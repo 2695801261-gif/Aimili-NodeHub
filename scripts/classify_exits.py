@@ -124,6 +124,59 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
     raise LookupFailure("all IP metadata providers failed: " + " | ".join(failures))
 
 
+def parse_cloudflare_front_config(raw: str) -> dict[str, Any]:
+    """Accept a VLESS share URI or a Mihomo YAML subscription/config."""
+    value = raw.strip()
+    if value.casefold().startswith("vless://"):
+        return parse_cloudflare_front_uri(value)
+    try:
+        document = yaml.safe_load(value)
+    except yaml.YAMLError as error:
+        raise ValueError("Cloudflare front secret must be a VLESS URI or Mihomo YAML") from error
+    if isinstance(document, dict) and isinstance(document.get("proxies"), list):
+        items = document["proxies"]
+    elif isinstance(document, list):
+        items = document
+    elif isinstance(document, dict):
+        items = [document]
+    else:
+        raise ValueError("Cloudflare front YAML contains no proxy object")
+    for item in items:
+        if not isinstance(item, dict) or str(item.get("type") or "").casefold() != "vless":
+            continue
+        if item.get("tls") is not True or str(item.get("network") or "").casefold() != "ws":
+            continue
+        if item.get("skip-cert-verify") is True:
+            continue
+        ws_options = item.get("ws-opts") if isinstance(item.get("ws-opts"), dict) else {}
+        headers = ws_options.get("headers") if isinstance(ws_options.get("headers"), dict) else {}
+        server = str(item.get("server") or "").strip()
+        user_id = str(item.get("uuid") or "").strip()
+        host_header = str(headers.get("Host") or headers.get("host") or item.get("servername") or server).strip()
+        servername = str(item.get("servername") or host_header).strip()
+        path = str(ws_options.get("path") or "/").strip()
+        try:
+            port = int(item.get("port"))
+        except (TypeError, ValueError):
+            continue
+        if not server or not user_id or not host_header or not servername or not 1 <= port <= 65535:
+            continue
+        netloc_host = f"[{server}]" if ":" in server and not server.startswith("[") else server
+        query = urllib.parse.urlencode({
+            "encryption": "none",
+            "security": "tls",
+            "type": "ws",
+            "host": host_header,
+            "sni": servername,
+            "path": path,
+        })
+        try:
+            return parse_cloudflare_front_uri(f"vless://{user_id}@{netloc_host}:{port}?{query}")
+        except ValueError:
+            continue
+    raise ValueError("Cloudflare front YAML has no valid VLESS + TLS + WebSocket proxy")
+
+
 def prepare_probe_candidates(
     candidates: list[dict[str, Any]], front_proxy: dict[str, Any] | None
 ) -> tuple[list[dict[str, Any]], int]:
@@ -495,7 +548,7 @@ def run() -> None:
     # Optional Cloudflare VLESS front is used only as the CI probe underlay.
     # Never serialize its private UUID into the public subscription artifacts.
     cf_front_uri = os.getenv("NODEHUB_CF_FRONT_URI", "").strip()
-    cf_front = parse_cloudflare_front_uri(cf_front_uri) if cf_front_uri else None
+    cf_front = parse_cloudflare_front_config(cf_front_uri) if cf_front_uri else None
     probe_candidates, vpngate_probe_count = prepare_probe_candidates(candidates, cf_front)
     if cf_front and vpngate_probe_count:
         print(
