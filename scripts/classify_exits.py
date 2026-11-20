@@ -38,7 +38,7 @@ SOURCE_REPORT = ROOT / "classification" / "source-discovery.json"
 MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "80"))
 MAX_TOTAL_CANDIDATES = 1000
 MAX_VPNGATE_CANDIDATES = 300
-MAX_SUPPLEMENTAL_CANDIDATES = 310
+MAX_SUPPLEMENTAL_CANDIDATES = MAX_VPNGATE_CANDIDATES + 10
 CONTROLLER = "http://127.0.0.1:9090"
 SOCKS = "socks5h://127.0.0.1:7891"
 SECRET = "nodehub-local-controller-secret"
@@ -443,7 +443,7 @@ def run() -> None:
     supplemental_candidates: list[dict[str, Any]] = []
     for source_name, source_path, source_limit in (
         ("VPN Gate", VPNGATE_PROFILE, 100),
-        ("VPN Gate rolling mirror", VPNGATE_ROLLING_PROFILE, 200),
+        ("VPN Gate rolling mirror", VPNGATE_ROLLING_PROFILE, MAX_VPNGATE_CANDIDATES - 100),
         ("VPNBook", VPNBOOK_PROFILE, 10),
     ):
         if source_path.is_file():
