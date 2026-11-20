@@ -126,7 +126,7 @@ def parse_vpnbook_page(page: str) -> tuple[tuple[str, str], list[dict[str, str]]
         # text. Resolve those names at runtime rather than falling back to
         # stale IP literals when its embedded JSON shape changes.
         hostnames = re.findall(
-            r"\\b([a-z]{2}\\d{1,4})\\.vpnbook\\.com\\b",
+            r"\b([a-z]{2}\d{1,4})\.vpnbook\.com\b",
             decoded,
             re.I,
         )
@@ -152,7 +152,7 @@ def parse_vpnbook_page(page: str) -> tuple[tuple[str, str], list[dict[str, str]]
 
 
 def resolve_server_ip(hostname: str) -> str:
-    if not re.fullmatch(r"[a-z]{2}\\d{1,4}\\.vpnbook\\.com", hostname, re.I):
+    if not re.fullmatch(r"[a-z]{2}\d{1,4}\.vpnbook\.com", hostname, re.I):
         raise VPNBookError("refusing to resolve a non-server VPNBook hostname")
     try:
         records = socket.getaddrinfo(
