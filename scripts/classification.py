@@ -31,6 +31,22 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, "asn_network_type_missing")
     asn_kinds = _kinds(evidence.get("asn_kind"))
     ip_status = evidence.get("ip_risk_status")
+    net_status = evidence.get("net_status")
+    if net_status != "ok":
+        return Verdict(None, "network_reputation_unavailable")
+    if not isinstance(evidence.get("net_kind"), list):
+        return Verdict(None, "network_kind_missing")
+    net_kinds = _kinds(evidence.get("net_kind"))
+    net_reports = evidence.get("net_reports")
+    net_reputation = evidence.get("net_reputation")
+    if isinstance(net_reports, bool) or not isinstance(net_reports, (int, float)):
+        return Verdict(None, "network_report_count_missing")
+    if net_reports != 0:
+        return Verdict(None, "network_has_abuse_reports")
+    if net_reputation not in {"ok", "info"}:
+        return Verdict(None, "network_reputation_not_acceptable")
+    if net_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
+        return Verdict(None, "network_has_disqualifying_signal")
     if ip_status == "ok" and not isinstance(evidence.get("ip_kind"), list):
         return Verdict(None, "ip_network_type_missing")
     ip_kinds = _kinds(evidence.get("ip_kind", []))
@@ -64,6 +80,10 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, "ip_has_disqualifying_network_signal")
 
     if "isp" in asn_kinds:
+        if "isp" not in net_kinds:
+            return Verdict(None, "isp_network_not_confirmed")
+        if "hosting" in net_kinds:
+            return Verdict(None, "conflicting_isp_hosting_network_signal")
         if "hosting" in ip_kinds:
             return Verdict(None, "conflicting_isp_hosting_ip_signal")
         if asn_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
@@ -76,6 +96,10 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         )
 
     if "hosting" in asn_kinds:
+        if "hosting" not in net_kinds:
+            return Verdict(None, "hosting_network_not_confirmed")
+        if "isp" in net_kinds:
+            return Verdict(None, "conflicting_isp_hosting_network_signal")
         if evidence.get("oxl_asn_status") != "ok":
             return Verdict(None, "hosting_asn_risk_lookup_missing")
         if "isp" in ip_kinds:
