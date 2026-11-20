@@ -61,6 +61,7 @@ class ClassificationTests(unittest.TestCase):
         evidence["layer3_network_type"] = "hosting"
         evidence["layer3_flags"]["hosting"] = True
         evidence["layer3_risk_reasons"] = ["hosting"]
+        evidence["net_kind"] = ["hosting"]
         self.assertEqual(classify(evidence).pool, "low-risk-datacenter")
 
     def test_unreported_oxl_network_can_use_layer3_network_evidence(self):
