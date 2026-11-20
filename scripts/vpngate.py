@@ -660,6 +660,44 @@ def tcp_prescreen_history(
     return survivors, report
 
 
+def prescreen_history_for_run(
+    records: list[dict[str, Any]],
+    *,
+    connector=None,
+    workers: int = TCP_PRESCREEN_WORKERS,
+    timeout_seconds: float = TCP_PRESCREEN_TIMEOUT_SECONDS,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Skip direct TCP filtering when VPNGate probes will use a CF dialer front."""
+    if os.getenv("NODEHUB_CF_FRONT_URI", "").strip():
+        return records, {
+            "runner_vantage": "github-actions",
+            "skipped": True,
+            "skip_reason": "cloudflare_vless_probe_underlay_configured",
+            "tcp_candidates": 0,
+            "tcp_reachable": 0,
+            "tcp_unreachable": 0,
+            "tcp_skipped_non_tcp": sum(
+                1
+                for record in records
+                if isinstance(record, dict)
+                and isinstance(record.get("node"), dict)
+                and str(record["node"].get("proto") or "").casefold() not in {"tcp", "tcp-client", "tcp-server"}
+            ),
+            "tcp_skipped_invalid_endpoint": 0,
+            "workers": 0,
+            "timeout_seconds": timeout_seconds,
+            "failure_types": {},
+            "history_before": len(records),
+            "history_after": len(records),
+        }
+    return tcp_prescreen_history(
+        records,
+        connector=connector,
+        workers=workers,
+        timeout_seconds=timeout_seconds,
+    )
+
+
 def save_candidate_history(
     records: list[dict[str, Any]],
     *,
@@ -689,7 +727,7 @@ def collect_vpngate() -> dict[str, Any]:
             raise VPNGateError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
         current_valid, current_rejected = _validate_batch(current, MIHOMO)
         history, history_stats = merge_candidate_history(current_valid, previous, now=now)
-        history, tcp_prescreen = tcp_prescreen_history(history)
+        history, tcp_prescreen = prescreen_history_for_run(history)
         try:
             rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
         except ValueError:
@@ -731,7 +769,7 @@ def collect_vpngate() -> dict[str, Any]:
         except ValueError:
             rotation = 0
         fallback_history, history_stats = merge_candidate_history([], previous, now=now)
-        fallback_history, tcp_prescreen = tcp_prescreen_history(fallback_history)
+        fallback_history, tcp_prescreen = prescreen_history_for_run(fallback_history)
         valid: list[dict[str, Any]] = []
         rejected = 0
         if MIHOMO.is_file():
