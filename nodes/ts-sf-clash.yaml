@@ -19,26 +19,6 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · B0EDDDDC
-  type: vmess
-  server: 38.91.107.188
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
-- name: US · VMESS · ts-sf-clash · 0B46754D
-  type: vmess
-  server: 167.88.63.39
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
 - name: US · VMESS · ts-sf-clash · 2AAF655F
   type: vmess
   server: 38.91.107.84
@@ -59,6 +39,26 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
+- name: US · VMESS · ts-sf-clash · B0EDDDDC
+  type: vmess
+  server: 38.91.107.188
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
+- name: US · VMESS · ts-sf-clash · 0B46754D
+  type: vmess
+  server: 167.88.63.39
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
 - name: ZZ · VMESS · ts-sf-clash · 9A33DAD9
   type: vmess
   server: 62.93.166.184
@@ -69,20 +69,6 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · 5426E436
-  type: vmess
-  server: news.zoom.us
-  port: 8443
-  uuid: bd67fcd2-ec34-40a6-aac6-67731f2d7011
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: ws
-  ws-opts:
-    path: /
-    headers:
-      host: matrix.phonicsindia.mobi
 - name: ZZ · VMESS · ts-sf-clash · E99BF272
   type: vmess
   server: 188.114.96.3

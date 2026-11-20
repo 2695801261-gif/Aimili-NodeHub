@@ -20,64 +20,33 @@ proxies:
       Host: www.91334565.xyz
     path: /path/1733477783705
   servername: www.91334565.xyz
-- name: US · VMESS · radikal · 07673546
-  type: vmess
-  server: 129.146.77.248
-  port: 39495
-  uuid: f836c736-87fc-4fde-aabc-00857ecdff3e
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /cctv13.m3u8
-    headers:
-      Host: 129.146.77.248
-- name: US · TROJAN · wzmwayne · 275D69E2
-  type: trojan
-  server: 69.164.240.85
-  port: 50875
-  client-fingerprint: chrome
-  network: tcp
+- name: US · HTTP · shaoyouvip · 0CA069D1
+  type: http
+  server: 23.133.176.14
+  port: 443
   skip-cert-verify: true
-  sni: 69.164.240.85
-  sub_tag: C002-260622
-  udp: true
-  password: nwilryafgkyvuxauc8pz
-- name: US · VLESS · wzmwayne · 3022CDA8
-  type: vless
-  server: 69.48.201.136
-  port: 30016
-  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
-  encryption: none
-  network: ws
-  sub_tag: S004-260618
-  udp: true
-  ws-opts:
-    headers:
-      Host: uspanel.unixzone.us
-      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
-        like Gecko) Chrome/69.0.3497.100 Safari/537.36
-    path: /usserver
-  xudp: true
-  packet-encoding: xudp
-- name: US · SOCKS5 · wzmwayne · A66364C9
-  type: socks5
-  server: 69.55.49.177
-  port: 38182
-  skip-cert-verify: true
-  sub_tag: S001-260618
+  tls: true
   udp: true
   username: ''
   password: ''
+- name: US · TROJAN · wzmwayne · 012980E5
+  type: trojan
+  server: 216.106.186.66
+  port: 443
+  client-fingerprint: chrome
+  skip-cert-verify: true
+  sni: www.findlocaljobnetworkandbuildcommunityconnections.com
+  sub_tag: M003-260806
+  udp: true
+  network: tcp
+  password: 242a3d8eee5e4ed1a6bfa4141d549a25
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
   - US · VMESS · shaoyouvip · 3A631A24
-  - US · VMESS · radikal · 07673546
-  - US · TROJAN · wzmwayne · 275D69E2
-  - US · VLESS · wzmwayne · 3022CDA8
-  - US · SOCKS5 · wzmwayne · A66364C9
+  - US · HTTP · shaoyouvip · 0CA069D1
+  - US · TROJAN · wzmwayne · 012980E5
 rules:
 - MATCH,NODEHUB
 profile:
