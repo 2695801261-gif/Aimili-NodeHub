@@ -105,6 +105,17 @@ class CloudflareFrontURITests(unittest.TestCase):
         self.assertEqual(proxy["ws-opts"]["path"], "/?ed=2048")
         self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
 
+    def test_parse_cloudflare_front_uses_sni_as_host_when_server_is_ip(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        proxy = parse_cloudflare_front_uri(
+            "vless://123e4567-e89b-12d3-a456-426614174000@104.16.0.1:443"
+            "?encryption=none&security=tls&type=ws&sni=cf.example.com&path=%2F"
+        )
+        self.assertEqual(proxy["server"], "104.16.0.1")
+        self.assertEqual(proxy["servername"], "cf.example.com")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
+
     def test_parse_cloudflare_front_rejects_non_tls_or_non_ws_uri(self):
         from scripts.classify_exits import parse_cloudflare_front_uri
 
