@@ -104,6 +104,9 @@ jobs:
         run: uv run --locked python main.py
 
       - name: Classify verified proxy exits
+        timeout-minutes: 30
+        env:
+          NODEHUB_MAX_EXIT_PROBES: "25"
         run: uv run --locked python -m scripts.classify_exits
 
       - name: Check generated profiles
