@@ -138,6 +138,45 @@ def oxl_lookup(kind: str, value: str) -> tuple[str, dict[str, Any] | None]:
         raise
 
 
+def layer3_lookup(exit_ip: str) -> dict[str, Any]:
+    address = ipaddress.ip_address(exit_ip)
+    if address.version != 4:
+        raise LookupFailure("Layer3 Open API currently documents IPv4 address lookups only")
+    data = request_json(f"https://api.layer3intel.com/open/{exit_ip}", timeout=10)
+    network = data.get("network") or {}
+    location = data.get("location") or {}
+    risk = data.get("risk") or {}
+    flags = data.get("flags") or {}
+    if data.get("ip") != exit_ip:
+        raise LookupFailure("Layer3 returned a mismatched IP")
+    if not isinstance(network, dict) or not isinstance(location, dict):
+        raise LookupFailure("Layer3 returned incomplete network or location data")
+    if not isinstance(risk, dict) or not isinstance(flags, dict):
+        raise LookupFailure("Layer3 returned incomplete risk or flag data")
+    reasons = risk.get("reasons")
+    if not isinstance(reasons, list):
+        raise LookupFailure("Layer3 returned no risk-reason list")
+    try:
+        layer3_asn = int(network.get("asn"))
+    except (TypeError, ValueError):
+        raise LookupFailure("Layer3 returned no valid network ASN")
+    return {
+        "layer3_ip": data.get("ip"),
+        "layer3_type": data.get("type"),
+        "layer3_risk_level": risk.get("level"),
+        "layer3_risk_score": risk.get("score"),
+        "layer3_risk_reasons": reasons,
+        "layer3_flags": flags,
+        "layer3_country": location.get("country"),
+        "layer3_asn": layer3_asn,
+        "layer3_network_type": network.get("type"),
+        "layer3_prefix": network.get("prefix"),
+        "layer3_drop_listed": network.get("drop_listed") is True,
+        "layer3_sharing": data.get("sharing"),
+        "layer3_crawler": bool(data.get("crawler")),
+    }
+
+
 def report_sum(data: dict[str, Any] | None) -> float | None:
     if not data:
         return None
@@ -287,6 +326,8 @@ def run() -> None:
                     row.update(metadata)
                     row["metadata_source"] = metadata_source
                     row["ip_metadata_success"] = True
+                    time.sleep(0.5)
+                    row.update(layer3_lookup(exit_ip))
                     row["ip_risk_status"] = ip_status
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
