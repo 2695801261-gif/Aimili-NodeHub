@@ -49,4 +49,5 @@
 - [O-X-L Risk Database](https://github.com/O-X-L/risk-db) — BSD-3-Clause 数据库；只使用其公开查询信号，不复制其 GPLv3 构建脚本。
 - 本仓库自己的分类规则和测试位于 `scripts/` 与 `tests/`。
 - [开源项目架构对照](docs/OPEN_SOURCE_ARCHITECTURE_NOTES.md) 记录 XEHN、CFNext/cfnew、ProxyCollector、AimiliVPN 等项目的可借鉴模式及本项目采用的安全边界。
+- [可选 Cloudflare 前置配置](docs/CF_FRONT_SETUP.md) 说明 `NODEHUB_CF_FRONT_URI` 的支持格式、GitHub Secret 配置方法和安全边界。
 - [URnetwork 架构参考](docs/URNETWORK_REFERENCE.md) 对照其成员自愿提供、实时节点质量排序和出口安全机制，明确 NodeHub 当前能借鉴的部分与不能冒称实现的安全能力。
