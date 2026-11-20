@@ -34,6 +34,33 @@ class ExitProbeBudgetTests(unittest.TestCase):
         self.assertEqual(len({x["name"] for x in selected}), 80)
 
 
+    def test_160_probe_budget_expands_primary_and_vpngate_coverage(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = (
+            [{"name": f"US · VMESS · primary · {i}"} for i in range(400)]
+            + [{"name": f"JP · VMESS · primary · {i}"} for i in range(600)]
+            + [{"name": f"VPNGate-US-{i}"} for i in range(24)]
+            + [{"name": f"VPNGate-JP-{i}"} for i in range(220)]
+            + [{"name": f"VPNBook-us{i}"} for i in range(5)]
+            + [{"name": f"VPNBook-de{i}"} for i in range(5)]
+        )
+        selected = select_exit_candidates(candidates, 160)
+
+        self.assertEqual(len(selected), 160)
+        self.assertEqual(sum(x["name"].startswith("US ·") for x in selected), 80)
+        self.assertEqual(sum(x["name"].startswith("VPNGate-") for x in selected), 70)
+        self.assertEqual(sum(x["name"].startswith("VPNBook-") for x in selected), 10)
+        self.assertGreaterEqual(
+            sum(
+                x["name"].startswith("US ·")
+                or x["name"].startswith("VPNGate-US-")
+                or x["name"].startswith("VPNBook-us")
+                for x in selected
+            ),
+            104,
+        )
+
     def test_us_advertised_candidates_are_prioritized_within_each_source_quota(self):
         from scripts.classify_exits import select_exit_candidates
 

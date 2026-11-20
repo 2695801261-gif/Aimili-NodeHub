@@ -63,7 +63,12 @@ jobs:
           new = "repository:\n  owner: 2695801261-gif\n  name: Aimili-NodeHub"
           if old not in s:
               raise SystemExit("Pinned upstream config layout changed; refusing unsafe publication")
-          p.write_text(s.replace(old, new, 1), encoding="utf-8")
+          old_limit = "  node_limit: 500"
+          new_limit = "  node_limit: 1000"
+          if old_limit not in s:
+              raise SystemExit("Pinned FreeNodes node_limit layout changed; refusing unsafe pool expansion")
+          s = s.replace(old, new, 1).replace(old_limit, new_limit, 1)
+          p.write_text(s, encoding="utf-8")
           PY
 
       - name: Install dependencies
@@ -114,7 +119,7 @@ jobs:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           IPAPI_IS_API_KEY: ${{ secrets.IPAPI_IS_API_KEY }}
           NODEHUB_CF_FRONT_URI: ${{ secrets.NODEHUB_CF_FRONT_URI }}
-          NODEHUB_MAX_EXIT_PROBES: "80"
+          NODEHUB_MAX_EXIT_PROBES: "160"
         run: uv run --locked python -m scripts.nodehub
 
       - name: Save refreshed VPNGate candidate history
