@@ -15,7 +15,9 @@ from scripts.vpngate_pool_mirror import (
     collect_vpngate_rolling,
     load_catalog,
     select_reachable_rows,
+    _proxy_from_row,
 )
+from scripts.vpngate import VPNGateError
 
 
 CA = """-----BEGIN CERTIFICATE-----
@@ -99,6 +101,66 @@ def make_fixture(now):
             },
         })
 
+    # UDP is explicitly not applicable to the mirror's TCP-only Worker probe.
+    udp_ip = "8.8.4.4"
+    udp_config_text = (
+        "client\n"
+        "dev tun\n"
+        "proto udp\n"
+        f"remote {udp_ip} 1194 udp\n"
+        "auth-user-pass\n"
+        "<ca>\n"
+        f"{CA}\n"
+        "</ca>\n"
+    )
+    udp_raw = udp_config_text.encode("utf-8")
+    udp_hash = hashlib.sha256(udp_raw).hexdigest()
+    udp_doc = {
+        "schema_version": 1,
+        "kind": "vpngate-pool-config",
+        "openvpn_config_base64": base64.b64encode(udp_raw).decode("ascii"),
+        "openvpn_config_sha256": udp_hash,
+        "openvpn_config_bytes": len(udp_raw),
+    }
+    udp_body = json.dumps(udp_doc, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()
+    udp_path = f"pool/configs/{udp_hash}.json"
+    config_files[udp_path] = udp_body
+    rows.append({
+        "id": "v1:" + hashlib.sha256(b"udp-node").hexdigest(),
+        "hostname": "vpn-udp.example.net",
+        "ip": udp_ip,
+        "country_code": "US",
+        "country_name": "United States",
+        "score": 2000,
+        "ping_ms": 45,
+        "speed_bps": 500000,
+        "num_vpn_sessions": 2,
+        "openvpn_config_sha256": udp_hash,
+        "openvpn_config_bytes": len(udp_raw),
+        "first_seen_at": iso(now - timedelta(days=1)),
+        "last_seen_at": iso(now - timedelta(hours=1)),
+        "present_in_latest_source": True,
+        "config": {
+            "path": udp_path,
+            "sha256": hashlib.sha256(udp_body).hexdigest(),
+            "bytes": len(udp_body),
+        },
+        "probe_targets": [],
+        "probe_reason": "udp",
+        "tcp_probe": {
+            "status": "not_applicable",
+            "probe_source": "cloudflare_workers",
+            "checked_at": None,
+            "last_success_at": None,
+            "round": None,
+            "worker_id": None,
+            "consecutive_failures": 0,
+            "last_failure_round": None,
+            "connect_ms": None,
+            "connected_endpoint": None,
+        },
+    })
+
     country_counts = Counter(row["country_code"] for row in rows)
     fetched_at = iso(now)
     servers_doc = {
@@ -164,9 +226,9 @@ class VPNGateRollingMirrorTests(unittest.TestCase):
     def test_load_catalog_checks_index_and_country_counts(self):
         index, rows, countries = load_catalog(read_url=self.read_url, now=self.now)
 
-        self.assertEqual(index["server_count"], 5)
-        self.assertEqual(len(rows), 5)
-        self.assertEqual(countries, {"JP": 1, "US": 4})
+        self.assertEqual(index["server_count"], 6)
+        self.assertEqual(len(rows), 6)
+        self.assertEqual(countries, {"JP": 1, "US": 5})
 
     def test_selects_recent_tcp_reachable_nodes_and_prioritizes_us(self):
         selected, report = select_reachable_rows(
@@ -174,8 +236,12 @@ class VPNGateRollingMirrorTests(unittest.TestCase):
         )
 
         self.assertEqual([row["country_code"] for row in selected], ["US", "JP"])
+        self.assertEqual(selected[0]["probe_reason"], "tcp")
         self.assertEqual(report["eligible_recent_tcp"], 2)
+        self.assertEqual(report["eligible_recent_udp"], 1)
+        self.assertEqual(report["eligible_recent_transport_total"], 3)
         self.assertEqual(report["eligible_us_recent_tcp"], 1)
+        self.assertEqual(report["eligible_us_recent_udp"], 1)
         self.assertEqual(report["selected_us"], 1)
         self.assertEqual(report["rejected"]["tcp_not_reachable"], 1)
         self.assertEqual(report["rejected"]["stale_tcp_check"], 1)
@@ -198,6 +264,17 @@ class VPNGateRollingMirrorTests(unittest.TestCase):
         with self.assertRaisesRegex(RollingMirrorError, "verified mirror download failed"):
             load_catalog(read_url=corrupted, now=self.now)
 
+    def test_udp_candidate_requires_matching_advertised_ip_and_transport(self):
+        row = next(item for item in self.rows if item.get("probe_reason") == "udp")
+        config_doc = json.loads(self.payloads[row["config"]["path"]])
+        config_text = base64.b64decode(config_doc["openvpn_config_base64"]).decode("utf-8")
+        mismatched_ip = config_text.replace("remote 8.8.4.4 1194 udp", "remote 8.8.4.5 1194 udp")
+        with self.assertRaisesRegex(VPNGateError, "does not match the rolling-pool IP"):
+            _proxy_from_row(row, mismatched_ip)
+        mismatched_transport = config_text.replace("proto udp", "proto tcp").replace("1194 udp", "1194 tcp")
+        with self.assertRaisesRegex(VPNGateError, "does not match the OpenVPN transport"):
+            _proxy_from_row(row, mismatched_transport)
+
     def test_collect_writes_only_verified_reachable_profiles(self):
         with tempfile.TemporaryDirectory() as temp:
             output = Path(temp) / "rolling-candidates.yaml"
@@ -205,19 +282,20 @@ class VPNGateRollingMirrorTests(unittest.TestCase):
                 read_url=self.read_url,
                 now=self.now,
                 profile_path=output,
-                max_candidates=2,
-                max_us_candidates=1,
+                max_candidates=3,
+                max_us_candidates=2,
             )
             document = yaml.safe_load(output.read_text(encoding="utf-8"))
 
         proxies = document["proxies"]
         self.assertEqual(report["status"], "ok")
-        self.assertEqual(report["pool_server_count"], 5)
-        self.assertEqual(report["selected"], 2)
-        self.assertEqual(report["selected_us"], 1)
-        self.assertEqual(report["configs_written"], 2)
-        self.assertEqual(len(proxies), 2)
-        self.assertEqual({proxy["proto"] for proxy in proxies}, {"tcp"})
+        self.assertEqual(report["pool_server_count"], 6)
+        self.assertEqual(report["selected"], 3)
+        self.assertEqual(report["selected_us"], 2)
+        self.assertEqual(report["configs_written"], 3)
+        self.assertEqual(len(proxies), 3)
+        self.assertEqual({proxy["proto"] for proxy in proxies}, {"tcp", "udp"})
+        self.assertEqual(next(p for p in proxies if p["proto"] == "udp")["udp"], True)
         self.assertTrue(any(proxy["name"].startswith("VPNGate-US-") for proxy in proxies))
         self.assertTrue(any(proxy["name"].startswith("VPNGate-JP-") for proxy in proxies))
 
