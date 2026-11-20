@@ -15,6 +15,24 @@ class IntelligenceFailureTests(unittest.TestCase):
             with self.assertRaisesRegex(LookupFailure, "HTTP 429"):
                 request_json("https://risk.example/api")
 
+class ExitProbeBudgetTests(unittest.TestCase):
+    def test_60_probe_budget_distributes_primary_and_supplemental_sources(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = (
+            [{"name": f"free-{i}"} for i in range(300)]
+            + [{"name": f"VPNGate-KR-{i}"} for i in range(50)]
+            + [{"name": f"VPNBook-US-{i}"} for i in range(50)]
+        )
+        selected = select_exit_candidates(candidates, 60)
+
+        self.assertEqual(len(selected), 60)
+        self.assertEqual(sum(x["name"].startswith("free-") for x in selected), 30)
+        self.assertEqual(sum(x["name"].startswith("VPNGate-") for x in selected), 15)
+        self.assertEqual(sum(x["name"].startswith("VPNBook-") for x in selected), 15)
+        self.assertEqual(len({x["name"] for x in selected}), 60)
+
+
 class ExitEchoRetryTests(unittest.TestCase):
     def test_transient_echo_failure_retries_both_independent_services(self):
         with patch(
