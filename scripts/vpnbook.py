@@ -34,7 +34,7 @@ def _fetch(url: str, limit: int) -> bytes:
     return data
 
 def parse_vpnbook_page(page: str) -> tuple[tuple[str,str], list[str]]:
-    password = re.search(r"Password(?:\\s|&nbsp;|<[^>]*>)*:?(?:\\s|&nbsp;|<[^>]*>)*<strong>\\s*([^<]{4,64})", page, re.I)
+    password = re.search(r"Password(?:\s|&nbsp;|<[^>]*>)*:?(?:\s|&nbsp;|<[^>]*>)*<strong>\s*([^<]{4,64})", page, re.I)
     if not password:
         raise VPNBookError("current shared password not found on official page")
     links = re.findall(r"""href=["']([^"']+\.zip(?:\?[^"']*)?)["']""", page, re.I)
