@@ -66,6 +66,31 @@ def request_json(url: str, *, method: str = "GET", payload: dict[str, Any] | Non
     return result
 
 
+def request_json_array(url: str, timeout: float = 20) -> set[int]:
+    request = urllib.request.Request(
+        url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            result = json.loads(response.read())
+    except urllib.error.HTTPError as error:
+        if error.code == 429 or error.code >= 500 or error.code == 404:
+            raise SystemExit(
+                f"ASN classification list unavailable: HTTP {error.code}; previous subscriptions are preserved"
+            ) from error
+        raise LookupFailure(f"ASN list rejected: HTTP {error.code}") from error
+    except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
+        raise SystemExit(
+            f"ASN classification list unavailable: {type(error).__name__}; previous subscriptions are preserved"
+        ) from error
+    if not isinstance(result, list):
+        raise SystemExit("Unexpected ASN kind-list response; previous subscriptions are preserved")
+    try:
+        return {int(value) for value in result}
+    except (TypeError, ValueError) as error:
+        raise SystemExit("Invalid ASN kind-list values; previous subscriptions are preserved") from error
+
+
 def parse_public_ip(raw: str) -> str:
     address = ipaddress.ip_address(raw.strip())
     if not address.is_global:
@@ -170,6 +195,11 @@ def run() -> None:
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
     ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any]]] = {}
 
+    asn_kind_lists: dict[str, set[int]] = {}
+    for kind in ("isp", "hosting", "vpn", "scanner", "crawler", "education"):
+        time.sleep(1.25)
+        asn_kind_lists[kind] = request_json_array(f"https://risk.oxl.app/api/list/asn/{kind}")
+
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
         work = Path(temporary)
         config = {
@@ -268,14 +298,17 @@ def run() -> None:
                         row["ip_reports"] = report_sum(ip_data)
 
                     asn = row["asn"]
+                    row["asn_kind"] = [kind for kind, members in asn_kind_lists.items() if asn in members]
                     if asn not in asn_cache:
                         time.sleep(1.25)
                         asn_cache[asn] = oxl_lookup("asn", str(asn))
                     asn_status, asn_data = asn_cache[asn]
                     row["oxl_asn_status"] = asn_status
                     if asn_data:
-                        row["asn_kind"] = asn_data.get("kind", [])
+                        row["asn_kind"] = sorted(set(row["asn_kind"]) | set(asn_data.get("kind", [])))
                         row["asn_reports"] = report_sum(asn_data)
+                    else:
+                        row["asn_reports"] = 0
 
                     verdict = classify(row)
                     row["pool"] = verdict.pool
