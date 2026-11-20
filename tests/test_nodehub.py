@@ -50,6 +50,19 @@ class NodeHubPipelineTests(unittest.TestCase):
         self.assertEqual(selected[-1]["name"], "490")
         self.assertEqual(len({item["name"] for item in selected}), 25)
 
+    def test_exit_probe_budget_includes_vpngate_candidates_by_source_quota(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = (
+            [{"name": f"free-{i}"} for i in range(400)]
+            + [{"name": f"VPNGate-JP-{i}"} for i in range(100)]
+        )
+        selected = select_exit_candidates(candidates, 25)
+
+        self.assertEqual(len(selected), 25)
+        self.assertEqual(sum(item["name"].startswith("VPNGate-") for item in selected), 5)
+        self.assertEqual(sum(item["name"].startswith("free-") for item in selected), 20)
+
     def test_exit_probe_selection_returns_all_when_pool_is_smaller_than_budget(self):
         from scripts.classify_exits import select_exit_candidates
 

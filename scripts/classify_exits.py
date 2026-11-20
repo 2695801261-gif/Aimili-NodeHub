@@ -289,20 +289,49 @@ def combine_candidate_sources(
 
 
 def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
-    """Spread a capped probe budget across the full Mihomo-ranked candidate pool.
+    """Spread probes across the full ranked pool and preserve source representation.
 
-    The upstream list is already Mihomo-validated and latency-ranked. Sampling
-    its full range avoids spending every exit lookup on only the first few
-    highest-ranked nodes, without inferring exit identity from node labels.
+    VPN Gate is intentionally capped to a minority of the combined pool. A
+    source-stratified quota prevents evenly spaced global indices from
+    accidentally selecting only FreeNodes entries due to the interleave
+    periodicity.
     """
     if limit < 1:
         raise ValueError("candidate limit must be positive")
     if len(candidates) <= limit:
         return list(candidates)
-    return [
-        candidates[((2 * index + 1) * len(candidates)) // (2 * limit)]
-        for index in range(limit)
+
+    vpn_indices = [
+        index for index, item in enumerate(candidates)
+        if str(item.get("name", "")).startswith("VPNGate-")
     ]
+    primary_indices = [
+        index for index, item in enumerate(candidates)
+        if not str(item.get("name", "")).startswith("VPNGate-")
+    ]
+    if not vpn_indices:
+        selected = [
+            ((2 * index + 1) * len(candidates)) // (2 * limit)
+            for index in range(limit)
+        ]
+        return [candidates[index] for index in selected]
+
+    vpn_budget = min(
+        len(vpn_indices),
+        max(1, (2 * len(vpn_indices) * limit + len(candidates)) // (2 * len(candidates))),
+    )
+    primary_budget = min(len(primary_indices), limit - vpn_budget)
+    vpn_budget = min(len(vpn_indices), limit - primary_budget)
+
+    chosen: set[int] = set()
+    for group, budget in ((primary_indices, primary_budget), (vpn_indices, vpn_budget)):
+        if budget <= 0:
+            continue
+        chosen.update(
+            group[((2 * index + 1) * len(group)) // (2 * budget)]
+            for index in range(budget)
+        )
+    return [item for index, item in enumerate(candidates) if index in chosen]
 
 def run() -> None:
     if not SOURCE_PROFILE.is_file() or not MIHOMO.is_file():
