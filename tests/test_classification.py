@@ -44,7 +44,7 @@ class ClassificationTests(unittest.TestCase):
 
     def test_missing_asn_intelligence_quarantines(self):
         evidence = base()
-        evidence["oxl_asn_status"] = "not_reported"
+        evidence["oxl_asn_status"] = "unavailable"
         self.assertIsNone(classify(evidence).pool)
 
     def test_echo_mismatch_quarantines(self):
@@ -84,6 +84,11 @@ class ClassificationTests(unittest.TestCase):
         evidence["ip_kind"] = ["hosting"]
         evidence["ip_reports"] = 0
         self.assertIsNone(classify(evidence).pool)
+
+    def test_live_kind_list_can_confirm_asn_without_report_record(self):
+        evidence = base()
+        evidence["oxl_asn_status"] = "not_reported"
+        self.assertEqual(classify(evidence).pool, "us-residential")
 
 
 if __name__ == "__main__":
