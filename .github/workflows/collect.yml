@@ -32,20 +32,20 @@ jobs:
           set -euo pipefail
           git clone --filter=blob:none https://github.com/nostalume/FreeNodes.git "$RUNNER_TEMP/FreeNodes"
           git -C "$RUNNER_TEMP/FreeNodes" checkout 5a4f4ecf8c06b49b503046179d10933a6a63ef69
-          mkdir -p "$RUNNER_TEMP/FreeNodes-run"
-          cp -a "$RUNNER_TEMP/FreeNodes/freenodes" "$RUNNER_TEMP/FreeNodes-run/"
-          cp "$RUNNER_TEMP/FreeNodes/main.py" "$RUNNER_TEMP/FreeNodes-run/"
-          cp "$RUNNER_TEMP/FreeNodes/config.yaml" "$RUNNER_TEMP/FreeNodes-run/"
-          cp "$RUNNER_TEMP/FreeNodes/pyproject.toml" "$RUNNER_TEMP/FreeNodes-run/"
-          cp "$RUNNER_TEMP/FreeNodes/uv.lock" "$RUNNER_TEMP/FreeNodes-run/"
-          cp "$RUNNER_TEMP/FreeNodes/mihomo-lock.json" "$RUNNER_TEMP/FreeNodes-run/"
+          cp -a "$RUNNER_TEMP/FreeNodes/freenodes" .
+          cp "$RUNNER_TEMP/FreeNodes/main.py" .
+          cp "$RUNNER_TEMP/FreeNodes/config.yaml" .
+          cp "$RUNNER_TEMP/FreeNodes/pyproject.toml" .
+          cp "$RUNNER_TEMP/FreeNodes/uv.lock" .
+          cp "$RUNNER_TEMP/FreeNodes/mihomo-lock.json" .
+          mkdir -p nodes
 
       - name: Configure publication identity
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-          p = Path("$RUNNER_TEMP/FreeNodes-run/config.yaml")
+          p = Path("config.yaml")
           s = p.read_text(encoding="utf-8")
           old = "repository:\n  owner: nostalume\n  name: FreeNodes"
           new = "repository:\n  owner: 2695801261-gif\n  name: Aimili-NodeHub"
@@ -55,7 +55,6 @@ jobs:
           PY
 
       - name: Install dependencies and browser
-        working-directory: ${{ runner.temp }}/FreeNodes-run
         run: |
           uv sync --locked --extra youtube
           uv run playwright install --with-deps chromium
@@ -71,10 +70,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -s "$RUNNER_TEMP/FreeNodes-run/nodes/merged.yaml"
-          test -s "$RUNNER_TEMP/FreeNodes-run/nodes/v2ray.txt"
-          mkdir -p nodes
-          cp -a "$RUNNER_TEMP/FreeNodes-run/nodes/." nodes/
+          test -s nodes/merged.yaml
+          test -s nodes/v2ray.txt
+          test -s nodes/publication-receipt.json
 
       - name: Commit changed subscriptions
         shell: bash
