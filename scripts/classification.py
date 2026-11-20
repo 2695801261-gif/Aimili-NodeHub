@@ -305,11 +305,10 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         )
 
     if layer3_type == "vpn" and _is_vpngate_relay_transport_signal(evidence):
-        # Permit only the narrow VPNGate VPN-on-access exception when IPWHO
-        # explicitly says type=isp, hosting/proxy/Tor are false, O-X-L confirms
-        # an ISP ASN, exact-IP abuse reports are zero, and any O-X-L network
-        # record agrees. The VPN flag is expected from this VPN transport;
-        # it is not treated as proof of a residential household line.
+        # Permit only the narrow VPNGate VPN-on-access exception when the
+        # fixed-line ISP name and exact Layer3 access prefix/ASN/network agree.
+        # IPWHO's type is an address family, not an ISP type. The VPN flag is
+        # expected from this transport; it does not prove a household line.
         if not vpngate_access_isp:
             brand_class = _vpngate_residential_brand_candidate(evidence)
             if brand_class == "us":
@@ -319,7 +318,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             return Verdict(None, "vpngate_isp_access_relay_candidate_unverified")
         if not (asn_status == "ok" and "isp" in asn_kinds and "hosting" not in asn_kinds) and not (asn_status == "not_reported" and evidence.get("layer3_asn") == evidence.get("asn") and evidence.get("layer3_prefix_match") is True):
             return Verdict(None, "vpngate_access_isp_without_isp_asn_confirmation")
-        if ip_status != "ok" or evidence.get("ip_reports") != 0:
+        if ip_status == "ok" and evidence.get("ip_reports") != 0:
             return Verdict(None, "vpngate_access_isp_without_clean_ip_reputation")
         if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
             return Verdict(None, "vpngate_access_isp_network_conflict")
@@ -327,7 +326,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             return Verdict(None, "vpngate_access_isp_network_unavailable")
         return Verdict(
             "us-residential" if country.upper() == "US" else "other-residential",
-            "vpngate_isp_access_ipwho_confirmed",
+            "vpngate_isp_access_layer3_confirmed",
         )
 
     if layer3_type == "hosting":
