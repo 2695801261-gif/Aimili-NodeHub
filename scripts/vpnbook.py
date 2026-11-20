@@ -1,6 +1,7 @@
 """Official VPNBook OpenVPN source adapter. Credentials are runtime-only."""
 from __future__ import annotations
 import io, json, re, urllib.error, urllib.parse, urllib.request, zipfile
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -90,8 +91,19 @@ def collect_vpnbook() -> dict[str,Any]:
     try:
         page = _fetch(PAGE_URL, MAX_PAGE_BYTES).decode("utf-8", errors="replace")
         credentials, links = parse_vpnbook_page(page)
-        archives = [(url, _fetch(url, MAX_ARCHIVE_BYTES)) for url in links]
+        archives = []
+        fetch_errors = Counter()
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = [(url, executor.submit(_fetch, url, MAX_ARCHIVE_BYTES)) for url in links[:12]]
+            for url, future in futures:
+                try:
+                    archives.append((url, future.result(timeout=30)))
+                except (Exception, FutureTimeout) as error:
+                    fetch_errors[type(error).__name__] += 1
+        if not archives:
+            raise VPNBookError("all official VPNBook configuration archives failed to download")
         proxies, report = parse_archives(archives, credentials)
+        report["archive_fetch_errors"] = dict(fetch_errors)
         if not MIHOMO.is_file():
             raise VPNBookError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
         valid, rejected = _validate_batch(proxies, MIHOMO)
