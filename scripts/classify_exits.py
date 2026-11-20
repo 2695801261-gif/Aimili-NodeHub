@@ -30,7 +30,7 @@ OUTPUTS = {
     "low-risk-datacenter": ROOT / "subscriptions" / "low-risk-datacenter.yaml",
 }
 EVIDENCE_PATH = ROOT / "classification" / "evidence.json"
-MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "100"))
+MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "25"))
 CONTROLLER = "http://127.0.0.1:9090"
 SOCKS = "socks5h://127.0.0.1:7891"
 SECRET = "nodehub-local-controller-secret"
@@ -334,7 +334,7 @@ def run() -> None:
                     row["reason"] = f"quarantined:{type(error).__name__}:{detail}"
                     counters["quarantined"] += 1
                 evidence_rows.append(row)
-                print(f"[{index}/{len(candidates)}] {name[:64]} -> {row.get('pool') or row.get('reason')}")
+                print(f"[{index}/{len(candidates)}] {name[:64]} -> {row.get('pool') or row.get('reason')}", flush=True)
         finally:
             process.terminate()
             try:
