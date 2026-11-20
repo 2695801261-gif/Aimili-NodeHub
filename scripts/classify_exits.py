@@ -124,6 +124,20 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
     raise LookupFailure("all IP metadata providers failed: " + " | ".join(failures))
 
 
+def prepare_probe_candidates(
+    candidates: list[dict[str, Any]], front_proxy: dict[str, Any] | None
+) -> tuple[list[dict[str, Any]], int]:
+    """Attach a private underlay to VPNGate probes without mutating publishable nodes."""
+    prepared = [dict(item) for item in candidates]
+    count = 0
+    if front_proxy:
+        for item in prepared:
+            if str(item.get("name") or "").startswith("VPNGate-"):
+                item["dialer-proxy"] = front_proxy["name"]
+                count += 1
+    return prepared, count
+
+
 def parse_cloudflare_front_uri(uri: str) -> dict[str, Any]:
     """Parse a TLS WebSocket VLESS URI for VPNGate probe-only dialer chaining."""
     parsed = urllib.parse.urlsplit(uri.strip())
@@ -482,13 +496,7 @@ def run() -> None:
     # Never serialize its private UUID into the public subscription artifacts.
     cf_front_uri = os.getenv("NODEHUB_CF_FRONT_URI", "").strip()
     cf_front = parse_cloudflare_front_uri(cf_front_uri) if cf_front_uri else None
-    probe_candidates = [dict(item) for item in candidates]
-    vpngate_probe_count = 0
-    if cf_front:
-        for item in probe_candidates:
-            if str(item.get("name") or "").startswith("VPNGate-"):
-                item["dialer-proxy"] = cf_front["name"]
-                vpngate_probe_count += 1
+    probe_candidates, vpngate_probe_count = prepare_probe_candidates(candidates, cf_front)
         print(
             f"VPNGate probe underlay: {cf_front['name']} enabled for {vpngate_probe_count} selected candidates; URI omitted from artifacts",
             flush=True,
