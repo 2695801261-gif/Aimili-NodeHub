@@ -400,7 +400,10 @@ def _proxy_from_row(row: dict[str, Any], config_text: str) -> dict[str, Any]:
     ip = str(row["ip"])
     ip_token = ip.replace(".", "-").replace(":", "-")
     hostname = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(row.get("hostname") or "server"))[:48].strip("-")
-    name = f"VPNGate-{country}-{ip_token}-{hostname}"
+    transport = row.get("probe_reason")
+    if transport not in {"tcp", "udp"}:
+        raise VPNGateError("rolling-pool transport is unsupported")
+    name = f"VPNGate-{country}-{ip_token}-{hostname}-{transport}"
     proxy = parse_ovpn_config(config_text, name)
     try:
         config_ip = ipaddress.ip_address(proxy["server"])
@@ -410,7 +413,6 @@ def _proxy_from_row(row: dict[str, Any], config_text: str) -> dict[str, Any]:
     if config_ip != row_ip:
         raise VPNGateError("OpenVPN remote address does not match the rolling-pool IP")
 
-    transport = row.get("probe_reason")
     if transport == "udp":
         if proxy.get("proto") != "udp":
             raise VPNGateError("rolling-pool UDP candidate does not match the OpenVPN transport")
