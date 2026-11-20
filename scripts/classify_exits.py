@@ -284,8 +284,8 @@ def run() -> None:
                     except (TypeError, ValueError):
                         raise LookupFailure("IPWhois response has no usable ASN")
                     country = ip_info.get("country_code")
-                    if not isinstance(country, str) or len(country) != 2:
-                        raise LookupFailure("IPWhois response has no country code")
+                    if not isinstance(country, str) or len(country) != 2 or country.upper() in {"ZZ", "XX", "T1", "A1", "EU", "AP"}:
+                        raise LookupFailure("IPWhois response has no usable country code")
                     row.update({
                         "country_code": country.upper(),
                         "asn": asn,
