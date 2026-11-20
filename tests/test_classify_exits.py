@@ -116,6 +116,52 @@ class CloudflareFrontURITests(unittest.TestCase):
         self.assertEqual(proxy["servername"], "cf.example.com")
         self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
 
+    def test_parse_mihomo_yaml_subscription_for_cloudflare_front(self):
+        from scripts.classify_exits import parse_cloudflare_front_config
+
+        raw = """
+proxies:
+  - name: ordinary-trojan
+    type: trojan
+    server: trojan.example.com
+    port: 443
+    password: ignored
+  - name: cf-front
+    type: vless
+    server: 104.16.0.1
+    port: 443
+    uuid: 123e4567-e89b-12d3-a456-426614174000
+    tls: true
+    servername: cf.example.com
+    network: ws
+    ws-opts:
+      path: /?ed=2048
+      headers:
+        Host: cf.example.com
+"""
+        proxy = parse_cloudflare_front_config(raw)
+        self.assertEqual(proxy["name"], "NODEHUB-CF-FRONT")
+        self.assertEqual(proxy["server"], "104.16.0.1")
+        self.assertEqual(proxy["servername"], "cf.example.com")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
+
+    def test_parse_mihomo_yaml_rejects_insecure_front(self):
+        from scripts.classify_exits import parse_cloudflare_front_config
+
+        raw = """
+proxies:
+  - name: cf-front
+    type: vless
+    server: cf.example.com
+    port: 443
+    uuid: 123e4567-e89b-12d3-a456-426614174000
+    tls: true
+    skip-cert-verify: true
+    network: ws
+"""
+        with self.assertRaisesRegex(ValueError, "no valid VLESS"):
+            parse_cloudflare_front_config(raw)
+
     def test_parse_cloudflare_front_rejects_non_tls_or_non_ws_uri(self):
         from scripts.classify_exits import parse_cloudflare_front_uri
 
