@@ -1,7 +1,7 @@
 proxies:
-- name: US · VMESS · ts-sf-v2ray · 29B05856
+- name: ZZ · VMESS · ts-sf-v2ray · 57B178D6
   type: vmess
-  server: 167.88.63.99
+  server: 158.51.121.246
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -9,9 +9,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · C050845A
+- name: US · VMESS · ts-sf-v2ray · 29B05856
   type: vmess
-  server: 38.22.17.64
+  server: 167.88.63.99
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -29,9 +29,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 669FB6FD
+- name: US · VMESS · ts-sf-v2ray · 81AB6618
   type: vmess
-  server: 38.91.107.84
+  server: 38.91.107.188
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -39,9 +39,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 81AB6618
+- name: US · VMESS · ts-sf-v2ray · C050845A
   type: vmess
-  server: 38.91.107.188
+  server: 38.22.17.64
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -58,9 +58,9 @@ proxies:
   cipher: auto
   network: tcp
   servername: community.fastly.steamstatic.com
-- name: ZZ · VMESS · ts-sf-v2ray · 57B178D6
+- name: US · VMESS · ts-sf-v2ray · 669FB6FD
   type: vmess
-  server: 158.51.121.246
+  server: 38.91.107.84
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -78,16 +78,6 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: ZZ · VMESS · ts-sf-v2ray · 4A88158C
-  type: vmess
-  server: 168.138.43.75
-  port: 80
-  uuid: 11c3627f-31e8-4695-dfbd-34076e2f1f5d
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /cctv13.m3u8
 - name: HK · VMESS · ts-sf-v2ray · 034E0906
   type: vmess
   server: 47.244.120.197
@@ -112,3 +102,31 @@ proxies:
     path: /ws?ed=2048
     headers:
       Host: vmess.lbw666.dpdns.org
+- name: US · VMESS · ts-sf-v2ray · AAEE0371
+  type: vmess
+  server: news.zoom.us
+  port: 8443
+  uuid: bd67fcd2-ec34-40a6-aac6-67731f2d7011
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: matrix.phonicsindia.mobi
+  ws-opts:
+    path: /
+    headers:
+      Host: matrix.phonicsindia.mobi
+- name: ZZ · VMESS · ts-sf-v2ray · 52ED878B
+  type: vmess
+  server: 188.114.96.3
+  port: 8443
+  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: v2ray1.dozapp.xyz
+  ws-opts:
+    path: /lMnsZUN4/
+    headers:
+      Host: v2ray1.dozapp.xyz

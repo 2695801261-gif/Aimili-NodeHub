@@ -17,7 +17,7 @@
   "history_expired": 0,
   "history_invalid": 0,
   "history_ttl_days": 14,
-  "probe_rotation": 144,
+  "probe_rotation": 145,
   "mihomo_validated": 50,
   "mihomo_rejected": 0,
   "status": "ok",

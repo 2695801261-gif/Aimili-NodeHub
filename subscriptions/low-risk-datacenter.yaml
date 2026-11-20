@@ -4,13 +4,24 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: IE · HTTP · kooker · 118F7AE0
-  type: http
-  server: 34.249.214.108
+- name: US · SS · wzmwayne · 0CCF6AEB
+  type: ss
+  server: 15.204.247.244
   port: 443
-  tls: true
-  skip-cert-verify: true
+  cipher: aes-256-gcm
+  sub_tag: A004-260618
   udp: true
+  password: pKEW8JPByTVTLtM
+- name: HK · VMESS · ts-sf-v2ray · 034E0906
+  type: vmess
+  server: 47.244.120.197
+  port: 44867
+  uuid: 845e6b08-2919-4290-ade0-5dc7dcea59ca
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /arki?ed=2048
 - name: FR · HYSTERIA · wzmwayne · 5937F5AD
   type: hysteria
   server: 62.210.70.191
@@ -22,75 +33,87 @@ proxies:
   up: '10'
   x-toolall-mihomo: true
   auth-str: dongtaiwang.com
-- name: DE · SOCKS5 · shaoyouvip · 43193B15
-  type: socks5
-  server: 92.5.68.29
-  port: 1080
+- name: ZZ · HYSTERIA2 · wzmwayne · 62891441
+  type: hysteria2
+  server: 62.210.7.139
+  port: 60111
   skip-cert-verify: true
+  sni: bing.com
+  password: github.com/Alvin9999-newpac/fanqiang
+- name: US · HTTP · shaoyouvip · 0CA069D1
+  type: http
+  server: 23.133.176.14
+  port: 443
+  skip-cert-verify: true
+  tls: true
   udp: true
   username: ''
   password: ''
-- name: CA · VMESS · radikal · 01ED49AC
-  type: vmess
-  server: 104.17.77.77
-  port: 8443
-  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  ws-opts:
-    path: /lMnsZUN4/
-    headers:
-      Host: v2ray1.dozapp.xyz
-- name: CA · VMESS · wzmwayne · 54F04D77
-  type: vmess
-  server: 23.162.200.198
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-  skip-cert-verify: false
-  sub_tag: A004-260618
-  tls: false
+- name: ZZ · SS · wzmwayne · 266D7192
+  type: ss
+  server: 198.98.53.130
+  port: 443
+  cipher: chacha20-ietf-poly1305
   udp: true
-  xudp: true
-  packet-encoding: xudp
-  servername: 23.162.200.198
-- name: ZZ · VLESS · wzmwayne · 3D80A218
-  type: vless
-  server: 51.158.206.97
-  port: 23576
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  client-fingerprint: chrome
-  flow: xtls-rprx-vision
-  network: tcp
-  servername: fuck.rkn
-  tls: true
-  udp: true
-- name: IE · HTTP · wzmwayne · AD7D5A11
+  password: eDfN7SODQceIOmIAbtJJtK
+- name: LT · HTTP · shaoyouvip · 7E33A63E
   type: http
-  server: 18.200.158.139
+  server: 89.124.11.9
   port: 443
   skip-cert-verify: true
-  sub_tag: R002-260618
   tls: true
   udp: true
+  username: ''
+  password: ''
+- name: ZZ · HYSTERIA2 · wzmwayne · 72E93D4E
+  type: hysteria2
+  server: 13.36.234.11
+  port: 443
+  skip-cert-verify: true
+  sni: 13.36.234.11
+  password: H7mP2xY9kJ4nQ8wR5tF6vB3z
+- name: US · SOCKS5 · wzmwayne · A66364C9
+  type: socks5
+  server: 69.55.49.177
+  port: 38182
+  skip-cert-verify: true
+  sub_tag: S001-260618
+  udp: true
+  username: ''
+  password: ''
+- name: ZZ · HYSTERIA2 · wzmwayne · 13715609
+  type: hysteria2
+  server: 138.3.208.26
+  port: 50160
+  skip-cert-verify: true
+  sni: 'off'
+  password: 184cdec28da5a09450803c8debcd2cc9
+- name: AU · TROJAN · wzmwayne · 3D8659FE
+  type: trojan
+  server: 45.63.30.142
+  port: 443
+  client-fingerprint: chrome
+  network: tcp
+  skip-cert-verify: false
+  sni: connectwithemployerstohireyouridealteam.com
+  sub_tag: A004-260618
+  udp: true
+  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - IE · HTTP · kooker · 118F7AE0
+  - US · SS · wzmwayne · 0CCF6AEB
+  - HK · VMESS · ts-sf-v2ray · 034E0906
   - FR · HYSTERIA · wzmwayne · 5937F5AD
-  - DE · SOCKS5 · shaoyouvip · 43193B15
-  - CA · VMESS · radikal · 01ED49AC
-  - CA · VMESS · wzmwayne · 54F04D77
-  - ZZ · VLESS · wzmwayne · 3D80A218
-  - IE · HTTP · wzmwayne · AD7D5A11
+  - ZZ · HYSTERIA2 · wzmwayne · 62891441
+  - US · HTTP · shaoyouvip · 0CA069D1
+  - ZZ · SS · wzmwayne · 266D7192
+  - LT · HTTP · shaoyouvip · 7E33A63E
+  - ZZ · HYSTERIA2 · wzmwayne · 72E93D4E
+  - US · SOCKS5 · wzmwayne · A66364C9
+  - ZZ · HYSTERIA2 · wzmwayne · 13715609
+  - AU · TROJAN · wzmwayne · 3D8659FE
 rules:
 - MATCH,NODEHUB
 profile:
