@@ -92,10 +92,10 @@ class ClassificationTests(unittest.TestCase):
         evidence["ip_reports"] = 0
         self.assertIsNone(classify(evidence).pool)
 
-    def test_live_kind_list_can_confirm_asn_without_report_record(self):
+    def test_unreported_isp_asn_is_quarantined(self):
         evidence = base()
         evidence["oxl_asn_status"] = "not_reported"
-        self.assertEqual(classify(evidence).pool, "us-residential")
+        self.assertIsNone(classify(evidence).pool)
 
     def test_unknown_country_is_quarantined(self):
         evidence = base()
