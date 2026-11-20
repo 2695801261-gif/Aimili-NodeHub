@@ -12,7 +12,7 @@
 - IPWhois 主源（IPinfo 备用）解析出口 IP 的国家、ASN 和运营商；Layer3 Intel 必须返回相同 IP、国家、ASN 和包含该 IP 的实际公告前缀。
 - Layer3 Intel 免费 Open API 的地址风险等级必须为 low、分数低于 25。住宅候选要求地址类型 residential、网络类型 access、风险原因为空；机房候选要求地址和网络均为 hosting，风险原因只能包含普通 hosting 标签。
 - Layer3 的 anonymizer、proxy、VPN、Tor、relay、共享地址、crawler、drop-list 等信号全部隔离。未知、business、mobile、education、government、isp（无法区分家庭/企业的泛 ISP 地址）等类型不进入住宅池。
-- O-X-L ASN 查询必须存在、举报数为零，并明确支持 ISP 或 hosting 类型。O-X-L IP 查询要求零举报；其 404 语义存在不确定性，重试后仍为 404 时只记录为 not-reported，不声称已证明无风险。
+- O-X-L ASN 查询若有记录，必须零举报并明确支持 ISP 或 hosting 类型；若明确返回 not-reported，不视为安全，只有 Layer3 对同一出口 IP、ASN、国家、前缀、低风险和目标网络类型全部独立确认时才允许继续。查询超时、限流或服务错误仍隔离。O-X-L IP 查询要求零举报；其 404 语义存在不确定性，重试后仍为 404 时只记录为 not-reported，不声称已证明无风险。
 - O-X-L 网络记录如果存在，必须通过零举报、`ok/info` 信誉、ASN、CIDR 和网络类型核验。若 O-X-L 网络 API 返回 404（该项目文档定义为 Network not reported），只允许在 Layer3 已提供匹配的网络类型、前缀和低风险证据，且 O-X-L ASN/IP 检查通过时继续。
 - VPN、proxy、Tor、scanner、crawler、education、maybe_hacked、mobile、CGNAT、relay、anycast 及 ISP/hosting 冲突信号全部隔离。
 - 保存检测时间、出口 IP、国家、ASN、运营商、Layer3 风险分数/原因、网络前缀、O-X-L 状态及判断理由，便于复核。

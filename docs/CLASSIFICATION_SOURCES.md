@@ -29,7 +29,7 @@ All lookups apply to the **proxy's observed exit IP**, never the configured serv
 - Role: IP- and ASN-level kind/report checks, plus network reputation and network-kind checks when a network record exists.
 - O-X-L documents network 404 as “Network not reported”. This is not treated as a positive clean reputation; independent Layer3 risk and prefix evidence must still pass. If an O-X-L network record exists, it must have zero reports, reputation `ok/info`, a matching ASN/CIDR and compatible network kind.
 - O-X-L documents IP 404 as “not reported or temporary lookup failure”. The classifier retries once and retains `not_reported` as an uncertainty signal, not proof of zero abuse.
-- O-X-L ASN lookup must exist and report exactly zero reports. Its ASN kind must positively support the target class.
+- If an O-X-L ASN record exists, it must report exactly zero reports and its ASN kind must positively support the target class. If O-X-L explicitly reports no ASN record, that absence is not a clean result: the candidate can proceed only when the independent Layer3 response matches the exact exit IP, country, ASN and announced prefix, has low risk, and confirms the target address/network type. O-X-L timeouts, rate limits and server errors are quarantined.
 - O-X-L warns that reports can contain false positives; these are risk signals, not proof of malicious intent.
 - Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 25 and caches repeated IP/network/ASN lookups within each run.
 
@@ -40,7 +40,7 @@ Every candidate must pass all of these gates:
 2. Two independent HTTPS exit-echo services return the same globally routable IP.
 3. IPWhois or the IPinfo fallback resolves that exact IP to a valid country, ASN and non-empty operator name.
 4. Layer3 returns the exact IP, matching country/ASN and an announced prefix containing the exit IP, plus a low-risk result under the class-specific rules above.
-5. O-X-L ASN lookup exists, reports zero, and positively confirms `isp` or `hosting` as appropriate.
+5. If O-X-L ASN lookup returns a record, it must report zero and positively confirm `isp` or `hosting` as appropriate. An explicit ASN `not_reported` result is not treated as clean; it can proceed only when Layer3 independently confirms the exact exit IP, country, ASN, announced prefix, low risk and target network type. Provider errors and rate limits remain quarantined.
 6. O-X-L IP lookup reports zero, or returns 404 after retry with that uncertainty preserved in evidence. Any returned IP kind that conflicts with the class causes quarantine.
 7. If O-X-L has a network record, it must pass zero-report, reputation, ASN, prefix and network-kind checks. If it returns 404, the candidate can proceed only on independent Layer3 network/risk evidence and the O-X-L ASN/IP gates.
 8. VPN, proxy, Tor, scanner, crawler, education, maybe-hacked, mobile, CGNAT, relay, anycast, drop-listed, shared-address, conflicting or unknown types are quarantined.

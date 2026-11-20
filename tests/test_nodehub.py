@@ -38,6 +38,30 @@ class NodeHubPipelineTests(unittest.TestCase):
         discover.assert_called_once_with()
         verify.assert_not_called()
 
+
+    def test_exit_probe_budget_is_spread_across_full_ranked_candidate_pool(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = [{"name": str(index)} for index in range(500)]
+        selected = select_exit_candidates(candidates, 25)
+
+        self.assertEqual(len(selected), 25)
+        self.assertEqual(selected[0]["name"], "10")
+        self.assertEqual(selected[-1]["name"], "490")
+        self.assertEqual(len({item["name"] for item in selected}), 25)
+
+    def test_exit_probe_selection_returns_all_when_pool_is_smaller_than_budget(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = [{"name": str(index)} for index in range(4)]
+        self.assertEqual(select_exit_candidates(candidates, 25), candidates)
+
+    def test_exit_probe_selection_rejects_nonpositive_budget(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        with self.assertRaisesRegex(ValueError, "positive"):
+            select_exit_candidates([{"name": "one"}], 0)
+
     def test_publication_verification_runs_only_after_classification(self):
         order = []
         run_pipeline(lambda: order.append("discover"),

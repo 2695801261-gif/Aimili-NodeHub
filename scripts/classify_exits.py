@@ -234,6 +234,24 @@ def validate_profile_content(content: str, pool: str) -> None:
             raise LookupFailure(f"Mihomo rejected {pool} profile: {detail}")
 
 
+
+
+def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    """Spread a capped probe budget across the full Mihomo-ranked candidate pool.
+
+    The upstream list is already Mihomo-validated and latency-ranked. Sampling
+    its full range avoids spending every exit lookup on only the first few
+    highest-ranked nodes, without inferring exit identity from node labels.
+    """
+    if limit < 1:
+        raise ValueError("candidate limit must be positive")
+    if len(candidates) <= limit:
+        return list(candidates)
+    return [
+        candidates[((2 * index + 1) * len(candidates)) // (2 * limit)]
+        for index in range(limit)
+    ]
+
 def run() -> None:
     if not SOURCE_PROFILE.is_file() or not MIHOMO.is_file():
         raise SystemExit("Required merged profile or pinned Mihomo binary is missing")
@@ -242,7 +260,8 @@ def run() -> None:
     if not isinstance(candidates, list) or not candidates:
         raise SystemExit("No validated proxies found in merged profile")
     candidates = [item for item in candidates if isinstance(item, dict) and isinstance(item.get("name"), str)]
-    candidates = candidates[:MAX_CANDIDATES]
+    available_candidates = len(candidates)
+    candidates = select_exit_candidates(candidates, MAX_CANDIDATES)
     if not candidates:
         raise SystemExit("No usable proxy entries found")
 
@@ -433,6 +452,11 @@ def run() -> None:
         "generated_at": datetime.now(UTC).isoformat(),
         "source_profile": "nodes/merged.yaml",
         "candidate_limit": MAX_CANDIDATES,
+        "candidate_selection": {
+            "strategy": "evenly_spaced_across_mihomo_ranked_pool",
+            "available": available_candidates,
+            "selected": len(candidates),
+        },
         "checked": len(evidence_rows),
         "counts": dict(counters),
         "pool_sizes": {pool: len(items) for pool, items in grouped.items()},
