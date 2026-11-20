@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import base64
+import concurrent.futures
 import csv
 import ipaddress
 import json
 import os
 import re
 import shlex
+import socket
 import subprocess
 import tempfile
 import time
@@ -32,6 +34,8 @@ HISTORY_TTL_SECONDS = 14 * 24 * 60 * 60
 HISTORY_MAX_STALE_PER_COUNTRY = 5
 HISTORY_MAX_NODES = 300
 HISTORY_PROBE_LIMIT = 50
+TCP_PRESCREEN_WORKERS = 64
+TCP_PRESCREEN_TIMEOUT_SECONDS = 2.5
 VPNGATE_OPERATED_IPV4_NETWORK = ipaddress.ip_network("219.100.37.0/24")
 VPNGATE_OPERATED_HOST_PREFIX = "public-vpn"
 
@@ -568,6 +572,94 @@ def select_history_candidates(
     return selected
 
 
+def tcp_prescreen_history(
+    records: list[dict[str, Any]],
+    *,
+    connector=None,
+    workers: int = TCP_PRESCREEN_WORKERS,
+    timeout_seconds: float = TCP_PRESCREEN_TIMEOUT_SECONDS,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Fast first-stage reachability check for TCP VPNGate nodes.
+
+    UDP nodes are deliberately retained without TCP probing. Failed TCP checks
+    are excluded only from this run's candidate history; a later fresh API
+    snapshot can re-admit them. This is runner-vantage evidence, not a global
+    statement that a server is permanently offline.
+    """
+    if workers < 1 or timeout_seconds <= 0:
+        raise ValueError("TCP prescreen limits must be positive")
+    connect = connector or socket.create_connection
+    tcp_items: list[tuple[int, str, int]] = []
+    skipped_non_tcp = 0
+    skipped_invalid = 0
+    for index, record in enumerate(records):
+        node = record.get("node") if isinstance(record, dict) else None
+        if not isinstance(node, dict):
+            skipped_invalid += 1
+            continue
+        proto = str(node.get("proto") or "").casefold()
+        if not proto.startswith("tcp"):
+            skipped_non_tcp += 1
+            continue
+        host = str(node.get("server") or "").strip()
+        try:
+            port = int(node.get("port"))
+        except (TypeError, ValueError):
+            port = 0
+        if not host or not 1 <= port <= 65535:
+            skipped_invalid += 1
+            continue
+        tcp_items.append((index, host, port))
+
+    def probe(item: tuple[int, str, int]) -> tuple[int, bool, str]:
+        index, host, port = item
+        last_error: OSError | None = None
+        for attempt in range(2):
+            try:
+                connection = connect((host, port), timeout=timeout_seconds)
+                try:
+                    connection.close()
+                except Exception:
+                    pass
+                return index, True, ""
+            except OSError as error:
+                last_error = error
+                if isinstance(error, ConnectionRefusedError) or attempt == 1:
+                    break
+                time.sleep(0.15)
+        return index, False, type(last_error).__name__ if last_error else "unknown"
+
+    outcomes: dict[int, tuple[bool, str]] = {}
+    active_workers = min(workers, len(tcp_items))
+    if tcp_items:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=active_workers) as executor:
+            for index, reachable, reason in executor.map(probe, tcp_items):
+                outcomes[index] = (reachable, reason)
+
+    survivors = [
+        record
+        for index, record in enumerate(records)
+        if index not in outcomes or outcomes[index][0]
+    ]
+    errors = Counter(
+        reason for reachable, reason in outcomes.values() if not reachable
+    )
+    report = {
+        "runner_vantage": "github-actions",
+        "tcp_candidates": len(tcp_items),
+        "tcp_reachable": sum(reachable for reachable, _ in outcomes.values()),
+        "tcp_unreachable": sum(not reachable for reachable, _ in outcomes.values()),
+        "tcp_skipped_non_tcp": skipped_non_tcp,
+        "tcp_skipped_invalid_endpoint": skipped_invalid,
+        "workers": active_workers,
+        "timeout_seconds": timeout_seconds,
+        "failure_types": dict(errors),
+        "history_before": len(records),
+        "history_after": len(survivors),
+    }
+    return survivors, report
+
+
 def save_candidate_history(
     records: list[dict[str, Any]],
     *,
@@ -597,6 +689,7 @@ def collect_vpngate() -> dict[str, Any]:
             raise VPNGateError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
         current_valid, current_rejected = _validate_batch(current, MIHOMO)
         history, history_stats = merge_candidate_history(current_valid, previous, now=now)
+        history, tcp_prescreen = tcp_prescreen_history(history)
         try:
             rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
         except ValueError:
@@ -622,6 +715,7 @@ def collect_vpngate() -> dict[str, Any]:
             "history_expired": history_stats["history_expired"],
             "history_invalid": history_stats["history_invalid"],
             "history_ttl_days": HISTORY_TTL_SECONDS // (24 * 60 * 60),
+            "tcp_prescreen": tcp_prescreen,
             "probe_rotation": rotation,
             "mihomo_validated": len(valid),
             "mihomo_rejected": rejected,
@@ -637,6 +731,7 @@ def collect_vpngate() -> dict[str, Any]:
         except ValueError:
             rotation = 0
         fallback_history, history_stats = merge_candidate_history([], previous, now=now)
+        fallback_history, tcp_prescreen = tcp_prescreen_history(fallback_history)
         valid: list[dict[str, Any]] = []
         rejected = 0
         if MIHOMO.is_file():
@@ -664,6 +759,7 @@ def collect_vpngate() -> dict[str, Any]:
             "history_expired": history_stats["history_expired"],
             "history_invalid": history_stats["history_invalid"],
             "history_ttl_days": HISTORY_TTL_SECONDS // (24 * 60 * 60),
+            "tcp_prescreen": tcp_prescreen,
             "probe_rotation": rotation,
             "mihomo_validated": len(valid),
             "mihomo_rejected": rejected,

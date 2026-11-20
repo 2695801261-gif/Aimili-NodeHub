@@ -339,41 +339,95 @@ def combine_candidate_sources(primary, supplemental, *, total_limit=MAX_TOTAL_CA
         "total":len(merged),
     }
 
+def _is_us_advertised(candidate: dict[str, Any]) -> bool:
+    """Use source labels only as a sampling hint; never as exit-country evidence."""
+    name = str(candidate.get("name", "")).strip()
+    return bool(
+        re.match(r"^(?:VPNGate|VPNBook)-US(?:-|$)", name, re.IGNORECASE)
+        or re.match(r"^US(?:\s|[·:_-])", name, re.IGNORECASE)
+    )
+
+
+def _rotating_pick(indices: list[int], budget: int, rotation: int) -> list[int]:
+    if budget <= 0 or not indices:
+        return []
+    if budget >= len(indices):
+        return list(indices)
+    size = len(indices)
+    return [
+        indices[(((2 * index + 1) * size) // (2 * budget) + rotation) % size]
+        for index in range(budget)
+    ]
+
+
+def _sample_source_group(candidates, indices: list[int], budget: int, rotation: int) -> list[int]:
+    """Prefer US-advertised candidates within each source quota, then rotate the rest."""
+    us = [index for index in indices if _is_us_advertised(candidates[index])]
+    us_set = set(us)
+    other = [index for index in indices if index not in us_set]
+    chosen = _rotating_pick(us, min(len(us), budget), rotation)
+    chosen.extend(_rotating_pick(other, budget - len(chosen), rotation + (1 if chosen else 0)))
+    return chosen
+
+
 def select_exit_candidates(candidates, limit, *, rotation=0):
-    """Rotate bounded probes across FreeNodes, VPN Gate and VPNBook."""
+    """Rotate source quotas while giving US-advertised candidates first look.
+
+    Country labels are untrusted discovery hints only. Actual exit country and
+    network classification still come exclusively from the observed proxy egress.
+    """
     if limit < 1:
         raise ValueError("candidate limit must be positive")
-    rotation=max(0,rotation)
-    if len(candidates)<=limit:
+    rotation = max(0, rotation)
+    if len(candidates) <= limit:
         return list(candidates)
-    groups={
-        "primary":[i for i,x in enumerate(candidates) if not str(x.get("name","")).startswith(("VPNGate-","VPNBook-"))],
-        "VPNGate":[i for i,x in enumerate(candidates) if str(x.get("name","")).startswith("VPNGate-")],
-        "VPNBook":[i for i,x in enumerate(candidates) if str(x.get("name","")).startswith("VPNBook-")],
+
+    groups = {
+        "primary": [
+            i for i, item in enumerate(candidates)
+            if not str(item.get("name", "")).startswith(("VPNGate-", "VPNBook-"))
+        ],
+        "VPNGate": [
+            i for i, item in enumerate(candidates)
+            if str(item.get("name", "")).startswith("VPNGate-")
+        ],
+        "VPNBook": [
+            i for i, item in enumerate(candidates)
+            if str(item.get("name", "")).startswith("VPNBook-")
+        ],
     }
-    secondary=[k for k in ("VPNGate","VPNBook") if groups[k]]
+    secondary = [key for key in ("VPNGate", "VPNBook") if groups[key]]
     if not secondary:
-        group=groups["primary"]
-        return [candidates[group[(((2*i+1)*len(group))//(2*limit)+rotation)%len(group)]] for i in range(limit)]
-    sec_budget=min(sum(len(groups[k]) for k in secondary),(limit+1)//2)
-    primary_budget=min(len(groups["primary"]),limit-sec_budget)
-    sec_budget=min(sum(len(groups[k]) for k in secondary),limit-primary_budget)
-    base,rem=divmod(sec_budget,len(secondary))
-    budgets={k:min(len(groups[k]),base+(i<rem)) for i,k in enumerate(secondary)}
-    unused=sec_budget-sum(budgets.values())
+        chosen = _sample_source_group(candidates, groups["primary"], limit, rotation)
+        return [item for index, item in enumerate(candidates) if index in set(chosen)]
+
+    sec_budget = min(sum(len(groups[key]) for key in secondary), (limit + 1) // 2)
+    primary_budget = min(len(groups["primary"]), limit - sec_budget)
+    sec_budget = min(sum(len(groups[key]) for key in secondary), limit - primary_budget)
+    base, remainder = divmod(sec_budget, len(secondary))
+    budgets = {
+        key: min(len(groups[key]), base + (index < remainder))
+        for index, key in enumerate(secondary)
+    }
+    unused = sec_budget - sum(budgets.values())
     while unused:
-        changed=False
+        changed = False
         for key in secondary:
-            if budgets[key]<len(groups[key]):
-                budgets[key]+=1;unused-=1;changed=True
-                if not unused:break
-        if not changed:break
-    chosen=set()
-    for key,budget in [("primary",primary_budget)]+[(k,budgets[k]) for k in secondary]:
-        group=groups[key]
-        if budget and group:
-            chosen.update(group[((((2*i+1)*len(group))//(2*budget))+rotation)%len(group)] for i in range(budget))
-    return [x for i,x in enumerate(candidates) if i in chosen]
+            if budgets[key] < len(groups[key]):
+                budgets[key] += 1
+                unused -= 1
+                changed = True
+                if not unused:
+                    break
+        if not changed:
+            break
+
+    chosen = set()
+    for source_index, (key, budget) in enumerate(
+        [("primary", primary_budget)] + [(key, budgets[key]) for key in secondary]
+    ):
+        chosen.update(_sample_source_group(candidates, groups[key], budget, rotation + source_index))
+    return [item for index, item in enumerate(candidates) if index in chosen]
 
 def run() -> None:
     if not SOURCE_PROFILE.is_file() or not MIHOMO.is_file():
@@ -410,7 +464,9 @@ def run() -> None:
     if not candidates:
         raise SystemExit("No usable proxies found across FreeNodes, VPN Gate and VPNBook sources")
     rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
+    advertised_us_available = sum(_is_us_advertised(item) for item in candidates)
     candidates = select_exit_candidates(candidates, MAX_CANDIDATES, rotation=rotation)
+    advertised_us_selected = sum(_is_us_advertised(item) for item in candidates)
 
     proxy_names = [item["name"] for item in candidates]
     if len(proxy_names) != len(set(proxy_names)):
@@ -607,9 +663,11 @@ def run() -> None:
         "source_profile": "nodes/merged.yaml",
         "candidate_limit": MAX_CANDIDATES,
         "candidate_selection": {
-            "strategy": "rotating_source_stratified_across_mihomo_ranked_pool",
+            "strategy": "source_stratified_with_us_hint_priority",
             "available": available_candidates,
             "selected": len(candidates),
+            "advertised_us_available": advertised_us_available,
+            "advertised_us_selected": advertised_us_selected,
         },
         "source_candidate_counts": source_candidate_counts,
         "source_discovery": source_discovery,
