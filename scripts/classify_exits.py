@@ -52,7 +52,8 @@ def request_json(url: str, *, method: str = "GET", payload: dict[str, Any] | Non
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            result = json.loads(response.read())
+            raw = response.read()
+            result = json.loads(raw) if raw.strip() else {}
     except urllib.error.HTTPError as error:
         if error.code == 404:
             raise
