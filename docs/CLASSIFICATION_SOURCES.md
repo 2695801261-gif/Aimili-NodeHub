@@ -14,12 +14,12 @@ This document describes the sources actually used by the current first-version c
 ### O-X-L Risk Database
 
 - Main project: https://github.com/O-X-L/risk-db
-- ASN kind lists: `https://risk.oxl.app/api/list/asn/{isp|hosting|vpn|scanner|crawler|education}`
+- ASN kind lists: `https://risk.oxl.app/api/list/asn/{isp|hosting|vpn|scanner|crawler}`
 - Per-IP lookup: `https://risk.oxl.app/api/ip/{exit-ip}`
 - Per-ASN lookup: `https://risk.oxl.app/api/asn/{asn}`
 - API documentation: https://risk.oxl.app/api/docs/
 - Published database license: BSD-3-Clause. The project’s separate scripts are GPLv3; this repository does not copy those scripts.
-- Role: positive ISP/hosting network labels and IP/ASN risk signals. The classifier downloads the six ASN kind lists once per run and caches per-IP/per-ASN lookups.
+- Role: positive ISP/hosting network labels and IP/ASN risk signals. The classifier downloads the five documented ASN kind lists once per run and caches per-IP/per-ASN lookups.
 - The project's own documentation warns that reports may contain false positives and should be treated as risk signals, not proof of malicious intent.
 - The project documents unauthenticated API limits of 500 requests per 10 minutes and 5,000 per day. The classifier caps exit probes at 100, spaces requests, caches lookups, and aborts on rate limiting or server errors.
 
