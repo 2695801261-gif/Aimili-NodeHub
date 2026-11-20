@@ -60,13 +60,12 @@ jobs:
           uv run playwright install --with-deps chromium
 
       - name: Discover, validate and generate profiles
-        working-directory: ${{ runner.temp }}/FreeNodes-run
         env:
           GH_TOKEN: ${{ github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: uv run --locked --extra youtube python main.py
 
-      - name: Copy generated profiles
+      - name: Check generated profiles
         shell: bash
         run: |
           set -euo pipefail
