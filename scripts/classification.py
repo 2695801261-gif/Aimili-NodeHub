@@ -24,6 +24,33 @@ def _kinds(value: Any) -> set[str]:
     return {x.strip().casefold() for x in value}
 
 
+def _is_vpngate_relay_transport_signal(evidence: dict[str, Any]) -> bool:
+    """Recognize only VPNGate's exact VPN-on-ISP-access signature for audit.
+
+    This does not make the exit residential or publishable. It separates the
+    volunteer relay transport signal from the underlying access-network clue,
+    so a later independent verifier can examine it without weakening the
+    normal residential/datacenter admission gates.
+    """
+    flags = evidence.get("layer3_flags")
+    return (
+        isinstance(evidence.get("node_name"), str)
+        and evidence["node_name"].startswith("VPNGate-")
+        and evidence.get("layer3_type") == "vpn"
+        and evidence.get("layer3_network_type") == "access"
+        and evidence.get("layer3_risk_level") == "high"
+        and evidence.get("layer3_risk_score") == 75
+        and evidence.get("layer3_risk_reasons") == ["vpn"]
+        and isinstance(flags, dict)
+        and flags.get("anonymizer") is True
+        and flags.get("vpn") is True
+        and flags.get("proxy") is False
+        and flags.get("tor") is False
+        and flags.get("relay") is False
+        and flags.get("hosting") is False
+    )
+
+
 def _valid_layer3(evidence: dict[str, Any]) -> tuple[str | None, str]:
     ip = evidence.get("exit_ip")
     if not isinstance(ip, str):
@@ -69,7 +96,7 @@ def _valid_layer3(evidence: dict[str, Any]) -> tuple[str | None, str]:
     if not isinstance(flags, dict):
         return None, "layer3_flags_missing"
     for flag in ANONYMIZER_FLAGS:
-        if flags.get(flag) is not False:
+        if flags.get(flag) is not False and not _is_vpngate_relay_transport_signal(evidence):
             return None, f"layer3_{flag}_signal"
 
     reasons = evidence.get("layer3_risk_reasons")
@@ -188,6 +215,17 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             "us-residential" if country.upper() == "US" else "other-residential",
             "layer3_residential_access_and_isp_asn_confirmed",
         )
+
+    if layer3_type == "vpn" and _is_vpngate_relay_transport_signal(evidence):
+        # VPNGate's tunnel protocol can trigger an anonymizer/VPN label even
+        # when the observed exit belongs to an ISP access network. Keep this
+        # in a separate, non-publishable audit lane until independent evidence
+        # proves residential status and resolves the high VPN risk signal.
+        if asn_status == "ok" and "isp" in asn_kinds and "hosting" not in asn_kinds:
+            if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
+                return Verdict(None, "vpngate_isp_access_candidate_network_conflict")
+            return Verdict(None, "vpngate_isp_access_relay_candidate_unverified")
+        return Verdict(None, "vpngate_relay_without_isp_confirmation")
 
     if layer3_type == "hosting":
         # Layer3's documented risk model assigns ordinary hosting a baseline
