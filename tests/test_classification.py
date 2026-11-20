@@ -90,6 +90,11 @@ class ClassificationTests(unittest.TestCase):
         evidence["oxl_asn_status"] = "not_reported"
         self.assertEqual(classify(evidence).pool, "us-residential")
 
+    def test_unknown_country_is_quarantined(self):
+        evidence = base()
+        evidence["country_code"] = "ZZ"
+        self.assertIsNone(classify(evidence).pool)
+
 
 if __name__ == "__main__":
     unittest.main()
