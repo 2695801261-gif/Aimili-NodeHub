@@ -17,7 +17,7 @@ This document records the source selection for the three output pools. Classific
 - Lists: https://github.com/O-X-L/risk-db-lists
 - API documentation: https://risk.oxl.app/api/docs
 - Data license: BSD-3-Clause for the published databases.
-- Role: independent ASN/network/IP signals such as ISP, hosting, VPN, proxy, Tor, scanner, crawler, education and abuse-report reputation.
+- Role: live ASN kind lists (ISP, hosting, VPN, proxy, Tor, scanner, crawler and education) plus per-IP/per-ASN abuse-report lookups. The classifier requires a positive ISP or hosting ASN classification and rejects conflicting kinds.
 - The project's own documentation warns that reports can be false positives and that the data is an early-stage risk signal. A match is a reason to quarantine/review, not proof of malicious intent.
 - API limits documented by the project: unauthenticated 500 requests / 10 minutes and 5,000 / day. The classifier must cache lookups per run and stop safely on 429/5xx.
 
