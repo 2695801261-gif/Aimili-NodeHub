@@ -26,8 +26,18 @@ def _kinds(value: Any) -> set[str]:
 
 
 US_RESIDENTIAL_ISP_BRANDS = (
-    "comcast", "charter communications", "spectrum", "frontier communications",
-    "fidium", "consolidated communications", "wave broadband",
+    "comcast", "xfinity", "charter communications", "spectrum",
+    "frontier communications", "fidium", "consolidated communications",
+    "wave broadband", "verizon fios", "verizon online",
+    "cox communications", "cox cable", "at&t", "att internet",
+    "att services", "att broadband", "optimum", "altice usa",
+    "altafiber", "breezeline", "windstream", "mediacom",
+    "centurylink", "century link", "lumen", "tds telecom",
+    "wideopenwest", "wow", "rcn", "astound", "ziply", "starry",
+    "google fiber", "sonic", "suddenlink", "armstrong", "buckeye",
+    "atlantic broadband", "lumos", "hawaiian telcom", "cable one",
+    "sparklight", "earthlink", "cablevision", "blue ridge communications",
+    "grande communications",
 )
 OTHER_FIXED_RESIDENTIAL_ISP_BRANDS = (
     "korea telecom", "kt corporation", "sk broadband", "lg u+",
@@ -41,11 +51,11 @@ OTHER_FIXED_RESIDENTIAL_ISP_BRANDS = (
 
 
 def _vpngate_residential_brand_candidate(evidence: dict[str, Any]) -> str | None:
-    """Use XEHN-style fixed-ISP brand evidence for audit labels, never admission."""
+    """Use XEHN-style fixed-ISP brand evidence as support, never by itself."""
     if not str(evidence.get("node_name") or "").startswith("VPNGate-"):
         return None
     isp = str(evidence.get("isp") or "").casefold()
-    if not isp or "mobile" in isp or "wireless" in isp:
+    if not isp or any(term in isp for term in ("mobile", "mobility", "wireless", "cellular", "lte", "5g", "4g")):
         return None
     country = str(evidence.get("country_code") or "").upper()
     if country == "US" and any(brand in isp for brand in US_RESIDENTIAL_ISP_BRANDS):
@@ -89,13 +99,9 @@ def _vpngate_access_isp_confirmation(evidence: dict[str, Any]) -> bool:
     ISP category. Use the matched Layer3 access prefix, ISP network type,
     IPWHO operator name, and (when present) O-X-L ASN/network evidence instead.
     """
-    isp = str(evidence.get("isp") or "").casefold()
     country = str(evidence.get("country_code") or "").upper()
-    known_fixed_isp = (
-        country == "US" and any(name in isp for name in US_RESIDENTIAL_ISP_BRANDS)
-    ) or (
-        country != "US" and any(name in isp for name in OTHER_FIXED_RESIDENTIAL_ISP_BRANDS)
-    )
+    brand_class = _vpngate_residential_brand_candidate(evidence)
+    known_fixed_isp = brand_class == ("us" if country == "US" else "other")
     asn_status = evidence.get("oxl_asn_status")
     asn_kinds = _kinds(evidence.get("asn_kind"))
     asn_confirmed = (
