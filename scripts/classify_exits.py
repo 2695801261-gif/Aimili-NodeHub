@@ -248,6 +248,7 @@ def run() -> None:
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
     ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any], str]] = {}
     net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
+    layer3_cache: dict[str, dict[str, Any]] = {}
 
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
         work = Path(temporary)
@@ -326,8 +327,10 @@ def run() -> None:
                     row.update(metadata)
                     row["metadata_source"] = metadata_source
                     row["ip_metadata_success"] = True
-                    time.sleep(0.5)
-                    row.update(layer3_lookup(exit_ip))
+                    if exit_ip not in layer3_cache:
+                        time.sleep(0.5)
+                        layer3_cache[exit_ip] = layer3_lookup(exit_ip)
+                    row.update(layer3_cache[exit_ip])
                     row["ip_risk_status"] = ip_status
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
