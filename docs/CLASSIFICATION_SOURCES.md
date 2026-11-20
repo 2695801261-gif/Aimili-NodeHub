@@ -11,7 +11,7 @@ This document describes the sources used by the current classifier. Classificati
 - Role: resolve the observed public exit IP to country, ASN, ISP and organization.
 - It does not provide authoritative VPN/proxy/Tor or abuse-risk verdicts.
 
-### O-X-L Risk Database
+### IPinfo fallback\n\n- Documentation: https://ipinfo.io/developers\n- Endpoint: `https://ipinfo.io/{exit-ip}/json` (legacy public endpoint; no token required).\n- Role: fallback country, ASN and organization lookup if IPWhois is unavailable or returns incomplete metadata.\n- IPinfo documents a 1,000-request/day public no-account limit shared by callers using the same source IP; the workflow uses it only as a fallback and stops on rate limiting.\n\n### O-X-L Risk Database
 
 - Main project: https://github.com/O-X-L/risk-db
 - IP lookup: `https://risk.oxl.app/api/ip/{exit-ip}`
@@ -29,8 +29,8 @@ Every candidate must first pass these gates:
 
 1. Mihomo selects the exact requested proxy node.
 2. Two independent HTTPS IP-echo services agree on the same globally routable exit IP.
-3. IPWhois successfully resolves that exact exit IP and returns a valid country, ASN and non-empty operator name.
-4. O-X-L network lookup must return a valid kind list, reputation `ok` or `info`, and exactly zero reports. Missing network records and other lookup failures are quarantined.
+3. IPWhois, or the IPinfo fallback if needed, resolves that exact exit IP and returns a valid country, ASN and non-empty operator name.
+4. O-X-L network lookup must return a valid kind list, reputation `ok` or `info`, and exactly zero reports. Its ASN must match the geolocation ASN, and its CIDR must contain the observed exit IP. Missing network records and other lookup failures are quarantined.
 5. O-X-L ASN lookup must return a valid kind list and exactly zero reports. Missing ASN records are quarantined.
 6. O-X-L IP lookup must return zero reports, or the endpoint must return `not_reported` after a retry. Its documentation describes IP 404 as “not reported or temporary lookup failure”; this ambiguity is retained in evidence and is not proof of zero abuse.
 7. VPN, proxy, Tor, scanner, crawler, education, maybe-hacked, mobile, CGNAT, relay, anycast and conflicting network-kind signals cause quarantine.
