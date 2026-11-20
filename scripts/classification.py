@@ -114,6 +114,8 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     if ip_status not in {"ok", "not_reported"}:
         return Verdict(None, "ip_risk_lookup_failed")
     if ip_status == "ok":
+        if not isinstance(evidence.get("ip_kind"), list):
+            return Verdict(None, "ip_network_type_missing")
         ip_reports = evidence.get("ip_reports")
         if isinstance(ip_reports, bool) or not isinstance(ip_reports, (int, float)):
             return Verdict(None, "ip_risk_count_missing")
