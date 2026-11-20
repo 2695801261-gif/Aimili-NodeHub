@@ -4,7 +4,7 @@
 
 ## 参考项目
 
-- [XEHN](https://github.com/hezhanleiok/xehn/tree/xehn-android)：该分支包含 VPNGate 采集器，通过 WARP underlay 获取官方 API 数据，再做 TCP 预检、OpenVPN 隧道握手和真实流量验证；同时使用 ISP 品牌提示和缓存。NodeHub 借鉴“underlay 负责可达性、出口验证负责最终结论”的链路，以及固定宽带 ISP 品牌提示；但不照搬其“没有机房信号就倾向住宅”的宽松回退，品牌只作为辅助证据，仍必须通过独立出口、ASN、Layer3 和风险门禁。
+- [XEHN Android 分支](https://github.com/hezhanleiok/xehn/tree/xehn-android)：确实包含 VPNGate 采集器，通过 WARP underlay 获取同一个官方 API，随后做 TCP 预检、OpenVPN 握手/流量测速，并用 ip-api + ipwho.is 丰富 ISP/ASN 证据。代码中的分类细节需要谨慎看：`enrichClassify` 对没有强住宅或机房信号的节点会调用 `heuristicClass`，其规则是“非硬机房 ASN、非机房关键词即住宅”；这能显著扩大住宅标签数量，但不是严格的家庭宽带证明。其 README 所称“分类家宽/机房”不能等同于每个住宅标签都有双源住宅证据。NodeHub 借鉴 WARP underlay、TCP 预检、握手测速、ISP 品牌名单和 ipwho 第二意见；不照搬默认住宅回退，仍要求真实出口 IP、国家、ASN、Layer3 网络类型和风险信息交叉通过。
 - [ProxyCollector](https://github.com/Mahdi0024/ProxyCollector)：多来源代理收集，使用 sing-box 进行真实代理连通性测试，并导出不同客户端订阅。可参考协议覆盖、引擎验证和多格式输出。
 - [VLESS Collector](https://github.com/mehrtat/vless-collector)：按来源读取配置、去重、启动 xray 对单节点执行真实 HTTP 探测、按延迟排序后发布。可参考“小批验证成功才发布”的简单闭环。
 - [Vair Collector](https://github.com/lm705/vair-collector)：Fetch → Stage 1 Ping → Stage 2 Speed → Publish，按配置身份去重，并对 Xray 与 sing-box 协议分配不同测试引擎。可借鉴分阶段筛选、身份去重与运行快照。
