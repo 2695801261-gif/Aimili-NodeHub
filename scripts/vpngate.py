@@ -10,6 +10,7 @@ import re
 import shlex
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from collections import Counter
@@ -21,11 +22,16 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 VPNGATE_API = "https://www.vpngate.net/api/iphone/"
 OUTPUT = ROOT / ".cache" / "vpngate" / "candidates.yaml"
+HISTORY_FILE = ROOT / "nodes" / "vpngate-candidate-history.json"
 REPORT = ROOT / "classification" / "source-discovery.json"
 MIHOMO = ROOT / ".cache" / "mihomo" / "mihomo"
 MAX_NODES = int(os.getenv("NODEHUB_MAX_VPNGATE_NODES", "100"))
 MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 MAX_CONFIG_BYTES = 128 * 1024
+HISTORY_TTL_SECONDS = 14 * 24 * 60 * 60
+HISTORY_MAX_STALE_PER_COUNTRY = 5
+HISTORY_MAX_NODES = 300
+HISTORY_PROBE_LIMIT = 50
 VPNGATE_OPERATED_IPV4_NETWORK = ipaddress.ip_network("219.100.37.0/24")
 VPNGATE_OPERATED_HOST_PREFIX = "public-vpn"
 
