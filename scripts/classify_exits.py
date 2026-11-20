@@ -197,7 +197,8 @@ def run() -> None:
     net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
 
     asn_kind_lists: dict[str, set[int]] = {}
-    for kind in ("isp", "hosting", "vpn", "scanner", "crawler", "education"):
+    for kind in ("hosting", "vpn", "scanner", "crawler"):
+        print(f"Loading OXL ASN kind list: {kind}")
         time.sleep(1.25)
         asn_kind_lists[kind] = request_json_array(f"https://risk.oxl.app/api/list/asn/{kind}")
 
