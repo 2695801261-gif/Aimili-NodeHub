@@ -11,6 +11,7 @@
 - [V2ray-Tester](https://github.com/lblwb/V2ray-Tester)：将静态配置硬拒绝、TCP 预检、核心实时连接和主动网络探测分层。可借鉴“廉价预检先行、昂贵核心测试后置”的顺序。
 - [AimiliVPN](https://github.com/baoweise-bot/aimili-vpngate)：面向 Linux VPS 的 VPNGate 管理器；当前代码采用最多 300 条候选、5 个并发 OpenVPN 测试 worker，先做 ICMP/TCP 延迟探测，再以 OpenVPN 初始化确认连通；IP 元数据使用批量 100 条查询和 7 天缓存。NodeHub 借鉴其分阶段筛选、并发测试和批量情报思路，但保留 GitHub Actions 无 VPS 部署方式，并以真实出口 IP、独立回显及多源风险证据作为最终发布门槛。
 - [AimiliVPN 多出口增强版](https://github.com/Guli-Joy/aimili-vpngate)：在上游基础上增加分层并发测速，默认 TCP 预筛并发 100、OpenVPN 完整测试并发 8；只对 TCP 节点做快速端口粗筛，UDP 节点不因 TCP 检测失败而误删。NodeHub 将这一模式用于 VPNGate 滚动历史候选，失败只从本轮候选中排除，后续新快照仍可重新纳入。该仓库当前默认扫描上限为 300，不能仅凭默认配置验证演示视频的 2,000 数字。
+- [VPNGate rolling pool mirror](https://github.com/GeorgeXie2333/vpngate-list-mirror)：把官方 API 的多次快照合并为 7 天滚动池，以 Cloudflare Workers 进行周期性 TCP 可达性检查，并用内容寻址配置文件和 SHA-256 清单校验。2026-11-20 的公开池快照约 4,948 条，US 标记约 160 条。NodeHub 只接收近期 TCP 检查通过的候选，下载配置后再校验配置哈希；最终仍必须通过本项目自己的 Mihomo 出口和风险门禁。这个来源能补足全球候选规模，但本身并不能提供 2,000 个美国节点。
 
 ## 对 Aimili-NodeHub 的边界
 
