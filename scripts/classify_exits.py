@@ -497,6 +497,7 @@ def run() -> None:
     cf_front_uri = os.getenv("NODEHUB_CF_FRONT_URI", "").strip()
     cf_front = parse_cloudflare_front_uri(cf_front_uri) if cf_front_uri else None
     probe_candidates, vpngate_probe_count = prepare_probe_candidates(candidates, cf_front)
+    if cf_front and vpngate_probe_count:
         print(
             f"VPNGate probe underlay: {cf_front['name']} enabled for {vpngate_probe_count} selected candidates; URI omitted from artifacts",
             flush=True,
