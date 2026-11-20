@@ -57,7 +57,7 @@ def request_json(url: str, *, method: str = "GET", payload: dict[str, Any] | Non
         if error.code == 404:
             raise
         if error.code == 429 or error.code >= 500:
-            raise LookupFailure(f"temporary lookup failure: HTTP {error.code}") from error
+            raise SystemExit(f"Intelligence source unavailable: HTTP {error.code}; previous subscriptions are preserved") from error
         raise LookupFailure(f"lookup rejected: HTTP {error.code}") from error
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
         raise LookupFailure(f"lookup failed: {type(error).__name__}") from error
@@ -154,7 +154,7 @@ def run() -> None:
     evidence_rows: list[dict[str, Any]] = []
     counters: Counter[str] = Counter()
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
-    ip_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
+    ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any]]] = {}
 
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
         work = Path(temporary)
@@ -220,49 +220,30 @@ def run() -> None:
                         raise ValueError("independent exit-IP echo services disagree")
 
                     if exit_ip in ip_cache:
-                        ip_status, ip_data = ip_cache[exit_ip]
+                        ip_status, ip_data, ip_info = ip_cache[exit_ip]
                     else:
                         time.sleep(0.35)
                         ip_info = request_json(f"https://ipwho.is/{exit_ip}")
                         if ip_info.get("success") is not True or ip_info.get("ip") != exit_ip:
                             raise LookupFailure("IPWhois did not verify the observed exit IP")
-                        connection = ip_info.get("connection") or {}
-                        asn_raw = connection.get("asn")
-                        try:
-                            asn = int(str(asn_raw).upper().removeprefix("AS"))
-                        except (TypeError, ValueError):
-                            raise LookupFailure("IPWhois response has no usable ASN")
-                        country = ip_info.get("country_code")
-                        if not isinstance(country, str) or len(country) != 2:
-                            raise LookupFailure("IPWhois response has no country code")
-                        row.update({
-                            "country_code": country.upper(),
-                            "asn": asn,
-                            "isp": connection.get("isp") or connection.get("org"),
-                            "ipwhois_success": True,
-                        })
                         ip_status, ip_data = oxl_lookup("ip", exit_ip)
-                        ip_cache[exit_ip] = (ip_status, ip_data)
-                    if not row.get("ipwhois_success"):
-                        ip_info = request_json(f"https://ipwho.is/{exit_ip}")
-                        if ip_info.get("success") is not True or ip_info.get("ip") != exit_ip:
-                            raise LookupFailure("IPWhois did not verify the observed exit IP")
-                        connection = ip_info.get("connection") or {}
-                        asn_raw = connection.get("asn")
-                        try:
-                            asn = int(str(asn_raw).upper().removeprefix("AS"))
-                        except (TypeError, ValueError):
-                            raise LookupFailure("IPWhois response has no usable ASN")
-                        country = ip_info.get("country_code")
-                        if not isinstance(country, str) or len(country) != 2:
-                            raise LookupFailure("IPWhois response has no country code")
-                        row.update({
-                            "country_code": country.upper(),
-                            "asn": asn,
-                            "isp": connection.get("isp") or connection.get("org"),
-                            "ipwhois_success": True,
-                        })
-                        ip_status, ip_data = ip_cache[exit_ip]
+                        ip_cache[exit_ip] = (ip_status, ip_data, ip_info)
+
+                    connection = ip_info.get("connection") or {}
+                    asn_raw = connection.get("asn")
+                    try:
+                        asn = int(str(asn_raw).upper().removeprefix("AS"))
+                    except (TypeError, ValueError):
+                        raise LookupFailure("IPWhois response has no usable ASN")
+                    country = ip_info.get("country_code")
+                    if not isinstance(country, str) or len(country) != 2:
+                        raise LookupFailure("IPWhois response has no country code")
+                    row.update({
+                        "country_code": country.upper(),
+                        "asn": asn,
+                        "isp": connection.get("isp") or connection.get("org"),
+                        "ipwhois_success": True,
+                    })
                     row["ip_risk_status"] = ip_status
                     if ip_data:
                         row["ip_kind"] = ip_data.get("kind", [])
