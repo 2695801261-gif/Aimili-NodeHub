@@ -7,7 +7,7 @@ from typing import Any
 
 DISQUALIFYING_KINDS = {
     "vpn", "proxy", "tor", "scanner", "crawler", "education",
-    "maybe_hacked", "mobile", "cgnat", "relay", "anycast", "business", "government",
+    "maybe_hacked", "mobile", "dynamic", "cgnat", "relay", "anycast", "business", "government",
 }
 ANONYMIZER_FLAGS = ("anonymizer", "proxy", "vpn", "tor", "relay")
 
