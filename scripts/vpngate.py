@@ -176,6 +176,8 @@ def parse_ovpn_config(config_text: str, name: str) -> dict[str, Any]:
     if auth_user_pass and auth_user_pass[-1]:
         raise VPNGateError("OpenVPN profile references an external credential file")
     certificate_auth = bool(blocks.get("cert") and blocks.get("key"))
+    if auth_user_pass and certificate_auth:
+        raise VPNGateError("OpenVPN profile mixes username/password and client certificate authentication")
     if not auth_user_pass and not certificate_auth:
         raise VPNGateError("OpenVPN profile has neither auth-user-pass nor client certificate credentials")
 

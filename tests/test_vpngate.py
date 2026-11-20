@@ -55,6 +55,22 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertIn("tls-auth", proxy)
         self.assertEqual(proxy["key-direction"], "1")
 
+    def test_parses_vpngate_certificate_auth_without_username_password(self):
+        cert = "-----BEGIN CERTIFICATE-----\\nMIIBclient\\n-----END CERTIFICATE-----"
+        key = "-----BEGIN PRIVATE KEY-----\\nMIIBprivate\\n-----END PRIVATE KEY-----"
+        text = profile().replace("auth-user-pass\\n", "")
+        text += f"<cert>\\n{cert}\\n</cert>\\n<key>\\n{key}\\n</key>\\n"
+        proxy = parse_ovpn_config(text, "VPNGate-JP-cert")
+        self.assertNotIn("username", proxy)
+        self.assertNotIn("password", proxy)
+        self.assertEqual(proxy["cert"], cert)
+        self.assertEqual(proxy["key"], key)
+
+    def test_rejects_mixed_authentication_modes(self):
+        text = profile() + "<cert>\\nCERT\\n</cert>\\n<key>\\nKEY\\n</key>\\n"
+        with self.assertRaisesRegex(VPNGateError, "mixes username/password"):
+            parse_ovpn_config(text, "bad")
+
     def test_rejects_missing_ca(self):
         with self.assertRaisesRegex(VPNGateError, "CA certificate"):
             parse_ovpn_config("client\nremote 8.8.8.20 1194\n", "bad")
@@ -81,6 +97,15 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertEqual(proxies[0]["type"], "openvpn")
         self.assertEqual(report["rows_seen"], 1)
         self.assertEqual(report["candidates_parsed"], 1)
+
+    def test_rejects_csv_ip_that_disagrees_with_embedded_remote(self):
+        header = (
+            "#HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,"
+            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\\n"
+        )
+        proxies, report = parse_directory(header + csv_row(profile(), ip="1.1.1.1"), limit=10)
+        self.assertEqual(proxies, [])
+        self.assertIn("CSV server IP does not match the embedded OpenVPN remote", report["rejection_reasons"])
 
     def test_selects_top_scored_candidates_with_limit(self):
         rows = [
