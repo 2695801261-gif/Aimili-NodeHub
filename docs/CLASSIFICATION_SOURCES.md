@@ -4,13 +4,20 @@ This document records the source selection for the three output pools. Classific
 
 ## Sources selected for the first classifier
 
-### IPtoASN
+### IPWhois (`ipwho.is`)
+
+- Documentation: https://ipwhois.io/documentation
+- Endpoint: `https://ipwho.is/{exit-ip}`
+- Free tier: no API key, 1,000 lookups/day per runner egress IP.
+- Role: independent exit-IP country, ASN, ISP and organization observation. The free tier does **not** provide VPN/proxy/Tor security flags; those must come from other sources.
+
+### IPtoASN (cross-check)
 
 - Site: https://iptoasn.com/
 - Data: combined IPv4/IPv6 BGP-origin ranges, ASN, country code and AS description.
 - Refresh: source describes the downloadable data as hourly updated.
 - License: PDDL 1.0 (public-domain dedication and license).
-- Role: local IP-to-origin-ASN and country lookup. It does not classify a network as residential or safe.
+- Role: cross-check the observed ASN and registered country. It does not classify a network as residential or safe.
 
 ### O-X-L Risk Database
 
@@ -50,7 +57,7 @@ Same requirements as US residential, except the exit country must be known and n
 
 All of the following are required:
 
-1. Actual exit IP is independently observed and ASN/country are resolved.
+1. Actual exit IP is independently observed and ASN/country are resolved by IPWhois and cross-checked against IPtoASN.
 2. Hosting/datacenter is positively supported by ASN or IP/network classification.
 3. No VPN, proxy, Tor, relay, mobile, enterprise-gateway, scanner, crawler, or high-risk abuse signal is present.
 4. No conflicting or missing evidence at a required gate. Any uncertainty goes to quarantine.
