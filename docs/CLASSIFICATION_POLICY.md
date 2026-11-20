@@ -27,4 +27,4 @@ Layer3 Open API 不包含付费版的实时 residential-proxy 标记，因此 re
 
 ## 当前实现范围
 
-FreeNodes 固定版本负责完整启用配置来源的发现（GitHub 订阅、网页、受限密码页和 YouTube 资源适配器）、去重、Mihomo 能力检测和通用节点池生成；工作流不得把 sources 过滤成仅 github_file。VPN Gate 官方 CSV 的 OpenVPN_ConfigData_Base64 经独立适配器转换为 Mihomo 原生 openvpn outbound，并通过 Mihomo 配置检查后与其他来源一起接受相同的真实出口与风险核验。来源覆盖和格式边界见 [DISCOVERY_SOURCES.md](DISCOVERY_SOURCES.md)。本项目将 FreeNodes 与 VPN Gate 候选合并为最多 500 个节点，并按来源比例从完整排序池分配最多 40 个真实出口探测名额，逐个验证出口 IP；两个独立 HTTPS 回显端点的临时连接失败会进行一次有界重试，但两端不一致仍隔离；使用 IPWhois/IPinfo、Layer3 Intel 和 O-X-L IP/ASN/可用网络记录进行交叉分类。字段、许可、限额和分类门槛见 [CLASSIFICATION_SOURCES.md](CLASSIFICATION_SOURCES.md)。
+FreeNodes 固定版本负责完整启用配置来源的发现（GitHub 订阅、网页、受限密码页和 YouTube 资源适配器）、去重、Mihomo 能力检测和通用节点池生成；工作流不得把 sources 过滤成仅 github_file。VPN Gate 官方 CSV 的 OpenVPN_ConfigData_Base64 经独立适配器转换为 Mihomo 原生 openvpn outbound，并通过 Mihomo 配置检查后与其他来源一起接受相同的真实出口与风险核验。来源覆盖和格式边界见 [DISCOVERY_SOURCES.md](DISCOVERY_SOURCES.md)。本项目将 FreeNodes 与 VPN Gate 候选合并为最多 500 个节点，并按来源比例从完整排序池分配最多 60 个真实出口探测名额，逐个验证出口 IP；两个独立 HTTPS 回显端点的临时连接失败会进行一次有界重试，但两端不一致仍隔离；使用 IPWhois/IPinfo、Layer3 Intel 和 O-X-L IP/ASN/可用网络记录进行交叉分类。字段、许可、限额和分类门槛见 [CLASSIFICATION_SOURCES.md](CLASSIFICATION_SOURCES.md)。

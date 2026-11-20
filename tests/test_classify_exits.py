@@ -23,6 +23,12 @@ class ExitEchoRetryTests(unittest.TestCase):
         ), patch("scripts.classify_exits.time.sleep"):
             self.assertEqual(echo_pair(), ("203.0.113.7", True))
 
+    def test_transient_failure_on_second_endpoint_retries_only_that_endpoint(self):
+        with patch(
+            "scripts.classify_exits.curl_exit_ip",
+            side_effect=["203.0.113.7", subprocess.CalledProcessError(28, "curl"), "203.0.113.7"],
+        ), patch("scripts.classify_exits.time.sleep"):
+            self.assertEqual(echo_pair(), ("203.0.113.7", True))
     def test_persistent_echo_disagreement_remains_unverified(self):
         with patch(
             "scripts.classify_exits.curl_exit_ip",
