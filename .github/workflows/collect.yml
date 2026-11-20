@@ -113,6 +113,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           IPAPI_IS_API_KEY: ${{ secrets.IPAPI_IS_API_KEY }}
+          NODEHUB_CF_FRONT_URI: ${{ secrets.NODEHUB_CF_FRONT_URI }}
           NODEHUB_MAX_EXIT_PROBES: "80"
         run: uv run --locked python -m scripts.nodehub
 
