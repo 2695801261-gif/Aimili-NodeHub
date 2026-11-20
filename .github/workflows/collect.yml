@@ -16,7 +16,8 @@ on:
 
 concurrency:
   group: aimili-nodehub-collection
-  cancel-in-progress: false
+  # A newer code push supersedes an older, potentially slow collection run.
+  cancel-in-progress: true
 
 permissions:
   contents: write

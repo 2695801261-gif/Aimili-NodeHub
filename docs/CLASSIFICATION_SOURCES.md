@@ -62,4 +62,4 @@ Every candidate must pass all of these gates:
 ## Quarantine and publication
 Unknown or unsupported address/network types, IPv6 addresses not covered by the Layer3 Open address endpoint, missing exit IP, echo disagreement, metadata disagreement, API errors, rate limits, missing required ASN confirmation, risk signals or conflicting sources are not published.
 
-The workflow writes all three profiles and the evidence report only after classification completes and Mihomo validates every generated profile. A failed run leaves the last committed subscriptions untouched. Public nodes and evidence are readable by anyone; do not use the subscriptions for sensitive traffic.
+The workflow validates all three profiles with Mihomo before publication. A class with no newly verified candidates keeps its previous last-known-good profile; on first run it remains an explicitly marked empty profile while other classes can publish. A failed run leaves the last committed subscriptions untouched. Public nodes and evidence are readable by anyone; do not use the subscriptions for sensitive traffic.
