@@ -506,7 +506,7 @@ def merge_candidate_history(
         grouped.setdefault(_candidate_country(record["node"]), []).append((identity, record))
 
     retained: list[tuple[tuple[str, int, str], dict[str, Any]]] = []
-    for items in grouped.values():
+    for country, items in grouped.items():
         current_items = [item for item in items if item[0] in current_ids]
         stale_items = [item for item in items if item[0] not in current_ids]
         stale_items.sort(
@@ -514,11 +514,7 @@ def merge_candidate_history(
             reverse=True,
         )
         retained.extend(current_items)
-        stale_limit = (
-            max_stale_us_per_country
-            if items and _candidate_country(items[0][1]["node"]) == "US"
-            else max_stale_per_country
-        )
+        stale_limit = max_stale_us_per_country if country == "US" else max_stale_per_country
         retained.extend(stale_items[:stale_limit])
 
     retained.sort(
