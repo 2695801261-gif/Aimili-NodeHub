@@ -60,6 +60,33 @@ class ExitEchoRetryTests(unittest.TestCase):
             echo_pair(attempts=0)
 
 
+class CloudflareProbeUnderlayTests(unittest.TestCase):
+    def test_underlay_is_attached_only_to_vpngate_probe_copies(self):
+        from scripts.classify_exits import prepare_probe_candidates
+
+        source = [
+            {"name": "VPNGate-US-1", "type": "openvpn"},
+            {"name": "free-vless-1", "type": "vless"},
+            {"name": "VPNBook-US-1", "type": "openvpn"},
+        ]
+        front = {"name": "NODEHUB-CF-FRONT", "type": "vless"}
+        prepared, count = prepare_probe_candidates(source, front)
+        self.assertEqual(count, 1)
+        self.assertEqual(prepared[0]["dialer-proxy"], "NODEHUB-CF-FRONT")
+        self.assertNotIn("dialer-proxy", prepared[1])
+        self.assertNotIn("dialer-proxy", prepared[2])
+        self.assertTrue(all("dialer-proxy" not in item for item in source))
+
+    def test_without_front_keeps_all_probe_candidates_direct(self):
+        from scripts.classify_exits import prepare_probe_candidates
+
+        source = [{"name": "VPNGate-US-1"}, {"name": "free-vless-1"}]
+        prepared, count = prepare_probe_candidates(source, None)
+        self.assertEqual(count, 0)
+        self.assertEqual(prepared, source)
+        self.assertTrue(all("dialer-proxy" not in item for item in prepared))
+
+
 class CloudflareFrontURITests(unittest.TestCase):
     def test_parse_tls_websocket_vless_uri_for_probe_underlay(self):
         from scripts.classify_exits import parse_cloudflare_front_uri
