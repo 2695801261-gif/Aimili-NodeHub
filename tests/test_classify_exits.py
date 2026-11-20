@@ -105,6 +105,126 @@ class ExitEchoRetryTests(unittest.TestCase):
             echo_pair(attempts=0)
 
 
+class CloudflareProbeUnderlayTests(unittest.TestCase):
+    def test_underlay_is_attached_only_to_vpngate_probe_copies(self):
+        from scripts.classify_exits import prepare_probe_candidates
+
+        source = [
+            {"name": "VPNGate-US-1", "type": "openvpn"},
+            {"name": "free-vless-1", "type": "vless"},
+            {"name": "VPNBook-US-1", "type": "openvpn"},
+        ]
+        front = {"name": "NODEHUB-CF-FRONT", "type": "vless"}
+        prepared, count = prepare_probe_candidates(source, front)
+        self.assertEqual(count, 1)
+        self.assertEqual(prepared[0]["dialer-proxy"], "NODEHUB-CF-FRONT")
+        self.assertNotIn("dialer-proxy", prepared[1])
+        self.assertNotIn("dialer-proxy", prepared[2])
+        self.assertTrue(all("dialer-proxy" not in item for item in source))
+
+    def test_without_front_keeps_all_probe_candidates_direct(self):
+        from scripts.classify_exits import prepare_probe_candidates
+
+        source = [{"name": "VPNGate-US-1"}, {"name": "free-vless-1"}]
+        prepared, count = prepare_probe_candidates(source, None)
+        self.assertEqual(count, 0)
+        self.assertEqual(prepared, source)
+        self.assertTrue(all("dialer-proxy" not in item for item in prepared))
+
+
+class CloudflareFrontURITests(unittest.TestCase):
+    def test_parse_tls_websocket_vless_uri_for_probe_underlay(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        proxy = parse_cloudflare_front_uri(
+            "vless://123e4567-e89b-12d3-a456-426614174000@cf.example.com:443"
+            "?encryption=none&security=tls&type=ws&host=cf.example.com"
+            "&sni=cf.example.com&path=%2F%3Fed%3D2048#cf-front"
+        )
+        self.assertEqual(proxy["type"], "vless")
+        self.assertEqual(proxy["server"], "cf.example.com")
+        self.assertEqual(proxy["port"], 443)
+        self.assertEqual(proxy["uuid"], "123e4567-e89b-12d3-a456-426614174000")
+        self.assertTrue(proxy["tls"])
+        self.assertEqual(proxy["network"], "ws")
+        self.assertEqual(proxy["ws-opts"]["path"], "/?ed=2048")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
+
+    def test_parse_cloudflare_front_uses_sni_as_host_when_server_is_ip(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        proxy = parse_cloudflare_front_uri(
+            "vless://123e4567-e89b-12d3-a456-426614174000@104.16.0.1:443"
+            "?encryption=none&security=tls&type=ws&sni=cf.example.com&path=%2F"
+        )
+        self.assertEqual(proxy["server"], "104.16.0.1")
+        self.assertEqual(proxy["servername"], "cf.example.com")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
+
+    def test_parse_mihomo_yaml_subscription_for_cloudflare_front(self):
+        from scripts.classify_exits import parse_cloudflare_front_config
+
+        raw = """
+proxies:
+  - name: ordinary-trojan
+    type: trojan
+    server: trojan.example.com
+    port: 443
+    password: ignored
+  - name: cf-front
+    type: vless
+    server: 104.16.0.1
+    port: 443
+    uuid: 123e4567-e89b-12d3-a456-426614174000
+    tls: true
+    servername: cf.example.com
+    network: ws
+    ws-opts:
+      path: /?ed=2048
+      headers:
+        Host: cf.example.com
+"""
+        proxy = parse_cloudflare_front_config(raw)
+        self.assertEqual(proxy["name"], "NODEHUB-CF-FRONT")
+        self.assertEqual(proxy["server"], "104.16.0.1")
+        self.assertEqual(proxy["servername"], "cf.example.com")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
+
+    def test_parse_mihomo_yaml_rejects_insecure_front(self):
+        from scripts.classify_exits import parse_cloudflare_front_config
+
+        raw = """
+proxies:
+  - name: cf-front
+    type: vless
+    server: cf.example.com
+    port: 443
+    uuid: 123e4567-e89b-12d3-a456-426614174000
+    tls: true
+    skip-cert-verify: true
+    network: ws
+"""
+        with self.assertRaisesRegex(ValueError, "no valid VLESS"):
+            parse_cloudflare_front_config(raw)
+
+    def test_parse_cloudflare_front_rejects_non_tls_or_non_ws_uri(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        base = "vless://123e4567-e89b-12d3-a456-426614174000@cf.example.com:443?"
+        with self.assertRaisesRegex(ValueError, "TLS"):
+            parse_cloudflare_front_uri(base + "encryption=none&type=ws")
+        with self.assertRaisesRegex(ValueError, "TLS"):
+            parse_cloudflare_front_uri(base + "encryption=none&security=tls&type=grpc")
+
+    def test_parse_cloudflare_front_rejects_invalid_uuid(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        with self.assertRaisesRegex(ValueError, "UUID"):
+            parse_cloudflare_front_uri(
+                "vless://not-a-uuid@cf.example.com:443?encryption=none&security=tls&type=ws"
+            )
+
+
 class IPApiIsMetadataTests(unittest.TestCase):
     def test_optional_ipapi_is_lookup_keeps_key_in_post_body(self):
         from scripts.classify_exits import lookup_ipapi_is
