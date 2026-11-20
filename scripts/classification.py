@@ -26,6 +26,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     """Classify only when every required evidence field is present and consistent."""
     country = evidence.get("country_code")
     asn = evidence.get("asn")
+    isp_name = evidence.get("isp")
     if not isinstance(evidence.get("asn_kind"), list):
         return Verdict(None, "asn_network_type_missing")
     asn_kinds = _kinds(evidence.get("asn_kind"))
@@ -40,6 +41,8 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, "missing_or_invalid_country")
     if isinstance(asn, bool) or not isinstance(asn, int) or asn <= 0:
         return Verdict(None, "missing_or_invalid_asn")
+    if not isinstance(isp_name, str) or not isp_name.strip():
+        return Verdict(None, "network_operator_name_missing")
     if evidence.get("exit_echo_agreement") is not True:
         return Verdict(None, "exit_echo_mismatch")
     if evidence.get("ipwhois_success") is not True:
