@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   # Share the writer lock with the full collection workflow.
-  group: aimili-vpngate-history-writer
+  group: aimili-nodehub-collection
   cancel-in-progress: false
 
 jobs:
