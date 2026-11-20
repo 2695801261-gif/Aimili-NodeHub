@@ -288,7 +288,7 @@ class ClassificationTests(unittest.TestCase):
         evidence["layer3_risk_reasons"] = ["vpn"]
         evidence["layer3_flags"]["anonymizer"] = True
         evidence["layer3_flags"]["vpn"] = True
-        self.assertEqual(classify(evidence).reason, "ip_has_abuse_report")
+        self.assertEqual(classify(evidence).reason, "ip_has_abuse_reports")
 
     def test_same_vpn_signal_from_non_vpngate_source_remains_generic_quarantine(self):
         evidence = base()
