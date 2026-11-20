@@ -1,13 +1,13 @@
 {
   "source": "vpngate_official_csv",
   "endpoint": "https://www.vpngate.net/api/iphone/",
-  "rows_seen": 97,
-  "candidates_parsed": 97,
+  "rows_seen": 96,
+  "candidates_parsed": 96,
   "rejected": 0,
   "rejection_reasons": {},
   "limit": 100,
   "selection_strategy": "rotating_country_round_robin_then_score",
-  "mihomo_validated": 97,
+  "mihomo_validated": 96,
   "mihomo_rejected": 0,
   "status": "ok",
   "vpnbook": {
