@@ -81,7 +81,7 @@ jobs:
 
       - name: Classify verified proxy exits
         continue-on-error: true
-        run: uv run --locked python scripts/classify_exits.py
+        run: uv run --locked python -m scripts.classify_exits
 
       - name: Check generated profiles
         shell: bash
@@ -111,7 +111,15 @@ jobs:
             git commit -m "auto: update verified nodes and classified pools"
             for attempt in 1 2 3; do
               git fetch origin main
-              git rebase origin/main
+              if ! git rebase origin/main; then
+                conflicts="$(git diff --name-only --diff-filter=U)"
+                if [ -z "$conflicts" ]; then exit 1; fi
+                while IFS= read -r path; do
+                  git checkout --theirs -- "$path"
+                  git add -- "$path"
+                done <<< "$conflicts"
+                GIT_EDITOR=true git rebase --continue
+              fi
               if git push; then
                 break
               fi
