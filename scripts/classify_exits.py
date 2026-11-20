@@ -31,7 +31,11 @@ OUTPUTS = {
 }
 EVIDENCE_PATH = ROOT / "classification" / "evidence.json"
 DIAGNOSTICS_PATH = ROOT / "classification" / "diagnostics.json"
+VPNGATE_PROFILE = ROOT / ".cache" / "vpngate" / "candidates.yaml"
+SOURCE_REPORT = ROOT / "classification" / "source-discovery.json"
 MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "25"))
+MAX_TOTAL_CANDIDATES = 500
+MAX_VPNGATE_CANDIDATES = 100
 CONTROLLER = "http://127.0.0.1:9090"
 SOCKS = "socks5h://127.0.0.1:7891"
 SECRET = "nodehub-local-controller-secret"
@@ -236,6 +240,54 @@ def validate_profile_content(content: str, pool: str) -> None:
 
 
 
+def combine_candidate_sources(
+    primary: list[dict[str, Any]],
+    supplemental: list[dict[str, Any]],
+    *,
+    total_limit: int = MAX_TOTAL_CANDIDATES,
+    supplemental_limit: int = MAX_VPNGATE_CANDIDATES,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Keep a bounded, interleaved pool so secondary sources receive probe coverage."""
+    if total_limit < 1 or supplemental_limit < 0:
+        raise ValueError("candidate limits are invalid")
+    supplemental = supplemental[:min(supplemental_limit, total_limit)]
+    primary = primary[:max(0, total_limit - len(supplemental))]
+    merged: list[dict[str, Any]] = []
+    seen_names: set[str] = set()
+    if supplemental:
+        for index, extra in enumerate(supplemental):
+            start = index * len(primary) // len(supplemental)
+            end = (index + 1) * len(primary) // len(supplemental)
+            for item in primary[start:end]:
+                name = item.get("name")
+                if isinstance(name, str) and name not in seen_names:
+                    seen_names.add(name)
+                    merged.append(item)
+            name = extra.get("name")
+            if isinstance(name, str) and name not in seen_names:
+                seen_names.add(name)
+                merged.append(extra)
+        # If duplicate names were removed, append any remaining primary items.
+        for item in primary:
+            name = item.get("name")
+            if isinstance(name, str) and name not in seen_names:
+                seen_names.add(name)
+                merged.append(item)
+    else:
+        for item in primary:
+            name = item.get("name")
+            if isinstance(name, str) and name not in seen_names:
+                seen_names.add(name)
+                merged.append(item)
+    merged = merged[:total_limit]
+    counts = {
+        "freenodes_included": sum(1 for item in merged if not str(item.get("name", "")).startswith("VPNGate-")),
+        "vpngate_included": sum(1 for item in merged if str(item.get("name", "")).startswith("VPNGate-")),
+        "total": len(merged),
+    }
+    return merged, counts
+
+
 def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
     """Spread a capped probe budget across the full Mihomo-ranked candidate pool.
 
@@ -260,7 +312,29 @@ def run() -> None:
     if not isinstance(candidates, list) or not candidates:
         raise SystemExit("No validated proxies found in merged profile")
     candidates = [item for item in candidates if isinstance(item, dict) and isinstance(item.get("name"), str)]
+    primary_candidates = candidates
+    supplemental_candidates: list[dict[str, Any]] = []
+    if VPNGATE_PROFILE.is_file():
+        try:
+            supplemental_doc = yaml.safe_load(VPNGATE_PROFILE.read_text(encoding="utf-8"))
+            raw_supplemental = supplemental_doc.get("proxies") if isinstance(supplemental_doc, dict) else None
+            if isinstance(raw_supplemental, list):
+                supplemental_candidates = [
+                    item for item in raw_supplemental
+                    if isinstance(item, dict) and isinstance(item.get("name"), str)
+                ]
+        except (OSError, yaml.YAMLError) as error:
+            print(f"VPN Gate candidate artifact unavailable: {type(error).__name__}: {error}", flush=True)
+    candidates, source_candidate_counts = combine_candidate_sources(
+        primary_candidates, supplemental_candidates
+    )
     available_candidates = len(candidates)
+    source_discovery = {}
+    if SOURCE_REPORT.is_file():
+        try:
+            source_discovery = json.loads(SOURCE_REPORT.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            source_discovery = {"status": "unreadable"}
     candidates = select_exit_candidates(candidates, MAX_CANDIDATES)
     if not candidates:
         raise SystemExit("No usable proxy entries found")
@@ -453,10 +527,12 @@ def run() -> None:
         "source_profile": "nodes/merged.yaml",
         "candidate_limit": MAX_CANDIDATES,
         "candidate_selection": {
-            "strategy": "evenly_spaced_across_mihomo_ranked_pool",
+            "strategy": "evenly_spaced_across_combined_mihomo_ranked_pool",
             "available": available_candidates,
             "selected": len(candidates),
         },
+        "source_candidate_counts": source_candidate_counts,
+        "source_discovery": source_discovery,
         "checked": len(evidence_rows),
         "counts": dict(counters),
         "pool_sizes": {pool: len(items) for pool, items in grouped.items()},

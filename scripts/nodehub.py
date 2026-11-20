@@ -33,6 +33,11 @@ def discover_nodes() -> None:
                if not path.is_file() or path.stat().st_size == 0]
     if missing:
         raise RuntimeError("discovery did not produce required artifacts: " + ", ".join(missing))
+    # VPN Gate is an independent OpenVPN source; its failures are recorded but
+    # do not discard productive FreeNodes sources.
+    from scripts.vpngate import collect_vpngate
+
+    collect_vpngate()
 
 
 def classify_and_publish() -> None:

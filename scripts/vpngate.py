@@ -175,6 +175,9 @@ def parse_ovpn_config(config_text: str, name: str) -> dict[str, Any]:
     auth_user_pass = directives.get("auth-user-pass", [])
     if auth_user_pass and auth_user_pass[-1]:
         raise VPNGateError("OpenVPN profile references an external credential file")
+    certificate_auth = bool(blocks.get("cert") and blocks.get("key"))
+    if not auth_user_pass and not certificate_auth:
+        raise VPNGateError("OpenVPN profile has neither auth-user-pass nor client certificate credentials")
 
     proxy: dict[str, Any] = {
         "name": name,
@@ -183,10 +186,10 @@ def parse_ovpn_config(config_text: str, name: str) -> dict[str, Any]:
         "port": port,
         "proto": proto,
         "udp": proto == "udp",
-        "username": "vpn",
-        "password": "vpn",
         "ca": blocks["ca"],
     }
+    if auth_user_pass:
+        proxy.update({"username": "vpn", "password": "vpn"})
     for tag in ("cert", "key", "tls-auth", "tls-crypt", "tls-crypt-v2"):
         if blocks.get(tag):
             proxy[tag] = blocks[tag]

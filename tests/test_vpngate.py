@@ -12,7 +12,7 @@ TLS_AUTH = """-----BEGIN OpenVPN Static key V1-----
 -----END OpenVPN Static key V1-----"""
 
 
-def profile(remote="198.51.100.20 443 udp"):
+def profile(remote="8.8.8.20 443 udp"):
     return f"""
 client
 dev tun
@@ -32,7 +32,7 @@ key-direction 1
 """
 
 
-def csv_row(config, *, hostname="public-vpn.example.net", ip="203.0.113.10",
+def csv_row(config, *, hostname="public-vpn.example.net", ip="1.1.1.10",
             country="JP", score="1000", ping="20"):
     encoded = base64.b64encode(config.encode()).decode()
     return (
@@ -45,7 +45,7 @@ class VPNGateParserTests(unittest.TestCase):
     def test_parses_openvpn_profile_into_mihomo_openvpn_proxy(self):
         proxy = parse_ovpn_config(profile(), "VPNGate-JP-test")
         self.assertEqual(proxy["type"], "openvpn")
-        self.assertEqual(proxy["server"], "198.51.100.20")
+        self.assertEqual(proxy["server"], "8.8.8.20")
         self.assertEqual(proxy["port"], 443)
         self.assertEqual(proxy["proto"], "udp")
         self.assertTrue(proxy["udp"])
@@ -57,7 +57,7 @@ class VPNGateParserTests(unittest.TestCase):
 
     def test_rejects_missing_ca(self):
         with self.assertRaisesRegex(VPNGateError, "CA certificate"):
-            parse_ovpn_config("client\\nremote 198.51.100.20 1194\\n", "bad")
+            parse_ovpn_config("client\\nremote 8.8.8.20 1194\\n", "bad")
 
     def test_rejects_non_global_literal_remote(self):
         with self.assertRaisesRegex(VPNGateError, "not globally routable"):
@@ -84,7 +84,7 @@ class VPNGateParserTests(unittest.TestCase):
 
     def test_selects_top_scored_candidates_with_limit(self):
         rows = [
-            csv_row(profile(f"198.51.100.{20+i} 443 udp"), ip=f"203.0.113.{10+i}",
+            csv_row(profile(f"8.8.8.{20+i} 443 udp"), ip=f"1.1.1.{10+i}",
                     score=str(i), ping=str(100-i))
             for i in range(5)
         ]

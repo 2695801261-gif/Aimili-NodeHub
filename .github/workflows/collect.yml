@@ -95,7 +95,7 @@ jobs:
           PY
 
       - name: Run classification and publication-gate unit tests
-        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py tests/test_nodehub.py
+        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py tests/test_nodehub.py tests/test_vpngate.py
 
       - name: Build, classify and publish the NodeHub module
         timeout-minutes: 55
