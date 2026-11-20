@@ -72,7 +72,7 @@ jobs:
           probe_path = Path("freenodes/probe.py")
           probe_source = probe_path.read_text(encoding="utf-8")
           old_deadline = "deadline: float = 300.0"
-          new_deadline = "deadline: float = 600.0"
+          new_deadline = "deadline: float = 720.0"
           if probe_source.count(old_deadline) != 1:
               raise SystemExit("Pinned FreeNodes probe deadline layout changed; refusing unsafe timeout expansion")
           probe_path.write_text(probe_source.replace(old_deadline, new_deadline, 1), encoding="utf-8")
