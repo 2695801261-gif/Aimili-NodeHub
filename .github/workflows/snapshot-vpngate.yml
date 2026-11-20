@@ -9,7 +9,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: aimili-vpngate-snapshot
+  # Share the writer lock with the full collection workflow.
+  group: aimili-vpngate-history-writer
   cancel-in-progress: false
 
 jobs:
