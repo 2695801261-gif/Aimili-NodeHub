@@ -225,7 +225,7 @@ def select_reachable_rows(
     now = (now or datetime.now(UTC)).astimezone(UTC)
     eligible: list[dict[str, Any]] = []
     rejected: Counter[str] = Counter()
-    seen_endpoints: set[tuple[str, int]] = set()
+    seen_endpoints: set[tuple[str, str, str]] = set()
     for row in rows:
         if not isinstance(row, dict):
             rejected["invalid_row"] += 1
@@ -245,38 +245,55 @@ def select_reachable_rows(
         if last_seen > now + timedelta(minutes=5) or now - last_seen > NODE_MAX_AGE:
             rejected["stale_node"] += 1
             continue
+
+        transport = row.get("probe_reason")
         probe = row.get("tcp_probe")
-        if not isinstance(probe, dict) or probe.get("status") != "reachable":
-            rejected["tcp_not_reachable"] += 1
+        if not isinstance(probe, dict):
+            rejected["invalid_probe_state"] += 1
             continue
-        if probe.get("probe_source") != "cloudflare_workers":
-            rejected["unexpected_probe_source"] += 1
+        if transport == "udp":
+            # UDP has no meaningful TCP port probe. It remains an untrusted
+            # candidate and must pass the later real Mihomo tunnel/exit checks.
+            if probe.get("status") != "not_applicable":
+                rejected["udp_probe_state_invalid"] += 1
+                continue
+            if row.get("probe_targets") not in ([], None):
+                rejected["udp_has_tcp_targets"] += 1
+                continue
+            identity = (str(row["ip"]), "udp", str(row.get("openvpn_config_sha256", "")))
+        elif transport == "tcp":
+            if probe.get("status") != "reachable":
+                rejected["tcp_not_reachable"] += 1
+                continue
+            if probe.get("probe_source") != "cloudflare_workers":
+                rejected["unexpected_probe_source"] += 1
+                continue
+            try:
+                checked_at = _utc(probe.get("checked_at"))
+            except RollingMirrorError:
+                rejected["invalid_tcp_check_time"] += 1
+                continue
+            if checked_at > now + timedelta(minutes=5) or now - checked_at > TCP_MAX_AGE:
+                rejected["stale_tcp_check"] += 1
+                continue
+            endpoint = probe.get("connected_endpoint")
+            targets = row.get("probe_targets")
+            if not isinstance(endpoint, dict) or not isinstance(targets, list) or endpoint not in targets:
+                rejected["missing_connected_endpoint"] += 1
+                continue
+            endpoint_ip = endpoint.get("ip")
+            try:
+                endpoint_port = int(endpoint.get("port"))
+            except (TypeError, ValueError):
+                endpoint_port = 0
+            if endpoint_ip != row.get("ip") or not 1 <= endpoint_port <= 65535:
+                rejected["invalid_connected_endpoint"] += 1
+                continue
+            identity = (str(endpoint_ip), "tcp", str(endpoint_port))
+        else:
+            rejected["unsupported_transport"] += 1
             continue
-        try:
-            checked_at = _utc(probe.get("checked_at"))
-        except RollingMirrorError:
-            rejected["invalid_tcp_check_time"] += 1
-            continue
-        if checked_at > now + timedelta(minutes=5) or now - checked_at > TCP_MAX_AGE:
-            rejected["stale_tcp_check"] += 1
-            continue
-        endpoint = probe.get("connected_endpoint")
-        targets = row.get("probe_targets")
-        if not isinstance(endpoint, dict) or not isinstance(targets, list) or endpoint not in targets:
-            rejected["missing_connected_endpoint"] += 1
-            continue
-        endpoint_ip = endpoint.get("ip")
-        try:
-            endpoint_port = int(endpoint.get("port"))
-        except (TypeError, ValueError):
-            endpoint_port = 0
-        if endpoint_ip != row.get("ip") or not 1 <= endpoint_port <= 65535:
-            rejected["invalid_connected_endpoint"] += 1
-            continue
-        identity = (str(endpoint_ip), endpoint_port)
-        if identity in seen_endpoints:
-            rejected["duplicate_endpoint"] += 1
-            continue
+
         config = row.get("config")
         config_hash = row.get("openvpn_config_sha256")
         config_bytes = row.get("openvpn_config_bytes")
@@ -291,9 +308,14 @@ def select_reachable_rows(
         ):
             rejected["invalid_config_reference"] += 1
             continue
+        if identity in seen_endpoints:
+            rejected["duplicate_endpoint"] += 1
+            continue
         seen_endpoints.add(identity)
         eligible.append(row)
 
+    tcp_rows = [row for row in eligible if row.get("probe_reason") == "tcp"]
+    udp_rows = [row for row in eligible if row.get("probe_reason") == "udp"]
     us_rows = sorted((row for row in eligible if row["country_code"] == "US"), key=_row_sort_key)
     other_by_country: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in eligible:
@@ -323,8 +345,11 @@ def select_reachable_rows(
 
     report = {
         "pool_rows": len(rows),
-        "eligible_recent_tcp": len(eligible),
-        "eligible_us_recent_tcp": len(us_rows),
+        "eligible_recent_tcp": len(tcp_rows),
+        "eligible_recent_udp": len(udp_rows),
+        "eligible_recent_transport_total": len(eligible),
+        "eligible_us_recent_tcp": sum(row["country_code"] == "US" for row in tcp_rows),
+        "eligible_us_recent_udp": sum(row["country_code"] == "US" for row in udp_rows),
         "selected": len(selected),
         "selected_us": sum(row["country_code"] == "US" for row in selected),
         "rejected": dict(rejected),
@@ -332,9 +357,9 @@ def select_reachable_rows(
         "node_max_age_days": NODE_MAX_AGE.days,
         "candidate_limit": max_candidates,
         "us_candidate_limit": us_limit,
+        "udp_candidates_require_live_tunnel_verification": True,
     }
     return selected, report
-
 
 def _load_config(
     row: dict[str, Any],
@@ -377,9 +402,28 @@ def _proxy_from_row(row: dict[str, Any], config_text: str) -> dict[str, Any]:
     hostname = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(row.get("hostname") or "server"))[:48].strip("-")
     name = f"VPNGate-{country}-{ip_token}-{hostname}"
     proxy = parse_ovpn_config(config_text, name)
-    if proxy.get("proto") != "tcp":
+    try:
+        config_ip = ipaddress.ip_address(proxy["server"])
+        row_ip = ipaddress.ip_address(ip)
+    except ValueError as error:
+        raise VPNGateError("OpenVPN remote address is not the advertised numeric IP") from error
+    if config_ip != row_ip:
+        raise VPNGateError("OpenVPN remote address does not match the rolling-pool IP")
+
+    transport = row.get("probe_reason")
+    if transport == "udp":
+        if proxy.get("proto") != "udp":
+            raise VPNGateError("rolling-pool UDP candidate does not match the OpenVPN transport")
+        # UDP is intentionally not TCP-prescreened. Mihomo must establish the
+        # actual OpenVPN tunnel and prove the exit before this node can publish.
+        proxy["proto"] = "udp"
+        proxy["udp"] = True
+        return proxy
+    if transport != "tcp" or proxy.get("proto") != "tcp":
         raise VPNGateError("rolling-pool TCP probe does not match the OpenVPN transport")
     endpoint = row["tcp_probe"]["connected_endpoint"]
+    if endpoint.get("ip") != ip:
+        raise VPNGateError("TCP probe endpoint does not match the advertised IP")
     proxy["server"] = endpoint["ip"]
     proxy["port"] = int(endpoint["port"])
     proxy["proto"] = "tcp"
@@ -426,12 +470,19 @@ def collect_vpngate_rolling(
                         config_cache[digest] = config_text
 
         proxies: list[dict[str, Any]] = []
+        seen_transport_endpoints: set[tuple[str, int, str]] = set()
         for row in selected:
             config_text = config_cache.get(row["openvpn_config_sha256"])
             if config_text is None:
                 continue
             try:
-                proxies.append(_proxy_from_row(row, config_text))
+                proxy = _proxy_from_row(row, config_text)
+                endpoint_key = (proxy["server"], int(proxy["port"]), proxy["proto"])
+                if endpoint_key in seen_transport_endpoints:
+                    failures["duplicate_transport_endpoint"] += 1
+                    continue
+                seen_transport_endpoints.add(endpoint_key)
+                proxies.append(proxy)
             except Exception as error:
                 failures[type(error).__name__] += 1
         profile_path.write_text(
