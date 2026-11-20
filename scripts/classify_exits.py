@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 import re
@@ -310,7 +311,7 @@ def curl_exit_ip(url: str) -> str:
 
 
 def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
-    """Retry each independent exit-IP endpoint only when that endpoint fails."""
+    """Confirm the tunnel egress by two-of-three independent echo services."""
     if attempts < 1:
         raise ValueError("echo attempts must be positive")
 
@@ -327,10 +328,34 @@ def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
             raise last_error
         raise LookupFailure("exit-IP echo failed without a diagnostic")
 
-    first = query("https://api.ipify.org")
-    second = query("https://checkip.amazonaws.com")
-    return first, first == second
+    endpoints = (
+        "https://api.ipify.org",
+        "https://checkip.amazonaws.com",
+    )
+    results: list[str] = []
+    errors: list[Exception] = []
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(query, endpoint) for endpoint in endpoints]
+        for future in futures:
+            try:
+                results.append(future.result())
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
+                errors.append(error)
 
+    if len(results) == 2 and results[0] == results[1]:
+        return results[0], True
+
+    try:
+        results.append(query("https://icanhazip.com"))
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
+        errors.append(error)
+
+    if results:
+        ip, votes = Counter(results).most_common(1)[0]
+        return ip, votes >= 2
+    if errors:
+        raise errors[0]
+    raise LookupFailure("no independent exit-IP echo service returned an address")
 
 def oxl_lookup(kind: str, value: str) -> tuple[str, dict[str, Any] | None]:
     url = f"https://risk.oxl.app/api/{kind}/{urllib.parse.quote(value, safe='')}"
@@ -691,7 +716,7 @@ def run() -> None:
                     row["exit_ip"] = exit_ip
                     row["exit_echo_agreement"] = agreement
                     if not agreement:
-                        raise ValueError("independent exit-IP echo services disagree")
+                        raise ValueError("insufficient independent exit-IP consensus")
 
                     row["metadata_status"] = "pending"
                     if exit_ip in ip_cache:

@@ -107,24 +107,68 @@ class ExitProbeBudgetTests(unittest.TestCase):
         )
 
 class ExitEchoRetryTests(unittest.TestCase):
-    def test_transient_echo_failure_retries_both_independent_services(self):
-        with patch(
-            "scripts.classify_exits.curl_exit_ip",
-            side_effect=[subprocess.CalledProcessError(28, "curl"), "203.0.113.7", "203.0.113.7"],
-        ), patch("scripts.classify_exits.time.sleep"):
+    def test_transient_echo_failure_retries_both_initial_services(self):
+        calls = {}
+        def fake(url):
+            calls[url] = calls.get(url, 0) + 1
+            if url.endswith("ipify.org") and calls[url] == 1:
+                raise subprocess.CalledProcessError(28, url)
+            return "203.0.113.7"
+
+        with patch("scripts.classify_exits.curl_exit_ip", side_effect=fake), patch(
+            "scripts.classify_exits.time.sleep"
+        ):
+            self.assertEqual(echo_pair(), ("203.0.113.7", True))
+        self.assertEqual(calls.get("https://api.ipify.org"), 2)
+        self.assertEqual(calls.get("https://checkip.amazonaws.com"), 1)
+        self.assertNotIn("https://icanhazip.com", calls)
+
+    def test_third_service_resolves_one_initial_echo_timeout(self):
+        calls = {}
+        def fake(url):
+            calls[url] = calls.get(url, 0) + 1
+            if url.endswith("ipify.org"):
+                raise subprocess.CalledProcessError(28, url)
+            return "203.0.113.7"
+
+        with patch("scripts.classify_exits.curl_exit_ip", side_effect=fake), patch(
+            "scripts.classify_exits.time.sleep"
+        ):
+            self.assertEqual(echo_pair(), ("203.0.113.7", True))
+        self.assertEqual(calls.get("https://checkip.amazonaws.com"), 1)
+        self.assertEqual(calls.get("https://icanhazip.com"), 1)
+
+    def test_third_service_resolves_a_two_provider_disagreement_by_majority(self):
+        def fake(url):
+            return {
+                "https://api.ipify.org": "203.0.113.7",
+                "https://checkip.amazonaws.com": "198.51.100.9",
+                "https://icanhazip.com": "203.0.113.7",
+            }[url]
+
+        with patch("scripts.classify_exits.curl_exit_ip", side_effect=fake):
             self.assertEqual(echo_pair(), ("203.0.113.7", True))
 
-    def test_transient_failure_on_second_endpoint_retries_only_that_endpoint(self):
-        with patch(
-            "scripts.classify_exits.curl_exit_ip",
-            side_effect=["203.0.113.7", subprocess.CalledProcessError(28, "curl"), "203.0.113.7"],
-        ), patch("scripts.classify_exits.time.sleep"):
-            self.assertEqual(echo_pair(), ("203.0.113.7", True))
-    def test_persistent_echo_disagreement_remains_unverified(self):
-        with patch(
-            "scripts.classify_exits.curl_exit_ip",
-            side_effect=["203.0.113.7", "198.51.100.9", "203.0.113.7", "198.51.100.9"],
-        ), patch("scripts.classify_exits.time.sleep"):
+    def test_three_different_echo_results_remain_unverified(self):
+        def fake(url):
+            return {
+                "https://api.ipify.org": "203.0.113.7",
+                "https://checkip.amazonaws.com": "198.51.100.9",
+                "https://icanhazip.com": "192.0.2.10",
+            }[url]
+
+        with patch("scripts.classify_exits.curl_exit_ip", side_effect=fake):
+            self.assertEqual(echo_pair(), ("203.0.113.7", False))
+
+    def test_only_one_successful_echo_is_not_enough_for_consensus(self):
+        def fake(url):
+            if url.endswith("icanhazip.com"):
+                return "203.0.113.7"
+            raise subprocess.CalledProcessError(28, url)
+
+        with patch("scripts.classify_exits.curl_exit_ip", side_effect=fake), patch(
+            "scripts.classify_exits.time.sleep"
+        ):
             self.assertEqual(echo_pair(), ("203.0.113.7", False))
 
     def test_zero_echo_attempts_is_rejected(self):
