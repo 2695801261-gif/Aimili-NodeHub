@@ -99,7 +99,7 @@ def publish_atomically(
     for pool, target in profile_paths.items():
         rendered = yaml.safe_dump(effective_profiles[pool], allow_unicode=True, sort_keys=False)
         if validate_profile is not None:
-            validate_profile(pool, rendered)
+            validate_profile(rendered, pool)
         targets[target] = rendered.encode("utf-8")
     targets[evidence_path] = (
         json.dumps(evidence, ensure_ascii=False, indent=2) + "\n"

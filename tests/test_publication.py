@@ -104,7 +104,7 @@ class AtomicPublicationTests(unittest.TestCase):
                 path.write_text("previous-good", encoding="utf-8")
             profiles, evidence = valid_inputs()
 
-            def reject_one(pool, rendered):
+            def reject_one(rendered, pool):
                 if pool == "low-risk-datacenter":
                     raise ValueError("simulated Mihomo rejection")
 

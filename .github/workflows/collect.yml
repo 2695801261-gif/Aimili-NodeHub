@@ -162,4 +162,10 @@ jobs:
               fi
               if [ "$attempt" -eq 3 ]; then exit 1; fi
             done
+            if [ "${{ steps.classify.outcome }}" != "success" ]; then
+              # Discard generated candidate/subscription worktree changes that
+              # were intentionally excluded from the failed-run diagnostics commit.
+              git restore --source=HEAD --staged --worktree -- nodes subscriptions
+              git clean -fd -- nodes subscriptions
+            fi
           fi
