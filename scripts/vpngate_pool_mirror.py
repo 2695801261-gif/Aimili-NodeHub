@@ -321,7 +321,10 @@ def select_reachable_rows(
         # candidates. Both transports still require the later live Mihomo check.
         return (row.get("probe_reason") != "tcp", *_row_sort_key(row))
 
-    us_rows = sorted((row for row in eligible if row["country_code"] == "US"), key=candidate_sort_key)
+    us_rows = sorted(
+        (row for row in eligible if row["country_code"] == "US"),
+        key=candidate_sort_key,
+    )
     other_by_country: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in eligible:
         if row["country_code"] != "US":
