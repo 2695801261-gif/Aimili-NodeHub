@@ -230,7 +230,18 @@ def _decode_row(row: dict[str, str]) -> dict[str, Any]:
     ip_hint = row.get("ip", "unknown").replace(".", "-")
     hostname = re.sub(r"[^A-Za-z0-9_.-]+", "-", row.get("hostname", "relay"))[:48]
     name = f"VPNGate-{country}-{ip_hint}-{hostname}"
-    return parse_ovpn_config(config, name)
+    proxy = parse_ovpn_config(config, name)
+    try:
+        row_ip = ipaddress.ip_address(row.get("ip", ""))
+    except ValueError:
+        row_ip = None
+    try:
+        remote_ip = ipaddress.ip_address(proxy["server"])
+    except ValueError:
+        remote_ip = None
+    if row_ip is not None and remote_ip is not None and row_ip != remote_ip:
+        raise VPNGateError("CSV server IP does not match the embedded OpenVPN remote")
+    return proxy
 
 
 def parse_directory(csv_text: str, *, limit: int = MAX_NODES) -> tuple[list[dict[str, Any]], dict[str, Any]]:

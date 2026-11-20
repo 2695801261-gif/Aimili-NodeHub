@@ -27,4 +27,4 @@ Layer3 Open API 不包含付费版的实时 residential-proxy 标记，因此 re
 
 ## 当前实现范围
 
-FreeNodes 固定版本负责完整启用配置来源的发现（GitHub 订阅、网页、受限密码页和 YouTube 资源适配器）、去重、Mihomo 能力检测和通用节点池生成；工作流不得把 sources 过滤成仅 github_file。VPN Gate 官方公开列表主要提供 SoftEther/L2TP/IPsec/OpenVPN/MS-SSTP 配置，OpenVPN 需使用 .ovpn 文件，不是 Mihomo 可直接导入的节点格式，因此目前不作为三份 Mihomo 订阅来源。来源覆盖和格式边界见 [DISCOVERY_SOURCES.md](DISCOVERY_SOURCES.md)。本项目再从 Mihomo 延迟排序后的完整节点池均匀抽样最多 25 个候选逐个验证出口 IP，使用 IPWhois/IPinfo、Layer3 Intel 和 O-X-L IP/ASN/可用网络记录进行交叉分类。字段、许可、限额和分类门槛见 [CLASSIFICATION_SOURCES.md](CLASSIFICATION_SOURCES.md)。
+FreeNodes 固定版本负责完整启用配置来源的发现（GitHub 订阅、网页、受限密码页和 YouTube 资源适配器）、去重、Mihomo 能力检测和通用节点池生成；工作流不得把 sources 过滤成仅 github_file。VPN Gate 官方 CSV 的 OpenVPN_ConfigData_Base64 经独立适配器转换为 Mihomo 原生 openvpn outbound，并通过 Mihomo 配置检查后与其他来源一起接受相同的真实出口与风险核验。来源覆盖和格式边界见 [DISCOVERY_SOURCES.md](DISCOVERY_SOURCES.md)。本项目再从 Mihomo 延迟排序后的完整节点池均匀抽样最多 25 个候选逐个验证出口 IP，使用 IPWhois/IPinfo、Layer3 Intel 和 O-X-L IP/ASN/可用网络记录进行交叉分类。字段、许可、限额和分类门槛见 [CLASSIFICATION_SOURCES.md](CLASSIFICATION_SOURCES.md)。

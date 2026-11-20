@@ -62,6 +62,27 @@ class NodeHubPipelineTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "positive"):
             select_exit_candidates([{"name": "one"}], 0)
 
+    def test_combines_freenodes_and_vpngate_with_a_bounded_interleaved_pool(self):
+        from scripts.classify_exits import combine_candidate_sources
+
+        primary = [{"name": f"free-{i}"} for i in range(500)]
+        vpn = [{"name": f"VPNGate-JP-{i}"} for i in range(120)]
+        combined, counts = combine_candidate_sources(primary, vpn)
+
+        self.assertEqual(len(combined), 500)
+        self.assertEqual(counts["freenodes_included"], 400)
+        self.assertEqual(counts["vpngate_included"], 100)
+        self.assertEqual(combined[4]["name"], "VPNGate-JP-0")
+        self.assertEqual(combined[9]["name"], "VPNGate-JP-1")
+
+    def test_combined_pool_keeps_all_primary_candidates_without_vpngate(self):
+        from scripts.classify_exits import combine_candidate_sources
+
+        primary = [{"name": f"free-{i}"} for i in range(600)]
+        combined, counts = combine_candidate_sources(primary, [])
+        self.assertEqual(len(combined), 500)
+        self.assertEqual(counts["vpngate_included"], 0)
+
     def test_publication_verification_runs_only_after_classification(self):
         order = []
         run_pipeline(lambda: order.append("discover"),

@@ -32,7 +32,7 @@ key-direction 1
 """
 
 
-def csv_row(config, *, hostname="public-vpn.example.net", ip="1.1.1.10",
+def csv_row(config, *, hostname="public-vpn.example.net", ip="8.8.8.20",
             country="JP", score="1000", ping="20"):
     encoded = base64.b64encode(config.encode()).decode()
     return (
@@ -57,7 +57,7 @@ class VPNGateParserTests(unittest.TestCase):
 
     def test_rejects_missing_ca(self):
         with self.assertRaisesRegex(VPNGateError, "CA certificate"):
-            parse_ovpn_config("client\\nremote 8.8.8.20 1194\\n", "bad")
+            parse_ovpn_config("client\nremote 8.8.8.20 1194\n", "bad")
 
     def test_rejects_non_global_literal_remote(self):
         with self.assertRaisesRegex(VPNGateError, "not globally routable"):
@@ -84,7 +84,7 @@ class VPNGateParserTests(unittest.TestCase):
 
     def test_selects_top_scored_candidates_with_limit(self):
         rows = [
-            csv_row(profile(f"8.8.8.{20+i} 443 udp"), ip=f"1.1.1.{10+i}",
+            csv_row(profile(f"8.8.8.{20+i} 443 udp"), ip=f"8.8.8.{20+i}",
                     score=str(i), ping=str(100-i))
             for i in range(5)
         ]

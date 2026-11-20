@@ -15,7 +15,7 @@
 
 采集工作流使用固定版本 FreeNodes 中完整的受支持来源配置，包括 GitHub 订阅文件、网页订阅发现、受限密码页和 YouTube 资源适配器；不会再把来源过滤成只有 GitHub 文件。具体来源覆盖和兼容性说明见 [发现来源说明](docs/DISCOVERY_SOURCES.md)。
 
-**VPN Gate 特别说明：** VPN Gate 官方公开节点主要提供 SoftEther、L2TP/IPsec、OpenVPN 和 MS-SSTP 配置，其中 OpenVPN 需要导入 `.ovpn` 文件。它不是 Mihomo/FlClash 可直接导入的 Clash 代理订阅格式，因此目前不会把 VPN Gate 的服务器 IP/端口伪装成 Mihomo 节点。只有实现独立 OpenVPN 运行验证并找到可移植、受客户端支持的输出格式后，才会考虑接入三池；否则会造成不可用订阅和错误分类。
+**VPN Gate 已接入：** 适配器读取官方 CSV API 中的 OpenVPN 配置，解码并转换为 Mihomo 原生 `type: openvpn` 节点；每个配置先通过固定版本 Mihomo 语法检查，再进入与其他来源相同的真实出口检测和风险分类。每轮最多纳入 100 个 VPN Gate 候选，合并后的候选池总量仍限制为 500。VPN Gate 的国家、服务器 IP、上游评分只用于来源记录和候选排序，不作为出口国家或住宅属性证据。
 
 ## 三类目标订阅
 

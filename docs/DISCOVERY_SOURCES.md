@@ -8,11 +8,15 @@ At the pinned revision, the configured web discovery sources include ClashMeta, 
 
 The reserve-only `audit_sources` remain inactive in the normal publication run. They are not silently promoted into production sources.
 
-## VPN Gate compatibility
+## VPN Gate OpenVPN adapter
 
-[VPN Gate](https://www.vpngate.net/en/) is a useful public VPN relay directory, but it is not a direct Mihomo/Clash subscription source. Its official documentation lists SoftEther VPN, L2TP/IPsec, OpenVPN, and MS-SSTP connection methods; its OpenVPN instructions require downloading and importing a `.ovpn` profile. The pinned FreeNodes parser and Mihomo publication pipeline accept typed Clash proxies and supported proxy URIs, not arbitrary OpenVPN profiles.
+[VPN Gate](https://www.vpngate.net/en/) is actively queried through its official CSV endpoint, `https://www.vpngate.net/api/iphone/`. The adapter locates the CSV header, decodes each OpenVPN_ConfigData_Base64 field, parses the embedded .ovpn directives and inline CA/certificate/TLS-key blocks, and converts only the supported parameters into native Mihomo `type: openvpn` proxy entries. Official connection methods and the .ovpn workflow are documented by [VPN Gate](https://www.vpngate.net/en/howto.aspx) and [its OpenVPN guide](https://www.vpngate.net/en/howto_openvpn.aspx); Mihomo's supported OpenVPN outbound fields are documented [here](https://wiki.metacubex.one/en/config/proxies/openvpn/).
 
-Therefore VPN Gate must not be represented as a Mihomo node by copying its server IP, port, country, or CSV metadata into a proxy record. That would create a fake/unusable node and would also confuse server location with the observed proxy exit. A future VPN Gate adapter would need a separate OpenVPN runtime test and a supported portable client format before any record could enter a FlClash/Mihomo subscription. Until then, VPN Gate is explicitly documented as an unsupported source format rather than silently counted as discovered nodes.
+The adapter rejects profiles with missing CA material, invalid or private literal remotes, malformed ports, external credential-file references, mismatched CSV/embedded remote IPs, conflicting TLS-key blocks, or unsupported transports. VPN Gate's public credentials are represented only when the profile requests auth-user-pass; certificate-based profiles use their inline client certificate and key instead. Each generated profile is checked by the pinned Mihomo binary before admission. The normal exit echo, IP metadata, Layer3 and O-X-L gates still apply afterwards.
+
+At most 100 Mihomo-syntax-valid VPN Gate candidates are included per run. To preserve source coverage under the existing 500-candidate ceiling, up to 400 FreeNodes candidates are interleaved with the VPN Gate candidates before the 25-node evenly-spaced real-exit probe budget is applied. Upstream country, score, ping and server IP are candidate metadata only; they never prove the actual exit IP, country, residential status or risk class. If the official API is unavailable, the failure is recorded and other productive sources continue.
+
+Mihomo supports the OpenVPN outbound; therefore VPN Gate is not excluded merely because its source format is .ovpn. The adapter performs a configuration conversion, not a trust upgrade: volunteer-operated relays remain untrusted until they pass the same independent exit and risk checks.
 
 ## End-to-end admission remains mandatory
 
