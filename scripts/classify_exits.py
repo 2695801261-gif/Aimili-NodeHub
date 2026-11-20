@@ -407,14 +407,13 @@ def run() -> None:
         print("Exit verification failure summary:", failures.most_common(10), flush=True)
         raise SystemExit("No exit IPs could be independently verified; keeping previous classified subscriptions")
 
-    rendered_profiles: list[tuple[Path, str]] = []
-    for pool, path in OUTPUTS.items():
-        profile = make_profile(grouped[pool], pool)
+    profiles = {
+        pool: make_profile(grouped[pool], pool)
+        for pool in OUTPUTS
+    }
+    for pool, profile in profiles.items():
         rendered = yaml.safe_dump(profile, allow_unicode=True, sort_keys=False)
         validate_profile_content(rendered, pool)
-        rendered_profiles.append((path, rendered))
-    for path, rendered in rendered_profiles:
-        atomic_write(path, rendered)
 
     report = {
         "schema_version": 1,
@@ -431,7 +430,17 @@ def run() -> None:
             "Unverified, conflicting, or failed lookups are quarantined.",
         ],
     }
-    atomic_write(EVIDENCE_PATH, json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    from scripts.publication import publish_atomically
+
+    # Validate every pool and every Mihomo profile before touching the last
+    # known-good subscriptions. A failed run must never replace them with empties.
+    publish_atomically(
+        OUTPUTS,
+        profiles,
+        EVIDENCE_PATH,
+        report,
+        validate_profile=validate_profile_content,
+    )
     print("Classification summary:", json.dumps(report["pool_sizes"], sort_keys=True))
 
 

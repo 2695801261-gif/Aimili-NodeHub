@@ -16,7 +16,7 @@ on:
 
 concurrency:
   group: aimili-nodehub-collection
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
