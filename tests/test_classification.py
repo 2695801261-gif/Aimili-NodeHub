@@ -21,6 +21,7 @@ def base():
         "net_kind": ["isp"],
         "net_reports": 0,
         "net_reputation": "ok",
+        "net_source": "oxl-api",
         "oxl_asn_status": "ok",
         "exit_echo_agreement": True,
         "layer3_ip": "8.8.8.8",
