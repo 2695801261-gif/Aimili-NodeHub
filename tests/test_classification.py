@@ -7,6 +7,7 @@ def base():
     return {
         "country_code": "US",
         "asn": 64500,
+        "isp": "Example Access Network",
         "asn_kind": ["isp"],
         "asn_reports": 0,
         "ip_risk_status": "not_reported",
@@ -95,6 +96,11 @@ class ClassificationTests(unittest.TestCase):
         evidence["country_code"] = "ZZ"
         self.assertIsNone(classify(evidence).pool)
 
+
+    def test_missing_operator_name_is_quarantined(self):
+        evidence = base()
+        evidence["isp"] = ""
+        self.assertIsNone(classify(evidence).pool)
 
 if __name__ == "__main__":
     unittest.main()
