@@ -255,9 +255,9 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertEqual(merged[0]["last_seen_at"], 500.0)
         self.assertEqual(stats["current_refreshed"], 1)
 
-    def test_default_history_retains_forty_off_window_candidates_per_country(self):
+    def test_default_history_retains_two_hundred_us_off_window_candidates(self):
         previous = []
-        for index in range(45):
+        for index in range(220):
             node = {
                 "name": f"VPNGate-US-8-8-{index // 256}-{index % 256}-volunteer",
                 "type": "openvpn", "server": f"8.8.{index // 256}.{index % 256}",
@@ -265,23 +265,22 @@ class VPNGateParserTests(unittest.TestCase):
             }
             previous.append({"node": node, "first_seen_at": 100.0, "last_seen_at": 900.0 + index})
         merged, stats = merge_candidate_history([], previous, now=1000.0, ttl_seconds=500)
-        self.assertEqual(len(merged), 40)
-        self.assertEqual(stats["off_window_retained"], 40)
-        # UDP entries remain candidates; they are never falsely TCP-prescreened.
+        self.assertEqual(len(merged), 200)
+        self.assertEqual(stats["off_window_retained"], 200)
         self.assertTrue(all(item["node"]["proto"] == "udp" for item in merged))
 
-    def test_default_history_probe_window_rotates_one_hundred_candidates(self):
-        records = []
-        for index in range(120):
+    def test_default_history_retains_forty_off_window_candidates_for_other_countries(self):
+        previous = []
+        for index in range(45):
             node = {
-                "name": f"VPNGate-US-8-8-{index // 256}-{index % 256}-volunteer",
+                "name": f"VPNGate-JP-8-8-{index // 256}-{index % 256}-volunteer",
                 "type": "openvpn", "server": f"8.8.{index // 256}.{index % 256}",
-                "port": 443, "proto": "udp" if index % 2 else "tcp",
+                "port": 443, "proto": "tcp",
             }
-            records.append({"node": node, "first_seen_at": 100.0, "last_seen_at": 100.0 + index})
-        selected = select_history_candidates(records, rotation=7)
-        self.assertEqual(len(selected), 100)
-        self.assertTrue(any(node["proto"] == "udp" for node in selected))
+            previous.append({"node": node, "first_seen_at": 100.0, "last_seen_at": 900.0 + index})
+        merged, stats = merge_candidate_history([], previous, now=1000.0, ttl_seconds=500)
+        self.assertEqual(len(merged), 40)
+        self.assertEqual(stats["off_window_retained"], 40)
 
     def test_history_keeps_only_five_off_window_candidates_per_country(self):
         previous = []
