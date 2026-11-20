@@ -130,5 +130,11 @@ class ClassificationTests(unittest.TestCase):
         evidence["net_kind"] = ["hosting"]
         self.assertIsNone(classify(evidence).pool)
 
+    def test_cgnat_relay_and_anycast_signals_quarantine(self):
+        for kind in ("cgnat", "relay", "anycast"):
+            evidence = base()
+            evidence["asn_kind"] = ["isp", kind]
+            self.assertIsNone(classify(evidence).pool)
+
 if __name__ == "__main__":
     unittest.main()
