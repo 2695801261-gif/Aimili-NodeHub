@@ -15,7 +15,7 @@
 
 采集工作流使用固定版本 FreeNodes 中完整的受支持来源配置，包括 GitHub 订阅文件、网页订阅发现、受限密码页和 YouTube 资源适配器；不会再把来源过滤成只有 GitHub 文件。具体来源覆盖和兼容性说明见 [发现来源说明](docs/DISCOVERY_SOURCES.md)。
 
-**VPN Gate 与 VPNBook 已接入：** VPN Gate 读取官方 CSV API；VPNBook 从官网嵌入式服务器目录和官方 API 获取各服务器的 TCP 443 OpenVPN 配置及当前共享凭据。两类配置都转换为 Mihomo 原生 `type: openvpn` 节点，并先通过固定版本 Mihomo 语法检查。两个补充来源每轮各最多纳入 50 个候选，共享 100 个名额；再与 FreeNodes 合并，候选池总量不超过 500。最多 25 个真实出口探测名额按来源分配并随 GitHub 运行编号轮换，避免某一来源长期得不到抽样。VPN Gate 的国家、服务器 IP、上游评分只用于来源记录和候选排序，不作为出口国家或住宅属性证据；VPNBook 动态密码不会写入来源报告、日志或诊断文件；若某节点通过全部门槛并进入公开订阅，连接所需的登录字段会随节点配置公开（这些共享凭据本来就在官网公开且会定期轮换）。
+**VPN Gate 与 VPNBook 已接入：** VPN Gate 读取官方 CSV API；VPNBook 从官网嵌入式服务器目录和官方 API 获取各服务器的 TCP 443 OpenVPN 配置及当前共享凭据。两类配置都转换为 Mihomo 原生 `type: openvpn` 节点，并先通过固定版本 Mihomo 语法检查。两个补充来源每轮各最多纳入 50 个候选，共享 100 个名额；再与 FreeNodes 合并，候选池总量不超过 500。最多 40 个真实出口探测名额按来源分配并随 GitHub 运行编号轮换，避免某一来源长期得不到抽样。VPN Gate 的国家、服务器 IP、上游评分只用于来源记录和候选排序，不作为出口国家或住宅属性证据；VPNBook 动态密码不会写入来源报告、日志或诊断文件；若某节点通过全部门槛并进入公开订阅，连接所需的登录字段会随节点配置公开（这些共享凭据本来就在官网公开且会定期轮换）。
 
 ## 三类目标订阅
 
@@ -27,7 +27,7 @@
 
 仓库内对应文件：`subscriptions/us-residential.yaml`、`subscriptions/other-residential.yaml`、`subscriptions/low-risk-datacenter.yaml`
 
-每次最多进行 25 个出口 IP 的分类检测，以控制免费 API 配额和运行时间。上游通用节点池最多保留 500 个通过 Mihomo 能力验证的节点。
+每次最多进行 40 个出口 IP 的分类检测，以控制免费 API 配额和运行时间。上游通用节点池最多保留 500 个通过 Mihomo 能力验证的节点。
 
 **分类边界：** “住宅”订阅代表多项证据支持的 ISP 网络候选，不等于已证明是某个家庭用户的宽带线路，也不能完全识别使用真实家宽出口的住宅代理。“低风险机房”只代表当前公开情报源没有发现本项目设定的排除信号，不是安全保证。未确认节点不会被硬塞进任何一个分类池。
 
@@ -48,3 +48,4 @@
 - [FreeNodes](https://github.com/nostalume/FreeNodes) — MIT；作为运行时采集、验证和订阅生成底座，固定到 `5a4f4ecf8c06b49b503046179d10933a6a63ef69`。
 - [O-X-L Risk Database](https://github.com/O-X-L/risk-db) — BSD-3-Clause 数据库；只使用其公开查询信号，不复制其 GPLv3 构建脚本。
 - 本仓库自己的分类规则和测试位于 `scripts/` 与 `tests/`。
+- [开源项目架构对照](docs/OPEN_SOURCE_ARCHITECTURE_NOTES.md) 记录 XEHN、ProxyCollector、VLESS Collector 的可借鉴模式及本项目采用的安全边界。
