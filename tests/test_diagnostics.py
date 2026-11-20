@@ -32,7 +32,7 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(report["reason_counts"]["asn_has_abuse_reports"], 1)
         self.assertEqual(report["provider_status_counts"]["oxl_asn_status"]["unavailable"], 1)
         self.assertEqual(report["exit_echo"], {
-            "agreement": 1, "disagreement": 0, "not_checked": 1
+            "agreement": 2, "disagreement": 0, "not_checked": 1
         })
 
 

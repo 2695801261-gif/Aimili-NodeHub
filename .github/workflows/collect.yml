@@ -129,23 +129,7 @@ jobs:
         run: |
           if [ -s classification/diagnostics.json ]; then
             echo "## NodeHub classification diagnostics" >> "$GITHUB_STEP_SUMMARY"
-            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-            import json
-            from pathlib import Path
-            data = json.loads(Path("classification/diagnostics.json").read_text())
-            print("| Metric | Count |")
-            print("|---|---:|")
-            for key in ("checked", "accepted", "quarantined"):
-                print(f"| {key} | {data.get(key, 0)} |")
-            print()
-            print("### Rejection reasons")
-            for reason, count in data.get("reason_counts", {}).items():
-                print(f"- `{reason}`: {count}")
-            print()
-            print("### Provider states")
-            for provider, states in data.get("provider_status_counts", {}).items():
-                print(f"- **{provider}**: " + ", ".join(f"{k}={v}" for k, v in states.items()))
-            PY
+            python -c 'import json; from pathlib import Path; d=json.loads(Path("classification/diagnostics.json").read_text()); print("| Metric | Count |"); print("|---|---:|"); [print(f"| {k} | {d.get(k, 0)} |") for k in ("checked", "accepted", "quarantined")]; print(); print("### Rejection reasons"); [print(f"- `{k}`: {v}") for k, v in d.get("reason_counts", {}).items()]; print(); print("### Provider states"); [print(f"- **{k}**: " + ", ".join(f"{a}={b}" for a, b in v.items())) for k, v in d.get("provider_status_counts", {}).items()]' >> "$GITHUB_STEP_SUMMARY"
           else
             echo "No classification diagnostics were produced." >> "$GITHUB_STEP_SUMMARY"
           fi
