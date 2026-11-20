@@ -65,7 +65,7 @@ jobs:
           p.write_text(s.replace(old, new, 1), encoding="utf-8")
           PY
 
-      - name: Install dependencies and browser
+      - name: Install dependencies
         run: |
           uv sync --locked
 
@@ -101,7 +101,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: uv run --locked --extra youtube python main.py
+        run: uv run --locked python main.py
 
       - name: Classify verified proxy exits
         run: uv run --locked python -m scripts.classify_exits
