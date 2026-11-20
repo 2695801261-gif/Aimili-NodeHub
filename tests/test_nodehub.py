@@ -75,8 +75,8 @@ class NodeHubPipelineTests(unittest.TestCase):
         first_vpn = {item["name"] for item in first if item["name"].startswith("VPNGate-")}
         second_vpn = {item["name"] for item in second if item["name"].startswith("VPNGate-")}
 
-        self.assertEqual(len(first_vpn), 5)
-        self.assertEqual(len(second_vpn), 5)
+        self.assertEqual(len(first_vpn), 13)
+        self.assertEqual(len(second_vpn), 13)
         self.assertTrue(first_vpn.isdisjoint(second_vpn))
 
     def test_exit_probe_selection_returns_all_when_pool_is_smaller_than_budget(self):
