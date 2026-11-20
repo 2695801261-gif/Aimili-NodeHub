@@ -13,7 +13,8 @@ def base():
         "ip_risk_status": "not_reported",
         "ip_kind": [],
         "ip_reports": None,
-        "ipwhois_success": True,
+        "ip_metadata_success": True,
+        "net_asn_match": True,
         "net_status": "ok",
         "net_kind": ["isp"],
         "net_reports": 0,
@@ -135,6 +136,11 @@ class ClassificationTests(unittest.TestCase):
             evidence = base()
             evidence["asn_kind"] = ["isp", kind]
             self.assertIsNone(classify(evidence).pool)
+
+    def test_exit_asn_must_match_network_record(self):
+        evidence = base()
+        evidence["net_asn_match"] = False
+        self.assertIsNone(classify(evidence).pool)
 
 if __name__ == "__main__":
     unittest.main()
