@@ -102,7 +102,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          NODEHUB_MAX_EXIT_PROBES: "25"
+          NODEHUB_MAX_EXIT_PROBES: "40"
         run: uv run --locked python -m scripts.nodehub
 
       - name: Publish failure diagnostics to job summary
