@@ -535,7 +535,7 @@ def select_history_candidates(
     limit: int = HISTORY_PROBE_LIMIT,
     rotation: int = 0,
 ) -> list[dict[str, Any]]:
-    """Select a country-balanced rotating sample, giving US-labelled sources first look."""
+    """Reserve half the sample for US candidates, then balance other countries."""
     if limit < 1:
         raise ValueError("VPN Gate history probe limit must be positive")
     groups: dict[str, list[dict[str, Any]]] = {}
@@ -543,9 +543,8 @@ def select_history_candidates(
         node = record.get("node") if isinstance(record, dict) else None
         if isinstance(node, dict) and _candidate_identity(node) is not None:
             groups.setdefault(_candidate_country(node), []).append(record)
-    countries = sorted(groups, key=lambda country: (country != "US", country))
     rotation = max(0, int(rotation))
-    for country in countries:
+    for country in groups:
         group = sorted(
             groups[country],
             key=lambda record: (
@@ -557,22 +556,35 @@ def select_history_candidates(
         offset = rotation % len(group)
         groups[country] = group[offset:] + group[:offset]
 
-    selected: list[dict[str, Any]] = []
+    us_group = groups.get("US", [])
+    us_budget = min(len(us_group), (limit + 1) // 2)
+    selected = [record["node"] for record in us_group[:us_budget]]
+    remaining = limit - len(selected)
+
+    countries = sorted(country for country in groups if country != "US")
     cursor = {country: 0 for country in countries}
-    while len(selected) < limit:
+    while remaining > 0 and countries:
         progressed = False
         for country in countries:
             position = cursor[country]
             if position < len(groups[country]):
                 selected.append(groups[country][position]["node"])
                 cursor[country] += 1
+                remaining -= 1
                 progressed = True
-                if len(selected) >= limit:
+                if remaining == 0:
                     break
         if not progressed:
             break
-    return selected
 
+    # If the other countries cannot fill their share, use additional US history
+    # rather than returning a short sample while valid US candidates remain.
+    us_cursor = us_budget
+    while remaining > 0 and us_cursor < len(us_group):
+        selected.append(us_group[us_cursor]["node"])
+        us_cursor += 1
+        remaining -= 1
+    return selected
 
 def tcp_prescreen_history(
     records: list[dict[str, Any]],
