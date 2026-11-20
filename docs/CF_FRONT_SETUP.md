@@ -4,7 +4,7 @@ NodeHub can test VPN Gate OpenVPN candidates through a private VLESS front proxy
 
 ## Accepted format
 
-The current parser accepts a **VLESS + TLS + WebSocket** share URI only. It validates the UUID, host, port, TLS, WebSocket transport, SNI and path. Trojan, XHTTP, plain WS, Reality, and generic subscription URLs are not accepted by this setting.
+The current parser accepts either a **VLESS + TLS + WebSocket** share URI or a Mihomo YAML proxy/config containing at least one VLESS + TLS + WebSocket proxy. It validates the UUID, host, port, TLS, WebSocket transport, SNI and path. Trojan, XHTTP, plain WS, Reality, and generic subscription URLs are not accepted by this setting. YAML entries with `skip-cert-verify: true` are rejected.
 
 Example shape (placeholders only):
 
@@ -12,7 +12,7 @@ Example shape (placeholders only):
 vless://<UUID>@<WORKER_HOST>:443?encryption=none&security=tls&type=ws&host=<HOST_HEADER>&sni=<SNI>&path=%2F<WS_PATH>
 ```
 
-If using CFNext, use a VLESS Worker-mode node that actually exports TLS WebSocket. A CFNext Home/VPN Gate subscription is not itself the front URI expected here.
+If using CFNext, use a VLESS Worker-mode node that actually exports TLS WebSocket. A CFNext Home/VPN Gate subscription is not itself the front configuration expected here. You may paste the single VLESS share URI or a Mihomo YAML file containing that proxy.
 
 ## Store it safely
 
