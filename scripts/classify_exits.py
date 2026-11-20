@@ -300,7 +300,8 @@ def run() -> None:
                         counters["quarantined"] += 1
                 except (LookupFailure, ValueError, subprocess.CalledProcessError, urllib.error.HTTPError) as error:
                     row["pool"] = None
-                    row["reason"] = f"quarantined:{type(error).__name__}"
+                    detail = " ".join(str(error).split())[:220]
+                    row["reason"] = f"quarantined:{type(error).__name__}:{detail}"
                     counters["quarantined"] += 1
                 evidence_rows.append(row)
                 print(f"[{index}/{len(candidates)}] {name[:64]} -> {row.get('pool') or row.get('reason')}")
@@ -313,6 +314,8 @@ def run() -> None:
                 process.wait(timeout=5)
 
     if not any(row.get("ipwhois_success") for row in evidence_rows):
+        failures = Counter(row.get("reason", "unknown") for row in evidence_rows)
+        print("Exit verification failure summary:", failures.most_common(10), flush=True)
         raise SystemExit("No exit IPs could be independently verified; keeping previous classified subscriptions")
 
     rendered_profiles: list[tuple[Path, str]] = []
