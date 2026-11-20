@@ -72,7 +72,7 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
     failures: list[str] = []
     try:
         time.sleep(1.0)
-        data = request_json(f"https://ipwho.is/{exit_ip}")
+        data = request_json(f"https://ipwho.is/{exit_ip}", timeout=5)
         connection = data.get("connection") or {}
         raw_asn = connection.get("asn")
         asn = int(str(raw_asn).upper().removeprefix("AS"))
@@ -87,7 +87,7 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
 
     try:
         time.sleep(1.0)
-        data = request_json(f"https://ipinfo.io/{exit_ip}/json")
+        data = request_json(f"https://ipinfo.io/{exit_ip}/json", timeout=8)
         org = data.get("org")
         match = re.match(r"^AS(\d+)\s+(.+)$", org.strip()) if isinstance(org, str) else None
         country = data.get("country")
