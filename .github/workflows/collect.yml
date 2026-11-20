@@ -69,29 +69,29 @@ jobs:
         run: |
           uv sync --locked
 
-      - name: Limit discovery to maintained direct subscription sources
+      - name: Enable all pinned FreeNodes discovery adapters
         shell: bash
         run: |
           set -euo pipefail
           uv run --locked python - <<'PY'
+          from collections import Counter
           from pathlib import Path
           import yaml
 
           path = Path("config.yaml")
           config = yaml.safe_load(path.read_text(encoding="utf-8"))
-          for section in ("sources", "audit_sources"):
-              entries = config.get(section, [])
-              config[section] = [
-                  item for item in entries
-                  if item.get("kind") == "github_file"
-              ]
-          if len(config.get("sources", [])) < 3:
-              raise SystemExit("Fewer than three direct GitHub subscription sources; refusing reduced discovery")
-          path.write_text(
-              yaml.safe_dump(config, allow_unicode=True, sort_keys=False),
-              encoding="utf-8",
-          )
-          print("Active direct GitHub sources:", len(config["sources"]))
+          sources = config.get("sources", [])
+          if not sources:
+              raise SystemExit("No active discovery sources are configured")
+          kinds = Counter(item.get("kind", "unknown") for item in sources)
+          supported = {"github_file", "web", "password_page", "youtube_resources"}
+          unknown = sorted(set(kinds) - supported)
+          if unknown:
+              raise SystemExit("Unsupported pinned source kinds: " + ", ".join(unknown))
+          print("Active pinned discovery sources:", len(sources))
+          for kind, count in sorted(kinds.items()):
+              print(f"  {kind}: {count}")
+          print("Reserve-only audit sources remain inactive by design.")
           PY
 
       - name: Run classification and publication-gate unit tests
