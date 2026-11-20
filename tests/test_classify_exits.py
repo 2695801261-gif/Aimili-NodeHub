@@ -67,17 +67,11 @@ class IPWhoMetadataTests(unittest.TestCase):
             "success": True,
             "ip": "203.0.113.20",
             "country_code": "US",
-            "type": "ISP",
+            "type": "IPv4",
             "connection": {
                 "asn": 7922,
                 "isp": "Comcast Cable Communications, LLC",
                 "org": "Comcast Cable",
-            },
-            "security": {
-                "hosting": False,
-                "proxy": False,
-                "vpn": True,
-                "tor": False,
             },
         }
         with patch("scripts.classify_exits.request_json", return_value=response), patch(
@@ -85,9 +79,9 @@ class IPWhoMetadataTests(unittest.TestCase):
         ):
             metadata, source = lookup_ip_metadata("203.0.113.20")
         self.assertEqual(source, "ipwho.is")
-        self.assertEqual(metadata["ipwho_type"], "isp")
+        self.assertEqual(metadata["ipwho_type"], "ipv4")
         self.assertEqual(metadata["ipwho_security"], {
-            "hosting": False, "proxy": False, "vpn": True, "tor": False,
+            "hosting": None, "proxy": None, "vpn": None, "tor": None,
         })
 
     def test_ipinfo_fallback_does_not_fabricate_ipwho_evidence(self):
