@@ -4,49 +4,129 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: US · VMESS · shaoyouvip · 3A631A24
-  type: vmess
-  server: 192.74.236.148
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  network: ws
-  skip-cert-verify: true
-  tls: true
+- name: US · SS · wzmwayne · 0E40B526
+  type: ss
+  server: 107.151.182.197
+  port: 8080
+  cipher: rc4-md5
+  sub_tag: A004-260618
   udp: true
-  ws-opts:
-    headers:
-      Host: www.91334565.xyz
-    path: /path/1733477783705
-  servername: www.91334565.xyz
-- name: US · HTTP · shaoyouvip · 0CA069D1
-  type: http
-  server: 23.133.176.14
-  port: 443
-  skip-cert-verify: true
-  tls: true
-  udp: true
-  username: ''
-  password: ''
-- name: US · TROJAN · wzmwayne · 012980E5
+  password: 14fFPrbezE3HDZzsMOr6
+- name: US · TROJAN · wzmwayne · 0F851A6A
   type: trojan
-  server: 216.106.186.66
-  port: 443
+  server: 69.164.240.85
+  port: 50875
   client-fingerprint: chrome
   skip-cert-verify: true
-  sni: www.findlocaljobnetworkandbuildcommunityconnections.com
+  sni: 69.164.240.85
   sub_tag: M003-260806
   udp: true
   network: tcp
-  password: 242a3d8eee5e4ed1a6bfa4141d549a25
+  password: nwilryafgkyvuxauc8pz
+- name: US · SS · wzmwayne · 958DCF82
+  type: ss
+  server: 15.204.246.111
+  port: 5498
+  cipher: aes-256-gcm
+  sub_tag: B007-260618
+  udp: true
+  password: lGqs95QkFHo2NV
+- name: US · TROJAN · wzmwayne · C9FAFB73
+  type: trojan
+  server: 66.163.112.242
+  port: 443
+  client-fingerprint: chrome
+  skip-cert-verify: false
+  sni: resources.unlockyourfuturefindyourperfectcareer.com
+  sub_tag: M003-260806
+  udp: true
+  network: tcp
+  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
+- name: US · VLESS · wzmwayne · 932828E5
+  type: vless
+  server: 69.48.201.136
+  port: 30016
+  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
+  network: ws
+  sub_tag: A004-260618
+  udp: true
+  ws-opts:
+    headers:
+      Host: uspanel.unixzone.us
+      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
+        like Gecko) Chrome/70.0.3538.67 Safari/537.36
+    path: /usserver
+  xudp: true
+  packet-encoding: xudp
+  servername: uspanel.unixzone.us
+- name: US · VLESS · wzmwayne · B405FD70
+  type: vless
+  server: 69.48.201.136
+  port: 30016
+  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
+  network: ws
+  sub_tag: A004-260618
+  udp: true
+  ws-opts:
+    headers:
+      Host: zoom.us
+      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
+        like Gecko) Chrome/66.0.3359.139 Safari/537.36
+    path: /usserver
+  xudp: true
+  packet-encoding: xudp
+  servername: zoom.us
+- name: US · TROJAN · wzmwayne · A577F8A5
+  type: trojan
+  server: 66.23.203.21
+  port: 59689
+  client-fingerprint: chrome
+  network: tcp
+  skip-cert-verify: true
+  sni: 66.23.203.21
+  sub_tag: C002-260622
+  udp: true
+  password: ae7eb4dwyaz25pxwgq59
+- name: US · TROJAN · wzmwayne · 67C4E2FA
+  type: trojan
+  server: 69.164.240.85
+  port: 50875
+  client-fingerprint: chrome
+  skip-cert-verify: true
+  sub_tag: M003-260806
+  udp: true
+  network: tcp
+  password: nwilryafgkyvuxauc8pz
+- name: US · VLESS · wzmwayne · D96F2EEF
+  type: vless
+  server: uspanel.unixzone.us
+  port: 30016
+  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
+  network: ws
+  sub_tag: A004-260618
+  udp: true
+  ws-opts:
+    headers:
+      Host: uspanel.unixzone.us
+      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
+        like Gecko) Chrome/59.0.3071.115 Safari/537.36
+    path: /usserver
+  xudp: true
+  packet-encoding: xudp
+  servername: uspanel.unixzone.us
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - US · VMESS · shaoyouvip · 3A631A24
-  - US · HTTP · shaoyouvip · 0CA069D1
-  - US · TROJAN · wzmwayne · 012980E5
+  - US · SS · wzmwayne · 0E40B526
+  - US · TROJAN · wzmwayne · 0F851A6A
+  - US · SS · wzmwayne · 958DCF82
+  - US · TROJAN · wzmwayne · C9FAFB73
+  - US · VLESS · wzmwayne · 932828E5
+  - US · VLESS · wzmwayne · B405FD70
+  - US · TROJAN · wzmwayne · A577F8A5
+  - US · TROJAN · wzmwayne · 67C4E2FA
+  - US · VLESS · wzmwayne · D96F2EEF
 rules:
 - MATCH,NODEHUB
 profile:
