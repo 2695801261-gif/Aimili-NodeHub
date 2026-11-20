@@ -60,8 +60,8 @@ class NodeHubPipelineTests(unittest.TestCase):
         selected = select_exit_candidates(candidates, 25)
 
         self.assertEqual(len(selected), 25)
-        self.assertEqual(sum(item["name"].startswith("VPNGate-") for item in selected), 5)
-        self.assertEqual(sum(item["name"].startswith("free-") for item in selected), 20)
+        self.assertEqual(sum(item["name"].startswith("VPNGate-") for item in selected), 13)
+        self.assertEqual(sum(item["name"].startswith("free-") for item in selected), 12)
 
     def test_vpngate_source_sampling_rotates_between_scheduled_runs(self):
         from scripts.classify_exits import select_exit_candidates

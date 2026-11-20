@@ -319,10 +319,12 @@ def select_exit_candidates(
         ]
         return [candidates[index] for index in selected]
 
-    vpn_budget = min(
-        len(vpn_indices),
-        max(1, (2 * len(vpn_indices) * limit + len(candidates)) // (2 * len(candidates))),
-    )
+    # VPN Gate is a first-class discovery source, not a token sample.
+    # Give it half of the bounded probe budget when available; if it has
+    # fewer candidates, use all of them and return the remaining probes to
+    # FreeNodes. This improves source coverage without exceeding the global
+    # real-exit probe cap.
+    vpn_budget = min(len(vpn_indices), (limit + 1) // 2)
     primary_budget = min(len(primary_indices), limit - vpn_budget)
     vpn_budget = min(len(vpn_indices), limit - primary_budget)
 
