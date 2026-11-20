@@ -57,8 +57,13 @@ def _valid_layer3(evidence: dict[str, Any]) -> tuple[str | None, str]:
 
     risk_level = evidence.get("layer3_risk_level")
     risk_score = evidence.get("layer3_risk_score")
-    if risk_level != "low" or isinstance(risk_score, bool) or not isinstance(risk_score, (int, float)) or not 0 <= risk_score < 25:
-        return None, "layer3_risk_not_low"
+    if (
+        risk_level not in {"low", "medium", "high", "critical"}
+        or isinstance(risk_score, bool)
+        or not isinstance(risk_score, (int, float))
+        or not 0 <= risk_score <= 100
+    ):
+        return None, "layer3_risk_evidence_invalid"
 
     flags = evidence.get("layer3_flags")
     if not isinstance(flags, dict):
@@ -105,8 +110,11 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         asn_reports = evidence.get("asn_reports")
         if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
             return Verdict(None, "asn_risk_count_missing")
-        if asn_reports != 0:
-            return Verdict(None, "asn_has_abuse_reports")
+        # O-X-L ASN report totals are aggregate network context, not
+        # reports against this observed exit IP. Keep the count in evidence,
+        # but do not treat it as an IP-level abuse finding. Require positive
+        # ASN type agreement and apply zero-report gates to exact IP/network
+        # records below.
         if asn_kinds & DISQUALIFYING_KINDS:
             return Verdict(None, "asn_has_disqualifying_signal")
     elif asn_status != "not_reported":
@@ -156,6 +164,11 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, layer3_error)
 
     if layer3_type == "residential":
+        if (
+            evidence.get("layer3_risk_level") != "low"
+            or evidence.get("layer3_risk_score") >= 25
+        ):
+            return Verdict(None, "residential_risk_not_low")
         if evidence.get("layer3_network_type") != "access":
             return Verdict(None, "residential_network_type_not_access")
         if evidence.get("layer3_flags", {}).get("hosting") is not False:
@@ -177,6 +190,15 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         )
 
     if layer3_type == "hosting":
+        # Layer3's documented risk model assigns ordinary hosting a baseline
+        # score of 50 (medium) with reason ["hosting"]. Admit only that exact
+        # baseline; any additional reason/score remains quarantined.
+        if (
+            evidence.get("layer3_risk_level") != "medium"
+            or evidence.get("layer3_risk_score") != 50
+            or evidence.get("layer3_risk_reasons") != ["hosting"]
+        ):
+            return Verdict(None, "hosting_risk_exceeds_baseline")
         if evidence.get("layer3_network_type") != "hosting":
             return Verdict(None, "hosting_network_type_not_confirmed")
         if evidence.get("layer3_flags", {}).get("hosting") is not True:

@@ -53,16 +53,29 @@ class ClassificationTests(unittest.TestCase):
         evidence["layer3_country"] = "DE"
         self.assertEqual(classify(evidence).pool, "other-residential")
 
-    def test_low_risk_hosting_exit(self):
+    def test_hosting_only_baseline_is_eligible_for_datacenter_pool(self):
         evidence = base()
         evidence["asn_kind"] = ["hosting"]
         evidence["net_kind"] = ["hosting"]
         evidence["layer3_type"] = "hosting"
         evidence["layer3_network_type"] = "hosting"
         evidence["layer3_flags"]["hosting"] = True
+        evidence["layer3_risk_level"] = "medium"
+        evidence["layer3_risk_score"] = 50
         evidence["layer3_risk_reasons"] = ["hosting"]
-        evidence["net_kind"] = ["hosting"]
         self.assertEqual(classify(evidence).pool, "low-risk-datacenter")
+
+    def test_hosting_with_nearby_vpn_reason_is_quarantined(self):
+        evidence = base()
+        evidence["asn_kind"] = ["hosting"]
+        evidence["net_kind"] = ["hosting"]
+        evidence["layer3_type"] = "hosting"
+        evidence["layer3_network_type"] = "hosting"
+        evidence["layer3_flags"]["hosting"] = True
+        evidence["layer3_risk_level"] = "medium"
+        evidence["layer3_risk_score"] = 50
+        evidence["layer3_risk_reasons"] = ["hosting", "nearby_vpn"]
+        self.assertIsNone(classify(evidence).pool)
 
     def test_unreported_oxl_network_can_use_layer3_network_evidence(self):
         evidence = base()
@@ -129,9 +142,15 @@ class ClassificationTests(unittest.TestCase):
         evidence["asn_kind"] = ["isp", "vpn"]
         self.assertIsNone(classify(evidence).pool)
 
-    def test_abuse_report_quarantines(self):
+    def test_aggregate_asn_reports_do_not_override_clean_exact_exit_evidence(self):
         evidence = base()
-        evidence["asn_reports"] = 1
+        evidence["asn_reports"] = 2180
+        self.assertEqual(classify(evidence).pool, "us-residential")
+
+    def test_disqualifying_asn_kind_still_quarantines(self):
+        evidence = base()
+        evidence["asn_kind"] = ["isp", "scanner"]
+        evidence["asn_reports"] = 0
         self.assertIsNone(classify(evidence).pool)
 
     def test_missing_asn_intelligence_quarantines(self):
