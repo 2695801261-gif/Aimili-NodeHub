@@ -338,8 +338,8 @@ def run() -> None:
         raise SystemExit("Required merged profile or pinned Mihomo binary is missing")
     source = yaml.safe_load(SOURCE_PROFILE.read_text(encoding="utf-8"))
     candidates = source.get("proxies") if isinstance(source, dict) else None
-    if not isinstance(candidates, list) or not candidates:
-        raise SystemExit("No validated proxies found in merged profile")
+    if not isinstance(candidates, list):
+        candidates = []
     candidates = [item for item in candidates if isinstance(item, dict) and isinstance(item.get("name"), str)]
     primary_candidates = candidates
     supplemental_candidates: list[dict[str, Any]] = []
@@ -364,9 +364,9 @@ def run() -> None:
             source_discovery = json.loads(SOURCE_REPORT.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             source_discovery = {"status": "unreadable"}
-    candidates = select_exit_candidates(candidates, MAX_CANDIDATES)
     if not candidates:
-        raise SystemExit("No usable proxy entries found")
+        raise SystemExit("No usable proxies found across FreeNodes and VPN Gate sources")
+    candidates = select_exit_candidates(candidates, MAX_CANDIDATES)
 
     proxy_names = [item["name"] for item in candidates]
     if len(proxy_names) != len(set(proxy_names)):

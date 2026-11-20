@@ -88,6 +88,16 @@ class NodeHubPipelineTests(unittest.TestCase):
         self.assertEqual(combined[4]["name"], "VPNGate-JP-0")
         self.assertEqual(combined[9]["name"], "VPNGate-JP-1")
 
+    def test_vpngate_candidates_remain_usable_when_freenodes_pool_is_empty(self):
+        from scripts.classify_exits import combine_candidate_sources
+
+        vpn = [{"name": f"VPNGate-JP-{i}"} for i in range(7)]
+        combined, counts = combine_candidate_sources([], vpn)
+
+        self.assertEqual(combined, vpn)
+        self.assertEqual(counts["freenodes_included"], 0)
+        self.assertEqual(counts["vpngate_included"], 7)
+
     def test_combined_pool_keeps_all_primary_candidates_without_vpngate(self):
         from scripts.classify_exits import combine_candidate_sources
 
