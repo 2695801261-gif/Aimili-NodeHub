@@ -1,3 +1,4 @@
+import os
 import base64
 import socket
 import unittest
@@ -50,6 +51,45 @@ def csv_row(config, *, hostname="volunteer.example.net", ip="8.8.8.20",
 
 
 class TCPPrescreenTests(unittest.TestCase):
+    def test_cloudflare_underlay_skips_direct_tcp_prescreen(self):
+        from scripts.vpngate import prescreen_history_for_run
+
+        records = [
+            {"node": {"name": "VPNGate-US-1", "server": "203.0.113.10", "port": 443, "proto": "tcp"}},
+            {"node": {"name": "VPNGate-JP-2", "server": "203.0.113.11", "port": 1194, "proto": "udp"}},
+        ]
+        def unexpected_connector(*args, **kwargs):
+            raise AssertionError("direct TCP prescreen must not run when CF underlay is configured")
+
+        with patch.dict(os.environ, {"NODEHUB_CF_FRONT_URI": "vless://secret-placeholder"}):
+            survivors, report = prescreen_history_for_run(records, connector=unexpected_connector)
+        self.assertEqual(survivors, records)
+        self.assertTrue(report["skipped"])
+        self.assertEqual(report["skip_reason"], "cloudflare_vless_probe_underlay_configured")
+        self.assertEqual(report["history_before"], report["history_after"])
+
+    def test_direct_tcp_prescreen_remains_active_without_cloudflare_underlay(self):
+        from scripts.vpngate import prescreen_history_for_run
+
+        records = [
+            {"node": {"name": "VPNGate-US-1", "server": "203.0.113.10", "port": 443, "proto": "tcp"}},
+        ]
+        calls = []
+        class FakeConnection:
+            def close(self):
+                pass
+        def connector(address, timeout):
+            calls.append((address, timeout))
+            return FakeConnection()
+
+        with patch.dict(os.environ, {}, clear=True):
+            survivors, report = prescreen_history_for_run(records, connector=connector, workers=1)
+        self.assertEqual(survivors, records)
+        self.assertEqual(len(calls), 1)
+        self.assertFalse(report.get("skipped", False))
+
+
+
     class FakeSocket:
         def __init__(self):
             self.closed = False
