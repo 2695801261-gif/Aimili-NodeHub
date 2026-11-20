@@ -2,7 +2,7 @@
 
 目标输出为三类 Mihomo 订阅：
 
-1. `us-residential`：代理实际出口地址被独立情报源标记为 residential，所在网络为 access，且 ASN/IP 风险门槛通过。
+1. `us-residential`：代理实际出口地址被独立情报源标记为 residential，所在网络为 access，且 精确 IP/网络风险门槛通过。
 2. `other-residential`：与美国住宅候选相同，但出口国家不是美国。
 3. `low-risk-datacenter`：出口地址和网络均被独立情报源标记为 hosting，风险分数低，且 ASN/IP 风险门槛通过。
 

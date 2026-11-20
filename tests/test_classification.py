@@ -215,6 +215,8 @@ class ClassificationTests(unittest.TestCase):
         evidence["layer3_type"] = "hosting"
         evidence["layer3_network_type"] = "hosting"
         evidence["layer3_flags"]["hosting"] = True
+        evidence["layer3_risk_level"] = "medium"
+        evidence["layer3_risk_score"] = 50
         evidence["layer3_risk_reasons"] = ["hosting"]
         evidence["net_kind"] = ["hosting"]
         self.assertEqual(classify(evidence).pool, "low-risk-datacenter")

@@ -31,7 +31,7 @@ All lookups apply to the **proxy's observed exit IP**, never the configured serv
 - O-X-L documents IP 404 as “not reported or temporary lookup failure”. The classifier retries once and retains `not_reported` as an uncertainty signal, not proof of zero abuse.
 - If an O-X-L ASN record exists, its ASN kind must positively support the target class and contain no disqualifying kind. The ASN report total is retained as network-level context, not treated as a report against every address in the ASN; exact IP and network records retain zero-report requirements. If O-X-L explicitly reports no ASN record, that absence is not a clean result: the candidate can proceed only when the independent Layer3 response matches the exact exit IP, country, ASN and announced prefix, has low risk, and confirms the target address/network type. O-X-L timeouts, rate limits and server errors are quarantined.
 - O-X-L warns that reports can contain false positives; these are risk signals, not proof of malicious intent.
-- Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 25 and caches repeated IP/network/ASN lookups within each run.
+- Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 40 and caches repeated IP/network/ASN lookups within each run.
 
 ## Admission policy
 Every candidate must pass all of these gates:
