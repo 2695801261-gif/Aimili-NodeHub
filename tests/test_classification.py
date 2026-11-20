@@ -208,6 +208,7 @@ class ClassificationTests(unittest.TestCase):
         }
         evidence["layer3_type"] = "vpn"
         evidence["layer3_network_type"] = "access"
+        evidence["layer3_prefix_match"] = True
         evidence["layer3_risk_level"] = "high"
         evidence["layer3_risk_score"] = 75
         evidence["layer3_risk_reasons"] = ["vpn"]
