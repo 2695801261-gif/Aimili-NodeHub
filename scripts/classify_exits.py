@@ -60,7 +60,7 @@ def request_json(url: str, *, method: str = "GET", payload: dict[str, Any] | Non
         if error.code == 404:
             raise
         if error.code == 429 or error.code >= 500:
-            raise SystemExit(f"Intelligence source unavailable: HTTP {error.code}; previous subscriptions are preserved") from error
+            raise LookupFailure(f"intelligence source unavailable: HTTP {error.code}") from error
         raise LookupFailure(f"lookup rejected: HTTP {error.code}") from error
     except (urllib.error.URLError, TimeoutError, json.JSONDecodeError) as error:
         raise LookupFailure(f"lookup failed: {type(error).__name__}") from error
@@ -302,10 +302,12 @@ def run() -> None:
                     "node_name": name,
                     "checked_at": datetime.now(UTC).isoformat(),
                     "exit_echo_agreement": None,
+                    "metadata_status": "not_checked",
                     "layer3_status": "not_checked",
                     "ip_metadata_success": False,
                     "oxl_asn_status": "not_checked",
                     "ip_risk_status": "not_checked",
+                    "net_status": "not_checked",
                 }
                 try:
                     request_json(
@@ -322,10 +324,13 @@ def run() -> None:
                     if not agreement:
                         raise ValueError("independent exit-IP echo services disagree")
 
+                    row["metadata_status"] = "pending"
                     if exit_ip in ip_cache:
                         ip_status, ip_data, metadata, metadata_source = ip_cache[exit_ip]
                     else:
                         metadata, metadata_source = lookup_ip_metadata(exit_ip)
+                        row["metadata_status"] = "ok"
+                        row["ip_risk_status"] = "pending"
                         time.sleep(1.25)
                         ip_status, ip_data = oxl_lookup("ip", exit_ip)
                         if ip_status == "not_reported":
@@ -333,6 +338,8 @@ def run() -> None:
                             ip_status, ip_data = oxl_lookup("ip", exit_ip)
                         ip_cache[exit_ip] = (ip_status, ip_data, metadata, metadata_source)
 
+                    row["metadata_status"] = "ok"
+                    row["ip_risk_status"] = ip_status
                     row.update(metadata)
                     row["metadata_source"] = metadata_source
                     row["ip_metadata_success"] = True
@@ -343,6 +350,7 @@ def run() -> None:
                     row.update(layer3_cache[exit_ip])
                     row["layer3_status"] = "ok"
                     row["ip_risk_status"] = ip_status
+                    row["net_status"] = "pending"
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
                         net_cache[exit_ip] = oxl_lookup("net", exit_ip)
@@ -379,6 +387,7 @@ def run() -> None:
                         row["ip_reports"] = report_sum(ip_data)
 
                     asn = row["asn"]
+                    row["oxl_asn_status"] = "pending"
                     if asn not in asn_cache:
                         time.sleep(1.25)
                         asn_cache[asn] = oxl_lookup("asn", str(asn))
@@ -399,8 +408,12 @@ def run() -> None:
                     else:
                         counters["quarantined"] += 1
                 except (LookupFailure, ValueError, subprocess.CalledProcessError, urllib.error.HTTPError) as error:
-                    if row.get("layer3_status") == "pending":
-                        row["layer3_status"] = "unavailable"
+                    for status_field in (
+                        "metadata_status", "layer3_status", "ip_risk_status",
+                        "net_status", "oxl_asn_status",
+                    ):
+                        if row.get(status_field) == "pending":
+                            row[status_field] = "unavailable"
                     row["pool"] = None
                     detail = " ".join(str(error).split())[:220]
                     row["reason"] = f"quarantined:{type(error).__name__}:{detail}"

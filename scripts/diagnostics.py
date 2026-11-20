@@ -9,7 +9,7 @@ def build_diagnostics(rows: Iterable[dict[str, Any]], *, pool_sizes: dict[str, i
                       candidate_limit: int) -> dict[str, Any]:
     evidence = list(rows)
     reasons = Counter(str(row.get("reason") or "reason_missing") for row in evidence)
-    fields = ("metadata_source", "ip_risk_status", "net_status", "oxl_asn_status", "layer3_status")
+    fields = ("metadata_source", "metadata_status", "ip_risk_status", "net_status", "oxl_asn_status", "layer3_status")
     statuses = {
         field: dict(sorted(Counter(str(row.get(field) or "not_checked")
                                     for row in evidence).items()))

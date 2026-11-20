@@ -13,6 +13,7 @@ class DiagnosticsTests(unittest.TestCase):
                  "metadata_source": "ipwho.is"},
                 {"pool": None, "reason": "asn_intelligence_unavailable",
                  "oxl_asn_status": "unavailable", "ip_risk_status": "not_checked",
+                 "metadata_status": "unavailable",
                  "net_status": "not_checked", "layer3_status": "not_checked",
                  "exit_echo_agreement": None,
                  "metadata_source": "ipinfo.io"},
