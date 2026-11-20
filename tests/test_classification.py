@@ -196,6 +196,100 @@ class ClassificationTests(unittest.TestCase):
         self.assertIsNone(verdict.pool)
         self.assertEqual(verdict.reason, "vpngate_isp_access_relay_candidate_unverified")
 
+
+    def test_vpngate_isp_exit_can_pass_with_ipwho_isp_and_clean_independent_evidence(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-203-0-113-10-volunteer"
+        evidence["isp"] = "Comcast Cable Communications, LLC"
+        evidence["metadata_source"] = "ipwho.is"
+        evidence["ipwho_type"] = "isp"
+        evidence["ipwho_security"] = {
+            "hosting": False, "proxy": False, "vpn": True, "tor": False,
+        }
+        evidence["ip_risk_status"] = "ok"
+        evidence["ip_kind"] = ["vpn"]
+        evidence["ip_reports"] = 0
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertEqual(verdict.pool, "us-residential")
+        self.assertEqual(verdict.reason, "vpngate_isp_access_ipwho_confirmed")
+
+    def test_vpngate_isp_exit_without_ipwho_type_is_not_promoted(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-203-0-113-13-volunteer"
+        evidence["isp"] = "Comcast Cable Communications, LLC"
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "vpngate_us_consumer_isp_candidate_unverified")
+
+    def test_vpngate_ipwho_hosting_signal_blocks_residential_promotion(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-203-0-113-14-volunteer"
+        evidence["metadata_source"] = "ipwho.is"
+        evidence["ipwho_type"] = "isp"
+        evidence["ipwho_security"] = {
+            "hosting": True, "proxy": False, "vpn": True, "tor": False,
+        }
+        evidence["ip_risk_status"] = "ok"
+        evidence["ip_reports"] = 0
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+
+    def test_vpngate_ipwho_proxy_or_tor_signal_blocks_residential_promotion(self):
+        for flag in ("proxy", "tor"):
+            evidence = base()
+            evidence["node_name"] = "VPNGate-US-203-0-113-15-volunteer"
+            evidence["metadata_source"] = "ipwho.is"
+            evidence["ipwho_type"] = "isp"
+            evidence["ipwho_security"] = {
+                "hosting": False, "proxy": False, "vpn": True, "tor": False,
+            }
+            evidence["ipwho_security"][flag] = True
+            evidence["ip_risk_status"] = "ok"
+            evidence["ip_reports"] = 0
+            evidence["layer3_type"] = "vpn"
+            evidence["layer3_risk_level"] = "high"
+            evidence["layer3_risk_score"] = 75
+            evidence["layer3_risk_reasons"] = ["vpn"]
+            evidence["layer3_flags"]["anonymizer"] = True
+            evidence["layer3_flags"]["vpn"] = True
+            self.assertIsNone(classify(evidence).pool)
+
+    def test_vpngate_ipwho_confirmation_does_not_override_ip_abuse_reports(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-203-0-113-16-volunteer"
+        evidence["metadata_source"] = "ipwho.is"
+        evidence["ipwho_type"] = "isp"
+        evidence["ipwho_security"] = {
+            "hosting": False, "proxy": False, "vpn": True, "tor": False,
+        }
+        evidence["ip_risk_status"] = "ok"
+        evidence["ip_reports"] = 1
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        self.assertEqual(classify(evidence).reason, "ip_has_abuse_reports")
+
     def test_same_vpn_signal_from_non_vpngate_source_remains_generic_quarantine(self):
         evidence = base()
         evidence["node_name"] = "OtherSource-US-example"

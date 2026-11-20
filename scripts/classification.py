@@ -82,6 +82,24 @@ def _is_vpngate_relay_transport_signal(evidence: dict[str, Any]) -> bool:
     )
 
 
+def _vpngate_ipwho_isp_confirmation(evidence: dict[str, Any]) -> bool:
+    """Require IPWHO's explicit ISP type and clean hosting/proxy/Tor fields.
+
+    VPNGate itself is a VPN transport. Its VPN flag is therefore not, alone,
+    evidence that the underlying exit address belongs to a datacenter.
+    """
+    security = evidence.get("ipwho_security")
+    return (
+        _is_vpngate_relay_transport_signal(evidence)
+        and evidence.get("metadata_source") == "ipwho.is"
+        and evidence.get("ipwho_type") == "isp"
+        and isinstance(security, dict)
+        and security.get("hosting") is False
+        and security.get("proxy") is False
+        and security.get("tor") is False
+    )
+
+
 def _valid_layer3(evidence: dict[str, Any]) -> tuple[str | None, str]:
     ip = evidence.get("exit_ip")
     if not isinstance(ip, str):
@@ -163,6 +181,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     if not isinstance(isp_name, str) or not isp_name.strip():
         return Verdict(None, "network_operator_name_missing")
 
+    vpngate_ipwho_isp = _vpngate_ipwho_isp_confirmation(evidence)
     asn_status = evidence.get("oxl_asn_status")
     if asn_status == "ok":
         asn_reports = evidence.get("asn_reports")
@@ -174,7 +193,12 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         # ASN type agreement and apply zero-report gates to exact IP/network
         # records below.
         if asn_kinds & DISQUALIFYING_KINDS:
-            return Verdict(None, "asn_has_disqualifying_signal")
+            if not (
+                vpngate_ipwho_isp
+                and "isp" in asn_kinds
+                and asn_kinds <= {"isp", "vpn"}
+            ):
+                return Verdict(None, "asn_has_disqualifying_signal")
     elif asn_status != "not_reported":
         # Provider errors and rate limits are not equivalent to an empty record.
         return Verdict(None, "asn_intelligence_unavailable")
@@ -195,7 +219,8 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             return Verdict(None, "ip_has_abuse_reports")
     ip_kinds = _kinds(evidence.get("ip_kind", []))
     if ip_kinds & DISQUALIFYING_KINDS:
-        return Verdict(None, "ip_has_disqualifying_network_signal")
+        if not (vpngate_ipwho_isp and ip_kinds <= {"vpn"}):
+            return Verdict(None, "ip_has_disqualifying_network_signal")
 
     net_status = evidence.get("net_status")
     net_kinds: set[str] = set()
@@ -213,7 +238,12 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         if evidence.get("net_asn_match") is not True or evidence.get("net_prefix_match") is not True:
             return Verdict(None, "network_prefix_or_asn_mismatch")
         if net_kinds & DISQUALIFYING_KINDS:
-            return Verdict(None, "network_has_disqualifying_signal")
+            if not (
+                vpngate_ipwho_isp
+                and "isp" in net_kinds
+                and net_kinds <= {"isp", "vpn"}
+            ):
+                return Verdict(None, "network_has_disqualifying_signal")
     elif net_status != "not_reported":
         return Verdict(None, "network_intelligence_unavailable")
 
@@ -248,20 +278,30 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         )
 
     if layer3_type == "vpn" and _is_vpngate_relay_transport_signal(evidence):
-        # VPNGate's tunnel protocol can trigger an anonymizer/VPN label even
-        # when the observed exit belongs to an ISP access network. Keep this
-        # in a separate, non-publishable audit lane until independent evidence
-        # proves residential status and resolves the high VPN risk signal.
-        if asn_status == "ok" and "isp" in asn_kinds and "hosting" not in asn_kinds:
-            if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
-                return Verdict(None, "vpngate_isp_access_candidate_network_conflict")
+        # Permit only the narrow VPNGate VPN-on-access exception when IPWHO
+        # explicitly says type=isp, hosting/proxy/Tor are false, O-X-L confirms
+        # an ISP ASN, exact-IP abuse reports are zero, and any O-X-L network
+        # record agrees. The VPN flag is expected from this VPN transport;
+        # it is not treated as proof of a residential household line.
+        if not vpngate_ipwho_isp:
             brand_class = _vpngate_residential_brand_candidate(evidence)
             if brand_class == "us":
                 return Verdict(None, "vpngate_us_consumer_isp_candidate_unverified")
             if brand_class == "other":
                 return Verdict(None, "vpngate_other_consumer_isp_candidate_unverified")
             return Verdict(None, "vpngate_isp_access_relay_candidate_unverified")
-        return Verdict(None, "vpngate_relay_without_isp_confirmation")
+        if asn_status != "ok" or "isp" not in asn_kinds or "hosting" in asn_kinds:
+            return Verdict(None, "vpngate_ipwho_isp_without_isp_asn_confirmation")
+        if ip_status != "ok" or evidence.get("ip_reports") != 0:
+            return Verdict(None, "vpngate_ipwho_isp_without_clean_ip_reputation")
+        if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
+            return Verdict(None, "vpngate_ipwho_isp_network_conflict")
+        if net_status not in {"ok", "not_reported"}:
+            return Verdict(None, "vpngate_ipwho_isp_network_unavailable")
+        return Verdict(
+            "us-residential" if country.upper() == "US" else "other-residential",
+            "vpngate_isp_access_ipwho_confirmed",
+        )
 
     if layer3_type == "hosting":
         # Layer3's documented risk model assigns ordinary hosting a baseline
