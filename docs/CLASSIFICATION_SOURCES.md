@@ -51,8 +51,9 @@ All of the following are required:
 
 1. Actual exit IP is independently observed and ASN/country are resolved by IPWhois; O-X-L independently classifies the ASN.
 2. Hosting/datacenter is positively supported by ASN or IP/network classification.
-3. No VPN, proxy, Tor, relay, mobile, enterprise-gateway, scanner, crawler, or high-risk abuse signal is present.
-4. No conflicting or missing evidence at a required gate. Any uncertainty goes to quarantine.
+3. The per-ASN risk lookup must succeed and report zero abuse reports; a missing ASN risk record is not sufficient for this pool.
+4. No VPN, proxy, Tor, relay, mobile, enterprise-gateway, scanner, crawler, or high-risk abuse signal is present.
+5. No conflicting or missing evidence at a required gate. Any uncertainty goes to quarantine.
 
 “Low-risk” is relative to the selected public intelligence sources and their freshness. It is not a safety guarantee.
 
