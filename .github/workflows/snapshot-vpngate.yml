@@ -1,0 +1,47 @@
+name: Snapshot VPNGate candidates
+
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aimili-vpngate-snapshot
+  cancel-in-progress: false
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout NodeHub
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.0"
+
+      - name: Restore previous VPNGate snapshot
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.2.0
+        with:
+          path: .cache/vpngate/candidate-history.json
+          key: vpngate-candidates-main-${{ github.run_id }}
+          restore-keys: |
+            vpngate-candidates-main-
+
+      - name: Refresh rolling VPNGate candidate history
+        id: refresh
+        env:
+          NODEHUB_MAX_VPNGATE_NODES: "100"
+        run: uv run --no-project --with PyYAML==6.0.2 --python 3.12 -m scripts.snapshot_vpngate
+
+      - name: Save refreshed VPNGate snapshot
+        if: steps.refresh.outcome == 'success'
+        uses: actions/cache/save@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.2.0
+        with:
+          path: .cache/vpngate/candidate-history.json
+          key: vpngate-candidates-main-${{ github.run_id }}
