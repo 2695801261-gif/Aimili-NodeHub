@@ -1,4 +1,5 @@
 import base64
+import socket
 import unittest
 
 from scripts.vpngate import (
@@ -7,6 +8,7 @@ from scripts.vpngate import (
     parse_directory,
     parse_ovpn_config,
     select_history_candidates,
+    tcp_prescreen_history,
 )
 
 
@@ -45,6 +47,66 @@ def csv_row(config, *, hostname="volunteer.example.net", ip="8.8.8.20",
         f"{hostname},{ip},{score},{ping},100000,{country},{country},1,"
         f"100,100,100,0,operator,message,{encoded}"
     )
+
+
+class TCPPrescreenTests(unittest.TestCase):
+    class FakeSocket:
+        def __init__(self):
+            self.closed = False
+
+        def close(self):
+            self.closed = True
+
+    def test_removes_unreachable_tcp_but_keeps_udp_without_probing_it(self):
+        records = [
+            {"node": {"name": "tcp-live", "server": "198.51.100.1", "port": 443, "proto": "tcp"}},
+            {"node": {"name": "tcp-dead", "server": "198.51.100.2", "port": 443, "proto": "tcp"}},
+            {"node": {"name": "udp-node", "server": "198.51.100.3", "port": 1194, "proto": "udp"}},
+        ]
+        calls = []
+
+        def connector(address, timeout):
+            calls.append(address)
+            if address[0] == "198.51.100.2":
+                raise ConnectionRefusedError("closed")
+            return self.FakeSocket()
+
+        survivors, report = tcp_prescreen_history(
+            records, connector=connector, workers=2, timeout_seconds=0.2
+        )
+
+        self.assertEqual([item["node"]["name"] for item in survivors], ["tcp-live", "udp-node"])
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(report["tcp_candidates"], 2)
+        self.assertEqual(report["tcp_reachable"], 1)
+        self.assertEqual(report["tcp_unreachable"], 1)
+        self.assertEqual(report["tcp_skipped_non_tcp"], 1)
+        self.assertEqual(report["runner_vantage"], "github-actions")
+
+    def test_retries_transient_tcp_timeout_once(self):
+        records = [
+            {"node": {"name": "tcp-retry", "server": "198.51.100.4", "port": 443, "proto": "tcp"}}
+        ]
+        calls = []
+
+        def connector(address, timeout):
+            calls.append(address)
+            if len(calls) == 1:
+                raise socket.timeout("temporary timeout")
+            return self.FakeSocket()
+
+        survivors, report = tcp_prescreen_history(
+            records, connector=connector, workers=1, timeout_seconds=0.2
+        )
+
+        self.assertEqual(len(survivors), 1)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(report["tcp_reachable"], 1)
+        self.assertEqual(report["tcp_unreachable"], 0)
+
+    def test_rejects_invalid_prescreen_limits(self):
+        with self.assertRaisesRegex(ValueError, "positive"):
+            tcp_prescreen_history([], workers=0)
 
 
 class VPNGateParserTests(unittest.TestCase):
