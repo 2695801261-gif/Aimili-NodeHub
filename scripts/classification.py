@@ -99,7 +99,6 @@ def _vpngate_access_isp_confirmation(evidence: dict[str, Any]) -> bool:
     ISP category. Use the matched Layer3 access prefix, ISP network type,
     IPWHO operator name, and (when present) O-X-L ASN/network evidence instead.
     """
-    isp = str(evidence.get("isp") or "").casefold()
     country = str(evidence.get("country_code") or "").upper()
     brand_class = _vpngate_residential_brand_candidate(evidence)
     known_fixed_isp = brand_class == ("us" if country == "US" else "other")
