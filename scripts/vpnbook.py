@@ -155,13 +155,18 @@ def parse_configs(
                 f"VPNBook-{server['id']}-tcp443",
                 credentials,
             )
+            if proxy["server"].casefold() not in {
+                server["hostname"].casefold(),
+                server["ip"],
+            }:
+                raise VPNBookError("profile remote does not match the official server record")
             identity = (proxy["server"], proxy["port"], proxy["proto"])
             if identity in seen:
                 rejected["duplicate_endpoint"] = rejected.get("duplicate_endpoint", 0) + 1
                 continue
             seen.add(identity)
             proxies.append(proxy)
-        except (VPNGateError, KeyError) as error:
+        except (VPNGateError, VPNBookError, KeyError) as error:
             reason = f"{type(error).__name__}:{str(error)[:120]}"
             rejected[reason] = rejected.get(reason, 0) + 1
     return proxies, {
@@ -186,7 +191,7 @@ def collect_vpnbook() -> dict[str, Any]:
                 executor.submit(_fetch, build_config_url(server), MAX_CONFIG_BYTES): server
                 for server in servers
             }
-            for future in as_completed(pending, timeout=60):
+            for future in as_completed(pending, timeout=120):
                 server = pending[future]
                 try:
                     profile = future.result().decode("utf-8-sig", errors="strict")

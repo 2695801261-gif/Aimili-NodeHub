@@ -82,6 +82,14 @@ class VPNBookSourceTests(unittest.TestCase):
             "https://www.vpnbook.com/api/openvpn?hostname=us16.vpnbook.com&protocol=tcp443&ip=147.135.15.16",
         )
 
+    def test_rejects_profile_remote_that_disagrees_with_official_server_record(self):
+        proxies, report = parse_configs(
+            [(self.server, profile("203.0.113.9 443 tcp"))],
+            ("vpnbook", "CurrentPass123"),
+        )
+        self.assertEqual(proxies, [])
+        self.assertTrue(any("profile remote does not match" in key for key in report["rejection_reasons"]))
+
     def test_parses_profiles_with_runtime_credentials(self):
         proxies, report = parse_configs(
             [(self.server, profile())],
