@@ -1,51 +1,54 @@
 {
   "schema_version": 1,
-  "candidate_limit": 25,
-  "checked": 25,
+  "candidate_limit": 40,
+  "checked": 40,
   "accepted": 0,
-  "quarantined": 25,
+  "quarantined": 40,
   "pool_sizes": {
     "low-risk-datacenter": 0,
     "other-residential": 0,
     "us-residential": 0
   },
   "reason_counts": {
-    "asn_has_abuse_reports": 12,
-    "layer3_address_type_not_publishable": 3,
-    "layer3_risk_not_low": 7,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 2,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 1
+    "asn_has_abuse_reports": 19,
+    "layer3_address_type_not_publishable": 2,
+    "layer3_risk_not_low": 11,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 4,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 2,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 35.": 1,
+    "quarantined:ValueError:independent exit-IP echo services disagree": 1
   },
   "provider_status_counts": {
     "metadata_source": {
-      "ipwho.is": 22,
-      "not_checked": 3
+      "ipwho.is": 32,
+      "not_checked": 8
     },
     "metadata_status": {
-      "not_checked": 3,
-      "ok": 22
+      "not_checked": 8,
+      "ok": 32
     },
     "ip_risk_status": {
-      "not_checked": 3,
-      "not_reported": 22
+      "not_checked": 8,
+      "not_reported": 32
     },
     "net_status": {
-      "not_checked": 3,
-      "not_reported": 22
+      "not_checked": 8,
+      "not_reported": 31,
+      "ok": 1
     },
     "oxl_asn_status": {
-      "not_checked": 3,
-      "not_reported": 10,
-      "ok": 12
+      "not_checked": 8,
+      "not_reported": 13,
+      "ok": 19
     },
     "layer3_status": {
-      "not_checked": 3,
-      "ok": 22
+      "not_checked": 8,
+      "ok": 32
     }
   },
   "exit_echo": {
-    "agreement": 22,
-    "disagreement": 0,
-    "not_checked": 3
+    "agreement": 32,
+    "disagreement": 1,
+    "not_checked": 7
   }
 }
