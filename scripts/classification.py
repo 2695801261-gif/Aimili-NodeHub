@@ -61,8 +61,10 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, "network_operator_name_missing")
     if evidence.get("exit_echo_agreement") is not True:
         return Verdict(None, "exit_echo_mismatch")
-    if evidence.get("ipwhois_success") is not True:
+    if evidence.get("ip_metadata_success") is not True:
         return Verdict(None, "exit_ip_lookup_failed")
+    if evidence.get("net_asn_match") is not True:
+        return Verdict(None, "exit_asn_network_mismatch")
     if evidence.get("oxl_asn_status") != "ok":
         return Verdict(None, "asn_intelligence_unavailable")
     if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
