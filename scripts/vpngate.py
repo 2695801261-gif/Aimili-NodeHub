@@ -26,6 +26,8 @@ MIHOMO = ROOT / ".cache" / "mihomo" / "mihomo"
 MAX_NODES = int(os.getenv("NODEHUB_MAX_VPNGATE_NODES", "100"))
 MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 MAX_CONFIG_BYTES = 128 * 1024
+VPNGATE_OPERATED_IPV4_NETWORK = ipaddress.ip_network("219.100.37.0/24")
+VPNGATE_OPERATED_HOST_PREFIX = "public-vpn"
 
 
 class VPNGateError(RuntimeError):
@@ -292,6 +294,17 @@ def parse_directory(csv_text: str, *, limit: int = MAX_NODES) -> tuple[list[dict
     for _, _, _, row in diversified:
         if len(accepted) >= limit:
             break
+        hostname = row.get("hostname", "").strip().casefold()
+        if hostname.startswith(VPNGATE_OPERATED_HOST_PREFIX):
+            rejected["vpngate_operated_public_vpn_hostname"] += 1
+            continue
+        try:
+            row_address = ipaddress.ip_address(row.get("ip", ""))
+        except ValueError:
+            row_address = None
+        if isinstance(row_address, ipaddress.IPv4Address) and row_address in VPNGATE_OPERATED_IPV4_NETWORK:
+            rejected["vpngate_operated_public_vpn_network"] += 1
+            continue
         try:
             proxy = _decode_row(row)
             identity = (proxy["server"], proxy["port"], proxy["proto"])
