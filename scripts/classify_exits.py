@@ -558,8 +558,7 @@ def run() -> None:
         candidate_limit=MAX_CANDIDATES,
     )
     report["diagnostics"] = diagnostics
-    diagnostic_text = json.dumps(diagnostics, ensure_ascii=False, indent=2) + "
-"
+    diagnostic_text = json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n"
     # Persist failure evidence before the publication gate; subscriptions stay untouched.
     write_reports_atomically(
         EVIDENCE_PATH,
