@@ -2,53 +2,58 @@
   "schema_version": 1,
   "candidate_limit": 40,
   "checked": 40,
-  "accepted": 0,
-  "quarantined": 40,
+  "accepted": 4,
+  "quarantined": 36,
   "pool_sizes": {
-    "low-risk-datacenter": 0,
-    "other-residential": 0,
+    "low-risk-datacenter": 2,
+    "other-residential": 2,
     "us-residential": 0
   },
   "reason_counts": {
-    "asn_has_abuse_reports": 19,
-    "layer3_address_type_not_publishable": 2,
-    "layer3_risk_not_low": 11,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 4,
+    "asn_has_disqualifying_signal": 3,
+    "hosting_risk_exceeds_baseline": 1,
+    "layer3_address_type_not_publishable": 4,
+    "layer3_anonymizer_signal": 18,
+    "layer3_drop_listed": 1,
+    "layer3_low_risk_hosting_and_asn_confirmed": 2,
+    "layer3_residential_access_and_isp_asn_confirmed": 2,
+    "network_has_abuse_reports": 2,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 2,
     "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 2,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 35.": 1,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 2,
     "quarantined:ValueError:independent exit-IP echo services disagree": 1
   },
   "provider_status_counts": {
     "metadata_source": {
-      "ipwho.is": 32,
-      "not_checked": 8
+      "ipwho.is": 33,
+      "not_checked": 7
     },
     "metadata_status": {
-      "not_checked": 8,
-      "ok": 32
+      "not_checked": 7,
+      "ok": 33
     },
     "ip_risk_status": {
-      "not_checked": 8,
-      "not_reported": 32
+      "not_checked": 7,
+      "not_reported": 33
     },
     "net_status": {
-      "not_checked": 8,
+      "not_checked": 7,
       "not_reported": 31,
-      "ok": 1
+      "ok": 2
     },
     "oxl_asn_status": {
-      "not_checked": 8,
-      "not_reported": 13,
-      "ok": 19
+      "not_checked": 7,
+      "not_reported": 11,
+      "ok": 22
     },
     "layer3_status": {
-      "not_checked": 8,
-      "ok": 32
+      "not_checked": 7,
+      "ok": 33
     }
   },
   "exit_echo": {
-    "agreement": 32,
+    "agreement": 33,
     "disagreement": 1,
-    "not_checked": 7
+    "not_checked": 6
   }
 }
