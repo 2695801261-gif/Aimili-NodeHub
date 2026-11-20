@@ -60,6 +60,42 @@ class ExitEchoRetryTests(unittest.TestCase):
             echo_pair(attempts=0)
 
 
+class CloudflareFrontURITests(unittest.TestCase):
+    def test_parse_tls_websocket_vless_uri_for_probe_underlay(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        proxy = parse_cloudflare_front_uri(
+            "vless://123e4567-e89b-12d3-a456-426614174000@cf.example.com:443"
+            "?encryption=none&security=tls&type=ws&host=cf.example.com"
+            "&sni=cf.example.com&path=%2F%3Fed%3D2048#cf-front"
+        )
+        self.assertEqual(proxy["type"], "vless")
+        self.assertEqual(proxy["server"], "cf.example.com")
+        self.assertEqual(proxy["port"], 443)
+        self.assertEqual(proxy["uuid"], "123e4567-e89b-12d3-a456-426614174000")
+        self.assertTrue(proxy["tls"])
+        self.assertEqual(proxy["network"], "ws")
+        self.assertEqual(proxy["ws-opts"]["path"], "/?ed=2048")
+        self.assertEqual(proxy["ws-opts"]["headers"]["Host"], "cf.example.com")
+
+    def test_parse_cloudflare_front_rejects_non_tls_or_non_ws_uri(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        base = "vless://123e4567-e89b-12d3-a456-426614174000@cf.example.com:443?"
+        with self.assertRaisesRegex(ValueError, "TLS"):
+            parse_cloudflare_front_uri(base + "encryption=none&type=ws")
+        with self.assertRaisesRegex(ValueError, "TLS"):
+            parse_cloudflare_front_uri(base + "encryption=none&security=tls&type=grpc")
+
+    def test_parse_cloudflare_front_rejects_invalid_uuid(self):
+        from scripts.classify_exits import parse_cloudflare_front_uri
+
+        with self.assertRaisesRegex(ValueError, "UUID"):
+            parse_cloudflare_front_uri(
+                "vless://not-a-uuid@cf.example.com:443?encryption=none&security=tls&type=ws"
+            )
+
+
 class IPApiIsMetadataTests(unittest.TestCase):
     def test_optional_ipapi_is_lookup_keeps_key_in_post_body(self):
         from scripts.classify_exits import lookup_ipapi_is
