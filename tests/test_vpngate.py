@@ -2,6 +2,7 @@ import os
 import base64
 import socket
 import unittest
+from unittest.mock import patch
 
 from scripts.vpngate import (
     VPNGateError,
