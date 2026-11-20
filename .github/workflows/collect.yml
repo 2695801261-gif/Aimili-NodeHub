@@ -115,6 +115,13 @@ jobs:
           NODEHUB_MAX_EXIT_PROBES: "80"
         run: uv run --locked python -m scripts.nodehub
 
+      - name: Save refreshed VPNGate candidate history
+        if: always() && !cancelled() && hashFiles('.cache/vpngate/candidate-history.json') != ''
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/vpngate/candidate-history.json
+          key: vpngate-candidates-main-${{ github.run_id }}
+
       - name: Publish failure diagnostics to job summary
         if: always()
         shell: bash
