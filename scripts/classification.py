@@ -6,7 +6,7 @@ from typing import Any
 
 DISQUALIFYING_KINDS = {
     "vpn", "proxy", "tor", "scanner", "crawler", "education",
-    "maybe_hacked", "mobile", "hosting", "business", "government",
+    "maybe_hacked", "mobile", "cgnat", "relay", "anycast", "hosting", "business", "government",
 }
 
 
