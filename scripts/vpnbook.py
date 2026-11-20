@@ -160,7 +160,6 @@ def parse_configs(
                 rejected["duplicate_endpoint"] = rejected.get("duplicate_endpoint", 0) + 1
                 continue
             seen.add(identity)
-            proxy["source"] = "vpnbook_official"
             proxies.append(proxy)
         except (VPNGateError, KeyError) as error:
             reason = f"{type(error).__name__}:{str(error)[:120]}"

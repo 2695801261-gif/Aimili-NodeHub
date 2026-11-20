@@ -91,7 +91,7 @@ class VPNBookSourceTests(unittest.TestCase):
         self.assertEqual(proxies[0]["name"], "VPNBook-us16-tcp443")
         self.assertEqual(proxies[0]["username"], "vpnbook")
         self.assertEqual(proxies[0]["password"], "CurrentPass123")
-        self.assertEqual(proxies[0]["source"], "vpnbook_official")
+        self.assertNotIn("source", proxies[0])
         self.assertEqual(report["candidates_parsed"], 1)
 
 

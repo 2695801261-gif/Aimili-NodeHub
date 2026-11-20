@@ -313,10 +313,6 @@ def parse_directory(csv_text: str, *, limit: int = MAX_NODES) -> tuple[list[dict
         "rejection_reasons": dict(rejected),
         "limit": limit,
         "selection_strategy": "rotating_country_round_robin_then_score",
-        "candidate_country_counts": dict(Counter(
-            item["name"].split("-")[1] if item.get("name", "").startswith("VPNGate-") else "XX"
-            for item in accepted
-        )),
     }
     return accepted, report
 
