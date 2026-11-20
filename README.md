@@ -4,7 +4,7 @@
 
 ## 工作方式
 
-- GitHub Actions 每 6 小时运行完整采集、分类和发布；VPN Gate 滚动候选快照另按 20 分钟频率刷新。
+- GitHub Actions 每 6 小时运行完整采集、分类和发布；VPN Gate 滚动候选快照另按 20 分钟频率刷新，私有历史池最多保留 2,000 条候选（14 天），每轮轮换复核 100 条；历史记录只是候选，不代表在线，最终仍需实时隧道与出口风险验证。
 - 基础采集与分类流程不需要 VPS、Cloudflare Worker、KV、域名或自建服务器。可选的 `NODEHUB_CF_FRONT_URI` GitHub Actions Secret 只用于 VPN Gate 探测时的 VLESS/TLS/WebSocket 前置链路；未配置时使用直连探测，前置 URI/UUID 不会写入公开订阅。
 - 使用固定提交版本的 [FreeNodes](https://github.com/nostalume/FreeNodes) 发现订阅源、去重、运行 Mihomo 实际连通性验证并生成通用节点池。
 - 再由本项目启动 Mihomo，逐个选择节点，通过三个独立 HTTPS 出口回显服务执行 2-of-3 一致性核验，确认代理实际出口 IP。
