@@ -102,5 +102,11 @@ class ClassificationTests(unittest.TestCase):
         evidence["isp"] = ""
         self.assertIsNone(classify(evidence).pool)
 
+    def test_unreported_hosting_asn_is_not_low_risk(self):
+        evidence = base()
+        evidence["asn_kind"] = ["hosting"]
+        evidence["oxl_asn_status"] = "not_reported"
+        self.assertIsNone(classify(evidence).pool)
+
 if __name__ == "__main__":
     unittest.main()
