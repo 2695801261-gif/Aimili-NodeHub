@@ -17,7 +17,7 @@ on:
 concurrency:
   # Both workflows mutate the same immutable Actions-cache history. Serialize
   # them so a 20-minute snapshot cannot overwrite a newer full-run snapshot.
-  group: aimili-vpngate-history-writer
+  group: aimili-nodehub-collection
   cancel-in-progress: false
 
 permissions:
