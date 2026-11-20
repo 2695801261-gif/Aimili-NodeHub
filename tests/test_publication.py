@@ -141,10 +141,10 @@ class AtomicPublicationTests(unittest.TestCase):
             profiles, evidence = valid_inputs()
             publish_atomically(
                 paths, profiles, evidence_path, evidence,
-                additional_files={diagnostics_path: '{"checked": 3}\\n'},
+                additional_files={diagnostics_path: '{"checked": 3}\n'},
             )
             self.assertEqual(diagnostics_path.read_text(encoding="utf-8"),
-                             '{"checked": 3}\\n')
+                             '{"checked": 3}\n')
 
 
     def test_failure_reports_are_written_without_touching_subscriptions(self):
@@ -160,11 +160,11 @@ class AtomicPublicationTests(unittest.TestCase):
             evidence = root / "classification" / "evidence.json"
             diagnostics = root / "classification" / "diagnostics.json"
             write_reports_atomically(
-                evidence, '{"checked": 2}\\n',
-                {diagnostics: '{"quarantined": 2}\\n'},
+                evidence, '{"checked": 2}\n',
+                {diagnostics: '{"quarantined": 2}\n'},
             )
-            self.assertEqual(evidence.read_text(encoding="utf-8"), '{"checked": 2}\\n')
-            self.assertEqual(diagnostics.read_text(encoding="utf-8"), '{"quarantined": 2}\\n')
+            self.assertEqual(evidence.read_text(encoding="utf-8"), '{"checked": 2}\n')
+            self.assertEqual(diagnostics.read_text(encoding="utf-8"), '{"quarantined": 2}\n')
             self.assertTrue(all(path.read_text(encoding="utf-8") == "last-good"
                                 for path in subscriptions))
 
