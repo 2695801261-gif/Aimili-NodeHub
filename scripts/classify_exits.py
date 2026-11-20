@@ -366,7 +366,7 @@ def _sample_source_group(candidates, indices: list[int], budget: int, rotation: 
     us_set = set(us)
     other = [index for index in indices if index not in us_set]
     chosen = _rotating_pick(us, min(len(us), budget), rotation)
-    chosen.extend(_rotating_pick(other, budget - len(chosen), rotation + 1))
+    chosen.extend(_rotating_pick(other, budget - len(chosen), rotation + (1 if chosen else 0)))
     return chosen
 
 
