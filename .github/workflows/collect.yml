@@ -1,0 +1,91 @@
+name: Collect and verify nodes
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 */6 * * *"
+
+concurrency:
+  group: aimili-nodehub-collection
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 210
+    steps:
+      - name: Checkout NodeHub
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.0"
+          enable-cache: true
+
+      - name: Fetch pinned FreeNodes engine
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --filter=blob:none https://github.com/nostalume/FreeNodes.git "$RUNNER_TEMP/FreeNodes"
+          git -C "$RUNNER_TEMP/FreeNodes" checkout 5a4f4ecf8c06b49b503046179d10933a6a63ef69
+          mkdir -p "$RUNNER_TEMP/FreeNodes-run"
+          cp -a "$RUNNER_TEMP/FreeNodes/freenodes" "$RUNNER_TEMP/FreeNodes-run/"
+          cp "$RUNNER_TEMP/FreeNodes/main.py" "$RUNNER_TEMP/FreeNodes-run/"
+          cp "$RUNNER_TEMP/FreeNodes/config.yaml" "$RUNNER_TEMP/FreeNodes-run/"
+          cp "$RUNNER_TEMP/FreeNodes/pyproject.toml" "$RUNNER_TEMP/FreeNodes-run/"
+          cp "$RUNNER_TEMP/FreeNodes/uv.lock" "$RUNNER_TEMP/FreeNodes-run/"
+          cp "$RUNNER_TEMP/FreeNodes/mihomo-lock.json" "$RUNNER_TEMP/FreeNodes-run/"
+
+      - name: Configure publication identity
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("$RUNNER_TEMP/FreeNodes-run/config.yaml")
+          s = p.read_text(encoding="utf-8")
+          old = "repository:\n  owner: nostalume\n  name: FreeNodes"
+          new = "repository:\n  owner: 2695801261-gif\n  name: Aimili-NodeHub"
+          if old not in s:
+              raise SystemExit("Pinned upstream config layout changed; refusing unsafe publication")
+          p.write_text(s.replace(old, new, 1), encoding="utf-8")
+          PY
+
+      - name: Install dependencies and browser
+        working-directory: ${{ runner.temp }}/FreeNodes-run
+        run: |
+          uv sync --locked --extra youtube
+          uv run playwright install --with-deps chromium
+
+      - name: Discover, validate and generate profiles
+        working-directory: ${{ runner.temp }}/FreeNodes-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: uv run --locked --extra youtube python main.py
+
+      - name: Copy generated profiles
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s "$RUNNER_TEMP/FreeNodes-run/nodes/merged.yaml"
+          test -s "$RUNNER_TEMP/FreeNodes-run/nodes/v2ray.txt"
+          mkdir -p nodes
+          cp -a "$RUNNER_TEMP/FreeNodes-run/nodes/." nodes/
+
+      - name: Commit changed subscriptions
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add nodes/
+          if git diff --cached --quiet; then
+            echo "No subscription changes."
+          else
+            git commit -m "auto: update verified node catalog"
+            git push
+          fi
