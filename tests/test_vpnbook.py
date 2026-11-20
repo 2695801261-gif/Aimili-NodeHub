@@ -32,8 +32,12 @@ key-direction 1
 class VPNBookSourceTests(unittest.TestCase):
     def test_extracts_runtime_credentials_and_only_official_zip_links(self):
         page = """
+        <div>VPN Password Updated: Nov 18, 2026</div>
+        <h3>VPN Credentials</h3>
+        <div>Use these credentials for all VPN servers</div>
         <div>Username <strong>vpnbook</strong></div>
-        <div>Password: <strong>CurrentPass123</strong></div>
+        <div>Password <strong>CurrentPass123</strong></div>
+        <div>Last updated: Nov 18, 2026</div>
         <a href="/free-openvpn-account/VPNBook.com-OpenVPN-US1.zip">US</a>
         <a href="https://evil.example/free-openvpn-account/evil.zip">bad</a>
         """

@@ -1,6 +1,7 @@
 """Official VPNBook OpenVPN source adapter. Credentials are runtime-only."""
 from __future__ import annotations
 import io, json, re, urllib.error, urllib.parse, urllib.request, zipfile
+from html import unescape
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from collections import Counter
 from pathlib import Path
@@ -35,10 +36,30 @@ def _fetch(url: str, limit: int) -> bytes:
     return data
 
 def parse_vpnbook_page(page: str) -> tuple[tuple[str,str], list[str]]:
-    password = re.search(r"Password(?:\s|&nbsp;|<[^>]*>)*:?(?:\s|&nbsp;|<[^>]*>)*<strong>\s*([^<]{4,64})", page, re.I)
+    # Parse visible text rather than relying on a particular HTML element name.
+    # The official page also mentions the password update date elsewhere, so
+    # prefer the dedicated VPN Credentials section before looking at the FAQ.
+    plain = unescape(re.sub(r"<[^>]+>", " ", page))
+    plain = re.sub(r"\\s+", " ", plain)
+    section = plain
+    if re.search(r"VPN\\s+Credentials", plain, re.I):
+        section = re.split(r"VPN\\s+Credentials", plain, maxsplit=1, flags=re.I)[1]
+        section = re.split(r"Last\\s+updated", section, maxsplit=1, flags=re.I)[0]
+    password = re.search(
+        r"\\bPassword\\b\\s*:?[\\s]+([A-Za-z0-9!@#$%^&*()_+\\-]{4,64})",
+        section,
+        re.I,
+    )
+    if not password:
+        # Legacy page variants label the value directly in the FAQ.
+        password = re.search(
+            r"Username\\s*:\\s*vpnbook[.\\s]+Password\\s*:\\s*([A-Za-z0-9!@#$%^&*()_+\\-]{4,64})",
+            plain,
+            re.I,
+        )
     if not password:
         raise VPNBookError("current shared password not found on official page")
-    links = re.findall(r"""href=["']([^"']+\.zip(?:\?[^"']*)?)["']""", page, re.I)
+    links = re.findall(r"""href=["']([^"']+\\.zip(?:\\?[^"']*)?)["']""", page, re.I)
     urls = []
     for link in links:
         absolute = urllib.parse.urljoin(BASE_URL, link)
@@ -50,73 +71,4 @@ def parse_vpnbook_page(page: str) -> tuple[tuple[str,str], list[str]]:
         raise VPNBookError("official page exposed no OpenVPN ZIP links")
     return ("vpnbook", password.group(1).strip()), urls
 
-def parse_archives(archives: list[tuple[str,bytes]], credentials: tuple[str,str], limit: int = MAX_PROFILES) -> tuple[list[dict[str,Any]],dict[str,Any]]:
-    proxies, rejected, seen = [], Counter(), set()
-    for url, raw in archives:
-        if len(raw) > MAX_ARCHIVE_BYTES:
-            rejected["archive_too_large"] += 1
-            continue
-        try:
-            with zipfile.ZipFile(io.BytesIO(raw)) as archive:
-                for info in archive.infolist():
-                    if info.is_dir() or not info.filename.lower().endswith(".ovpn"):
-                        continue
-                    if info.file_size < 1 or info.file_size > 128 * 1024:
-                        rejected["profile_size_invalid"] += 1
-                        continue
-                    try:
-                        profile = archive.read(info).decode("utf-8-sig")
-                        basename = Path(info.filename).name
-                        proxy = parse_ovpn_config(profile, "VPNBook-" + basename[:-5], credentials)
-                    except (VPNGateError, UnicodeDecodeError, zipfile.BadZipFile) as error:
-                        rejected[type(error).__name__ + ":" + str(error)[:100]] += 1
-                        continue
-                    key = (proxy["server"], proxy["port"], proxy["proto"])
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    proxy["source"] = "vpnbook_official"
-                    proxies.append(proxy)
-                    if len(proxies) >= limit:
-                        break
-        except (zipfile.BadZipFile, OSError):
-            rejected["invalid_zip"] += 1
-        if len(proxies) >= limit:
-            break
-    return proxies, {"source":"vpnbook_official","archives_seen":len(archives),"candidates_parsed":len(proxies),"rejection_reasons":dict(rejected),"limit":limit}
 
-def collect_vpnbook() -> dict[str,Any]:
-    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.parent.mkdir(parents=True, exist_ok=True)
-    try:
-        page = _fetch(PAGE_URL, MAX_PAGE_BYTES).decode("utf-8", errors="replace")
-        credentials, links = parse_vpnbook_page(page)
-        archives = []
-        fetch_errors = Counter()
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            futures = [(url, executor.submit(_fetch, url, MAX_ARCHIVE_BYTES)) for url in links[:12]]
-            for url, future in futures:
-                try:
-                    archives.append((url, future.result(timeout=30)))
-                except (Exception, FutureTimeout) as error:
-                    fetch_errors[type(error).__name__] += 1
-        if not archives:
-            raise VPNBookError("all official VPNBook configuration archives failed to download")
-        proxies, report = parse_archives(archives, credentials)
-        report["archive_fetch_errors"] = dict(fetch_errors)
-        if not MIHOMO.is_file():
-            raise VPNBookError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
-        valid, rejected = _validate_batch(proxies, MIHOMO)
-        report["mihomo_validated"] = len(valid)
-        report["mihomo_rejected"] = rejected
-        report["status"] = "ok" if valid else "empty"
-        OUTPUT.write_text(yaml.safe_dump({"proxies":valid},allow_unicode=True,sort_keys=False),encoding="utf-8")
-    except Exception as error:
-        report = {"source":"vpnbook_official","status":"unavailable","error":f"{type(error).__name__}: {' '.join(str(error).split())[:220]}","candidates_parsed":0}
-        OUTPUT.write_text(yaml.safe_dump({"proxies":[]},sort_keys=False),encoding="utf-8")
-    REPORT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    print("VPNBook discovery:",json.dumps(report,ensure_ascii=False,sort_keys=True),flush=True)
-    return report
-
-if __name__ == "__main__":
-    collect_vpnbook()
