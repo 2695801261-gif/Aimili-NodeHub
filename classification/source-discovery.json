@@ -1,40 +1,40 @@
 {
   "source": "vpngate_official_csv",
   "endpoint": "https://www.vpngate.net/api/iphone/",
-  "rows_seen": 95,
-  "candidates_parsed": 78,
-  "rejected": 17,
+  "rows_seen": 98,
+  "candidates_parsed": 82,
+  "rejected": 16,
   "rejection_reasons": {
-    "vpngate_operated_public_vpn_hostname": 17
+    "vpngate_operated_public_vpn_hostname": 16
   },
   "limit": 100,
   "selection_strategy": "rotating_country_round_robin_then_score",
-  "current_mihomo_validated": 78,
+  "current_mihomo_validated": 82,
   "current_mihomo_rejected": 0,
-  "history_candidates_available": 86,
-  "history_candidates_selected": 50,
-  "history_off_window_retained": 28,
+  "history_candidates_available": 130,
+  "history_candidates_selected": 100,
+  "history_off_window_retained": 75,
   "history_expired": 0,
   "history_invalid": 0,
   "history_ttl_days": 14,
   "tcp_prescreen": {
     "runner_vantage": "github-actions",
-    "tcp_candidates": 87,
-    "tcp_reachable": 67,
-    "tcp_unreachable": 20,
-    "tcp_skipped_non_tcp": 19,
+    "tcp_candidates": 131,
+    "tcp_reachable": 104,
+    "tcp_unreachable": 27,
+    "tcp_skipped_non_tcp": 26,
     "tcp_skipped_invalid_endpoint": 0,
     "workers": 64,
     "timeout_seconds": 2.5,
     "failure_types": {
-      "TimeoutError": 17,
-      "ConnectionRefusedError": 3
+      "TimeoutError": 25,
+      "ConnectionRefusedError": 2
     },
-    "history_before": 106,
-    "history_after": 86
+    "history_before": 157,
+    "history_after": 130
   },
-  "probe_rotation": 156,
-  "mihomo_validated": 50,
+  "probe_rotation": 157,
+  "mihomo_validated": 100,
   "mihomo_rejected": 0,
   "status": "ok",
   "vpngate_rolling_mirror": {
@@ -114,13 +114,13 @@
       "GR": 1
     },
     "pool_rows": 4948,
-    "eligible_recent_tcp": 1336,
-    "eligible_us_recent_tcp": 25,
+    "eligible_recent_tcp": 1321,
+    "eligible_us_recent_tcp": 24,
     "selected": 200,
-    "selected_us": 25,
+    "selected_us": 24,
     "rejected": {
       "tcp_not_reachable": 3344,
-      "stale_tcp_check": 268
+      "stale_tcp_check": 283
     },
     "tcp_check_max_age_hours": 12.0,
     "node_max_age_days": 7,
