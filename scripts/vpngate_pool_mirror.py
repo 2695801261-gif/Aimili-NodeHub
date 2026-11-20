@@ -35,7 +35,7 @@ MAX_POOL_BYTES = 16 * 1024 * 1024
 MAX_CONFIG_FILE_BYTES = 256 * 1024
 MAX_OPENVPN_BYTES = 128 * 1024
 MAX_POOL_SERVERS = 6000
-MAX_CONFIG_WORKERS = 12
+MAX_CONFIG_WORKERS = 24
 DEFAULT_MAX_CANDIDATES = 200
 DEFAULT_MAX_US_CANDIDATES = 160
 TCP_MAX_AGE = timedelta(hours=12)
@@ -66,7 +66,7 @@ def _read_https(url: str, max_bytes: int) -> bytes:
         url,
         headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
     )
-    with urllib.request.urlopen(request, timeout=25) as response:
+    with urllib.request.urlopen(request, timeout=12) as response:
         body = response.read(max_bytes + 1)
     if len(body) > max_bytes:
         raise RollingMirrorError("remote file exceeds the configured size limit")
