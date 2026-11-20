@@ -1,13 +1,15 @@
-"""Fail-closed classification rules for observed proxy exit IPs."""
+"""Fail-closed classification using observed exit IP and independent Layer3 intelligence."""
 from __future__ import annotations
 
+import ipaddress
 from dataclasses import dataclass
 from typing import Any
 
 DISQUALIFYING_KINDS = {
     "vpn", "proxy", "tor", "scanner", "crawler", "education",
-    "maybe_hacked", "mobile", "cgnat", "relay", "anycast", "hosting", "business", "government",
+    "maybe_hacked", "mobile", "cgnat", "relay", "anycast", "business", "government",
 }
+ANONYMIZER_FLAGS = ("anonymizer", "proxy", "vpn", "tor", "relay")
 
 
 @dataclass(frozen=True)
@@ -22,96 +24,161 @@ def _kinds(value: Any) -> set[str]:
     return {x.strip().casefold() for x in value}
 
 
+def _valid_layer3(evidence: dict[str, Any]) -> tuple[str | None, str]:
+    ip = evidence.get("exit_ip")
+    if not isinstance(ip, str):
+        return None, "layer3_exit_ip_missing"
+    try:
+        address = ipaddress.ip_address(ip)
+    except ValueError:
+        return None, "layer3_exit_ip_invalid"
+
+    if address.version != 4:
+        return None, "layer3_open_api_ipv4_only"
+
+    if evidence.get("layer3_ip") != ip:
+        return None, "layer3_ip_mismatch"
+    asn = evidence.get("asn")
+    layer3_asn = evidence.get("layer3_asn")
+    if isinstance(layer3_asn, bool) or not isinstance(layer3_asn, int) or layer3_asn != asn:
+        return None, "layer3_asn_mismatch"
+
+    prefix = evidence.get("layer3_prefix")
+    try:
+        network = ipaddress.ip_network(prefix, strict=False)
+    except (TypeError, ValueError):
+        return None, "layer3_prefix_invalid"
+    if address not in network:
+        return None, "layer3_prefix_mismatch"
+
+    layer3_country = evidence.get("layer3_country")
+    if not isinstance(layer3_country, str) or layer3_country.upper() != evidence.get("country_code"):
+        return None, "layer3_country_mismatch"
+
+    risk_level = evidence.get("layer3_risk_level")
+    risk_score = evidence.get("layer3_risk_score")
+    if risk_level != "low" or isinstance(risk_score, bool) or not isinstance(risk_score, (int, float)) or not 0 <= risk_score < 25:
+        return None, "layer3_risk_not_low"
+
+    flags = evidence.get("layer3_flags")
+    if not isinstance(flags, dict):
+        return None, "layer3_flags_missing"
+    for flag in ANONYMIZER_FLAGS:
+        if flags.get(flag) is not False:
+            return None, f"layer3_{flag}_signal"
+
+    reasons = evidence.get("layer3_risk_reasons")
+    if not isinstance(reasons, list) or any(not isinstance(item, str) for item in reasons):
+        return None, "layer3_risk_reasons_missing"
+    if evidence.get("layer3_sharing") is not None:
+        return None, "layer3_shared_address"
+    if evidence.get("layer3_drop_listed") is True:
+        return None, "layer3_drop_listed"
+    if evidence.get("layer3_crawler") is True:
+        return None, "layer3_crawler_signal"
+
+    return evidence.get("layer3_type"), ""
+
+
 def classify(evidence: dict[str, Any]) -> Verdict:
-    """Classify only when every required evidence field is present and consistent."""
+    """Classify only when all required IP, ASN, route and risk evidence agrees."""
     country = evidence.get("country_code")
     asn = evidence.get("asn")
     isp_name = evidence.get("isp")
     if not isinstance(evidence.get("asn_kind"), list):
         return Verdict(None, "asn_network_type_missing")
     asn_kinds = _kinds(evidence.get("asn_kind"))
-    ip_status = evidence.get("ip_risk_status")
-    net_status = evidence.get("net_status")
-    if net_status != "ok":
-        return Verdict(None, "network_reputation_unavailable")
-    if not isinstance(evidence.get("net_kind"), list):
-        return Verdict(None, "network_kind_missing")
-    net_kinds = _kinds(evidence.get("net_kind"))
-    net_reports = evidence.get("net_reports")
-    net_reputation = evidence.get("net_reputation")
-    if isinstance(net_reports, bool) or not isinstance(net_reports, (int, float)):
-        return Verdict(None, "network_report_count_missing")
-    if net_reports != 0:
-        return Verdict(None, "network_has_abuse_reports")
-    if net_reputation not in {"ok", "info"}:
-        return Verdict(None, "network_reputation_not_acceptable")
-    if net_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
-        return Verdict(None, "network_has_disqualifying_signal")
-    if ip_status == "ok" and not isinstance(evidence.get("ip_kind"), list):
-        return Verdict(None, "ip_network_type_missing")
-    ip_kinds = _kinds(evidence.get("ip_kind", []))
-    asn_reports = evidence.get("asn_reports")
-    ip_reports = evidence.get("ip_reports")
 
+    if evidence.get("exit_echo_agreement") is not True:
+        return Verdict(None, "exit_echo_mismatch")
+    if evidence.get("ip_metadata_success") is not True:
+        return Verdict(None, "exit_ip_lookup_failed")
     if not isinstance(country, str) or len(country) != 2 or country.upper() in {"ZZ", "XX", "T1", "A1", "EU", "AP"}:
         return Verdict(None, "missing_or_invalid_country")
     if isinstance(asn, bool) or not isinstance(asn, int) or asn <= 0:
         return Verdict(None, "missing_or_invalid_asn")
     if not isinstance(isp_name, str) or not isp_name.strip():
         return Verdict(None, "network_operator_name_missing")
-    if evidence.get("exit_echo_agreement") is not True:
-        return Verdict(None, "exit_echo_mismatch")
-    if evidence.get("ip_metadata_success") is not True:
-        return Verdict(None, "exit_ip_lookup_failed")
-    if evidence.get("net_asn_match") is not True:
-        return Verdict(None, "exit_asn_network_mismatch")
-    if evidence.get("net_prefix_match") is not True:
-        return Verdict(None, "exit_ip_outside_reported_network")
+
     if evidence.get("oxl_asn_status") != "ok":
         return Verdict(None, "asn_intelligence_unavailable")
+    asn_reports = evidence.get("asn_reports")
     if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
         return Verdict(None, "asn_risk_count_missing")
     if asn_reports != 0:
         return Verdict(None, "asn_has_abuse_reports")
+    if asn_kinds & DISQUALIFYING_KINDS:
+        return Verdict(None, "asn_has_disqualifying_signal")
+
+    ip_status = evidence.get("ip_risk_status")
     if ip_status not in {"ok", "not_reported"}:
         return Verdict(None, "ip_risk_lookup_failed")
     if ip_status == "ok":
+        ip_reports = evidence.get("ip_reports")
         if isinstance(ip_reports, bool) or not isinstance(ip_reports, (int, float)):
             return Verdict(None, "ip_risk_count_missing")
         if ip_reports != 0:
             return Verdict(None, "ip_has_abuse_reports")
-    if ip_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
+    ip_kinds = _kinds(evidence.get("ip_kind", []))
+    if ip_kinds & DISQUALIFYING_KINDS:
         return Verdict(None, "ip_has_disqualifying_network_signal")
 
-    if "isp" in asn_kinds:
-        if "isp" not in net_kinds:
-            return Verdict(None, "isp_network_not_confirmed")
-        if "hosting" in net_kinds:
-            return Verdict(None, "conflicting_isp_hosting_network_signal")
+    net_status = evidence.get("net_status")
+    net_kinds: set[str] = set()
+    if net_status == "ok":
+        if not isinstance(evidence.get("net_kind"), list):
+            return Verdict(None, "network_kind_missing")
+        net_kinds = _kinds(evidence.get("net_kind"))
+        net_reports = evidence.get("net_reports")
+        if isinstance(net_reports, bool) or not isinstance(net_reports, (int, float)):
+            return Verdict(None, "network_report_count_missing")
+        if net_reports != 0:
+            return Verdict(None, "network_has_abuse_reports")
+        if evidence.get("net_reputation") not in {"ok", "info"}:
+            return Verdict(None, "network_reputation_not_acceptable")
+        if evidence.get("net_asn_match") is not True or evidence.get("net_prefix_match") is not True:
+            return Verdict(None, "network_prefix_or_asn_mismatch")
+        if net_kinds & DISQUALIFYING_KINDS:
+            return Verdict(None, "network_has_disqualifying_signal")
+    elif net_status != "not_reported":
+        return Verdict(None, "network_intelligence_unavailable")
+
+    layer3_type, layer3_error = _valid_layer3(evidence)
+    if layer3_error:
+        return Verdict(None, layer3_error)
+
+    if layer3_type == "residential":
+        if evidence.get("layer3_network_type") != "access":
+            return Verdict(None, "residential_network_type_not_access")
+        if evidence.get("layer3_flags", {}).get("hosting") is not False:
+            return Verdict(None, "residential_hosting_signal")
+        if evidence.get("layer3_risk_reasons") != []:
+            return Verdict(None, "residential_risk_reason_present")
+        if "isp" not in asn_kinds or "hosting" in asn_kinds:
+            return Verdict(None, "isp_asn_not_confirmed")
+        if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
+            return Verdict(None, "isp_network_conflict")
         if "hosting" in ip_kinds:
-            return Verdict(None, "conflicting_isp_hosting_ip_signal")
-        if asn_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
-            return Verdict(None, "conflicting_isp_asn_signals")
-        if "hosting" in asn_kinds:
-            return Verdict(None, "conflicting_isp_hosting_signals")
+            return Verdict(None, "isp_hosting_ip_conflict")
         return Verdict(
-            "us-residential" if country == "US" else "other-residential",
-            "isp_asn_api_confirmed_no_known_disqualifying_signal",
+            "us-residential" if country.upper() == "US" else "other-residential",
+            "layer3_residential_access_and_isp_asn_confirmed",
         )
 
-    if "hosting" in asn_kinds:
-        if "hosting" not in net_kinds:
-            return Verdict(None, "hosting_network_not_confirmed")
-        if "isp" in net_kinds:
-            return Verdict(None, "conflicting_isp_hosting_network_signal")
-        if evidence.get("oxl_asn_status") != "ok":
-            return Verdict(None, "hosting_asn_risk_lookup_missing")
+    if layer3_type == "hosting":
+        if evidence.get("layer3_network_type") != "hosting":
+            return Verdict(None, "hosting_network_type_not_confirmed")
+        if evidence.get("layer3_flags", {}).get("hosting") is not True:
+            return Verdict(None, "hosting_flag_missing")
+        allowed_reasons = {"hosting"}
+        if any(reason not in allowed_reasons for reason in evidence.get("layer3_risk_reasons", [])):
+            return Verdict(None, "hosting_risk_reason_present")
+        if "hosting" not in asn_kinds:
+            return Verdict(None, "hosting_asn_not_confirmed")
+        if net_status == "ok" and ("hosting" not in net_kinds or "isp" in net_kinds):
+            return Verdict(None, "hosting_network_conflict")
         if "isp" in ip_kinds:
-            return Verdict(None, "conflicting_isp_hosting_ip_signal")
-        if asn_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
-            return Verdict(None, "conflicting_hosting_asn_signals")
-        if "isp" in asn_kinds:
-            return Verdict(None, "conflicting_isp_hosting_signals")
-        return Verdict("low-risk-datacenter", "hosting_asn_list_confirmed_no_known_risk_signal")
+            return Verdict(None, "hosting_isp_ip_conflict")
+        return Verdict("low-risk-datacenter", "layer3_low_risk_hosting_and_asn_confirmed")
 
-    return Verdict(None, "network_type_not_confirmed")
+    return Verdict(None, "layer3_address_type_not_publishable")
