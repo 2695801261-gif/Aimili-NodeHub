@@ -3,7 +3,30 @@ import unittest
 import zipfile
 
 from scripts.vpnbook import VPNBookError, parse_archives, parse_vpnbook_page
-from tests.test_vpngate import profile
+CA = """-----BEGIN CERTIFICATE-----
+MIIBtestcertificate
+-----END CERTIFICATE-----"""
+TLS_AUTH = """-----BEGIN OpenVPN Static key V1-----
+0123456789abcdef
+-----END OpenVPN Static key V1-----"""
+
+
+def profile(remote="8.8.8.20 443 udp"):
+    return f"""client
+dev tun
+proto udp
+remote {remote}
+auth-user-pass
+cipher AES-128-CBC
+auth SHA1
+key-direction 1
+<ca>
+{CA}
+</ca>
+<tls-auth>
+{TLS_AUTH}
+</tls-auth>
+"""
 
 
 class VPNBookSourceTests(unittest.TestCase):

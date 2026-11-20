@@ -341,7 +341,7 @@ def run() -> None:
         except (OSError, json.JSONDecodeError):
             source_discovery = {"status": "unreadable"}
     if not candidates:
-        raise SystemExit("No usable proxies found across FreeNodes and VPN Gate sources")
+        raise SystemExit("No usable proxies found across FreeNodes, VPN Gate and VPNBook sources")
     rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
     candidates = select_exit_candidates(candidates, MAX_CANDIDATES, rotation=rotation)
 
