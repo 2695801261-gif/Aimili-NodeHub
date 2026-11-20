@@ -669,21 +669,35 @@ def prescreen_history_for_run(
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Skip direct TCP filtering when VPNGate probes will use a CF dialer front."""
     if os.getenv("NODEHUB_CF_FRONT_URI", "").strip():
+        tcp_candidates = 0
+        skipped_non_tcp = 0
+        skipped_invalid = 0
+        for record in records:
+            node = record.get("node") if isinstance(record, dict) else None
+            if not isinstance(node, dict):
+                skipped_invalid += 1
+                continue
+            if not str(node.get("proto") or "").casefold().startswith("tcp"):
+                skipped_non_tcp += 1
+                continue
+            host = str(node.get("server") or "").strip()
+            try:
+                port = int(node.get("port"))
+            except (TypeError, ValueError):
+                port = 0
+            if not host or not 1 <= port <= 65535:
+                skipped_invalid += 1
+            else:
+                tcp_candidates += 1
         return records, {
             "runner_vantage": "github-actions",
             "skipped": True,
             "skip_reason": "cloudflare_vless_probe_underlay_configured",
-            "tcp_candidates": 0,
+            "tcp_candidates": tcp_candidates,
             "tcp_reachable": 0,
             "tcp_unreachable": 0,
-            "tcp_skipped_non_tcp": sum(
-                1
-                for record in records
-                if isinstance(record, dict)
-                and isinstance(record.get("node"), dict)
-                and str(record["node"].get("proto") or "").casefold() not in {"tcp", "tcp-client", "tcp-server"}
-            ),
-            "tcp_skipped_invalid_endpoint": 0,
+            "tcp_skipped_non_tcp": skipped_non_tcp,
+            "tcp_skipped_invalid_endpoint": skipped_invalid,
             "workers": 0,
             "timeout_seconds": timeout_seconds,
             "failure_types": {},
