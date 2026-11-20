@@ -116,15 +116,16 @@ jobs:
             echo "No classification diagnostics were produced." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Commit changed subscriptions
+      - name: Commit generated artifacts and failure diagnostics
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add nodes/
-          if [ -d subscriptions ]; then git add subscriptions/; fi
-          if [ -d classification ]; then git add classification/; fi
+          for path in nodes subscriptions classification; do
+            if [ -d "$path" ]; then git add "$path/"; fi
+          done
           if git diff --cached --quiet; then
             echo "No subscription changes."
           else
