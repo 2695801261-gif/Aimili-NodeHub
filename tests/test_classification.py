@@ -483,5 +483,53 @@ class ClassificationTests(unittest.TestCase):
             self.assertIsNone(classify(evidence).pool)
 
 
+    def test_ipwho_positive_security_flags_quarantine_residential_conflicts(self):
+        for flag, expected in (
+            ("proxy", "ipwho_proxy_signal"),
+            ("tor", "ipwho_tor_signal"),
+            ("hosting", "ipwho_hosting_layer3_conflict"),
+            ("vpn", "ipwho_vpn_signal"),
+        ):
+            evidence = base()
+            evidence["ipwho_security"] = {
+                "hosting": False, "proxy": False, "vpn": False, "tor": False,
+            }
+            evidence["ipwho_security"][flag] = True
+            verdict = classify(evidence)
+            self.assertIsNone(verdict.pool, flag)
+            self.assertEqual(verdict.reason, expected, flag)
+
+    def test_ipwho_vpn_flag_is_allowed_only_for_verified_vpngate_isp_relay(self):
+        evidence = self._vpngate_access_candidate()
+        evidence["ipwho_security"] = {
+            "hosting": False, "proxy": False, "vpn": True, "tor": False,
+        }
+        self.assertEqual(classify(evidence).pool, "us-residential")
+
+    def test_ipwho_proxy_or_tor_blocks_vpngate_isp_relay_exception(self):
+        for flag in ("proxy", "tor", "hosting"):
+            evidence = self._vpngate_access_candidate()
+            evidence["ipwho_security"] = {
+                "hosting": False, "proxy": False, "vpn": True, "tor": False,
+            }
+            evidence["ipwho_security"][flag] = True
+            self.assertIsNone(classify(evidence).pool, flag)
+
+    def test_ipwho_hosting_agrees_with_layer3_hosting_datacenter(self):
+        evidence = base()
+        evidence["asn_kind"] = ["hosting"]
+        evidence["net_kind"] = ["hosting"]
+        evidence["layer3_type"] = "hosting"
+        evidence["layer3_network_type"] = "hosting"
+        evidence["layer3_flags"]["hosting"] = True
+        evidence["layer3_risk_level"] = "medium"
+        evidence["layer3_risk_score"] = 50
+        evidence["layer3_risk_reasons"] = ["hosting"]
+        evidence["ipwho_security"] = {
+            "hosting": True, "proxy": False, "vpn": False, "tor": False,
+        }
+        self.assertEqual(classify(evidence).pool, "low-risk-datacenter")
+
+
 if __name__ == "__main__":
     unittest.main()

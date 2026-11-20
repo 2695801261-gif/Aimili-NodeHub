@@ -302,6 +302,21 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     layer3_type, layer3_error = _valid_layer3(evidence)
     if layer3_error:
         return Verdict(None, layer3_error)
+    # ipwho.is is already the primary source for the observed exit's country,
+    # ASN and ISP. Do not discard its positive security flags: a conflict with
+    # Layer3/O-X-L must fail closed. VPNGate's narrowly verified VPN-on-ISP
+    # transport is the only exception for the expected VPN flag.
+    ipwho_security = evidence.get("ipwho_security")
+    if isinstance(ipwho_security, dict):
+        if ipwho_security.get("proxy") is True:
+            return Verdict(None, "ipwho_proxy_signal")
+        if ipwho_security.get("tor") is True:
+            return Verdict(None, "ipwho_tor_signal")
+        if ipwho_security.get("hosting") is True and layer3_type != "hosting":
+            return Verdict(None, "ipwho_hosting_layer3_conflict")
+        if ipwho_security.get("vpn") is True and not _is_vpngate_relay_transport_signal(evidence):
+            return Verdict(None, "ipwho_vpn_signal")
+
 
     if layer3_type == "residential":
         if (
