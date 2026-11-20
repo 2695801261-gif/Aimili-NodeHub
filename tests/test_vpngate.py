@@ -1,7 +1,13 @@
 import base64
 import unittest
 
-from scripts.vpngate import VPNGateError, parse_directory, parse_ovpn_config
+from scripts.vpngate import (
+    VPNGateError,
+    merge_candidate_history,
+    parse_directory,
+    parse_ovpn_config,
+    select_history_candidates,
+)
 
 
 CA = """-----BEGIN CERTIFICATE-----
@@ -108,6 +114,93 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertEqual(report["rows_seen"], 1)
         self.assertEqual(report["candidates_parsed"], 1)
 
+
+
+    def test_history_retains_off_window_us_candidate_until_ttl(self):
+        node = {
+            "name": "VPNGate-US-8-8-8-20-volunteer",
+            "type": "openvpn", "server": "8.8.8.20",
+            "port": 443, "proto": "tcp",
+        }
+        previous = [{"node": node, "first_seen_at": 100.0, "last_seen_at": 900.0}]
+        merged, stats = merge_candidate_history([], previous, now=1000.0, ttl_seconds=500)
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]["node"]["name"], node["name"])
+        self.assertEqual(stats["off_window_retained"], 1)
+
+    def test_history_expires_off_window_candidates_after_ttl(self):
+        node = {
+            "name": "VPNGate-US-8-8-8-21-volunteer",
+            "type": "openvpn", "server": "8.8.8.21",
+            "port": 443, "proto": "tcp",
+        }
+        previous = [{"node": node, "first_seen_at": 100.0, "last_seen_at": 100.0}]
+        merged, stats = merge_candidate_history([], previous, now=1000.0, ttl_seconds=100)
+        self.assertEqual(merged, [])
+        self.assertEqual(stats["history_expired"], 1)
+
+    def test_current_api_candidate_refreshes_existing_history_entry(self):
+        node = {
+            "name": "VPNGate-US-8-8-8-22-volunteer",
+            "type": "openvpn", "server": "8.8.8.22",
+            "port": 443, "proto": "tcp",
+        }
+        previous = [{"node": node, "first_seen_at": 100.0, "last_seen_at": 200.0}]
+        merged, stats = merge_candidate_history([node], previous, now=500.0)
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0]["first_seen_at"], 100.0)
+        self.assertEqual(merged[0]["last_seen_at"], 500.0)
+        self.assertEqual(stats["current_refreshed"], 1)
+
+    def test_history_keeps_only_five_off_window_candidates_per_country(self):
+        previous = []
+        for index in range(7):
+            node = {
+                "name": f"VPNGate-JP-8-8-8-{30+index}-volunteer",
+                "type": "openvpn", "server": f"8.8.8.{30+index}",
+                "port": 443, "proto": "tcp",
+            }
+            previous.append({"node": node, "first_seen_at": 100.0, "last_seen_at": 900.0 + index})
+        merged, stats = merge_candidate_history(
+            [], previous, now=1000.0, ttl_seconds=500, max_stale_per_country=5
+        )
+        self.assertEqual(len(merged), 5)
+        self.assertEqual(stats["off_window_retained"], 5)
+
+    def test_history_rejects_vpngate_operated_endpoints(self):
+        by_name = {
+            "name": "VPNGate-US-8-8-8-23-public-vpn-255",
+            "type": "openvpn", "server": "8.8.8.23",
+            "port": 443, "proto": "tcp",
+        }
+        by_network = {
+            "name": "VPNGate-JP-219-100-37-224-volunteer",
+            "type": "openvpn", "server": "219.100.37.224",
+            "port": 443, "proto": "tcp",
+        }
+        previous = [
+            {"node": by_name, "first_seen_at": 100.0, "last_seen_at": 900.0},
+            {"node": by_network, "first_seen_at": 100.0, "last_seen_at": 900.0},
+        ]
+        merged, stats = merge_candidate_history([], previous, now=1000.0, ttl_seconds=500)
+        self.assertEqual(merged, [])
+        self.assertEqual(stats["history_invalid"], 2)
+
+    def test_history_selection_prioritizes_us_and_rotates_us_candidates(self):
+        records = []
+        for country, base_ip in (("JP", 30), ("US", 20)):
+            for index in range(3):
+                node = {
+                    "name": f"VPNGate-{country}-8-8-8-{base_ip+index}-volunteer",
+                    "type": "openvpn", "server": f"8.8.8.{base_ip+index}",
+                    "port": 443, "proto": "tcp",
+                }
+                records.append({"node": node, "first_seen_at": 100.0, "last_seen_at": 100.0+index})
+        first = select_history_candidates(records, limit=2, rotation=0)
+        second = select_history_candidates(records, limit=2, rotation=1)
+        self.assertTrue(first[0]["name"].startswith("VPNGate-US-"))
+        self.assertTrue(second[0]["name"].startswith("VPNGate-US-"))
+        self.assertNotEqual(first[0]["name"], second[0]["name"])
 
     def test_excludes_vpngate_operated_public_vpn_hostname(self):
         header = (

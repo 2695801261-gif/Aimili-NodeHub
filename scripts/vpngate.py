@@ -10,6 +10,7 @@ import re
 import shlex
 import subprocess
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from collections import Counter
@@ -21,11 +22,16 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 VPNGATE_API = "https://www.vpngate.net/api/iphone/"
 OUTPUT = ROOT / ".cache" / "vpngate" / "candidates.yaml"
+HISTORY_FILE = ROOT / "nodes" / "vpngate-candidate-history.json"
 REPORT = ROOT / "classification" / "source-discovery.json"
 MIHOMO = ROOT / ".cache" / "mihomo" / "mihomo"
 MAX_NODES = int(os.getenv("NODEHUB_MAX_VPNGATE_NODES", "100"))
 MAX_RESPONSE_BYTES = 16 * 1024 * 1024
 MAX_CONFIG_BYTES = 128 * 1024
+HISTORY_TTL_SECONDS = 14 * 24 * 60 * 60
+HISTORY_MAX_STALE_PER_COUNTRY = 5
+HISTORY_MAX_NODES = 300
+HISTORY_PROBE_LIMIT = 50
 VPNGATE_OPERATED_IPV4_NETWORK = ipaddress.ip_network("219.100.37.0/24")
 VPNGATE_OPERATED_HOST_PREFIX = "public-vpn"
 
@@ -367,35 +373,311 @@ def _validate_batch(proxies: list[dict[str, Any]], binary: Path) -> tuple[list[d
     return left + right, left_rejected + right_rejected
 
 
+
+def _candidate_identity(node: dict[str, Any]) -> tuple[str, int, str] | None:
+    if not isinstance(node, dict) or node.get("type") != "openvpn":
+        return None
+    name = node.get("name")
+    if not isinstance(name, str) or not name.startswith("VPNGate-"):
+        return None
+    if "public-vpn" in name.casefold():
+        return None
+    server = node.get("server")
+    if not isinstance(server, str) or not server.strip():
+        return None
+    try:
+        address = ipaddress.ip_address(server)
+    except ValueError:
+        if not re.fullmatch(r"[A-Za-z0-9.-]+", server):
+            return None
+        identity_host = server.casefold()
+    else:
+        if not address.is_global:
+            return None
+        if isinstance(address, ipaddress.IPv4Address) and address in VPNGATE_OPERATED_IPV4_NETWORK:
+            return None
+        identity_host = str(address)
+    port = node.get("port")
+    if isinstance(port, bool) or not isinstance(port, int) or not 1 <= port <= 65535:
+        return None
+    proto = node.get("proto")
+    if proto not in {"tcp", "udp"}:
+        return None
+    return identity_host, port, proto
+
+
+def _candidate_country(node: dict[str, Any]) -> str:
+    parts = str(node.get("name") or "").split("-", 2)
+    if len(parts) >= 2 and parts[0] == "VPNGate" and re.fullmatch(r"[A-Z]{2}", parts[1]):
+        return parts[1]
+    return "XX"
+
+
+def load_candidate_history(path: Path = HISTORY_FILE) -> list[dict[str, Any]]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+        return []
+    records = payload.get("candidates")
+    return records if isinstance(records, list) else []
+
+
+def merge_candidate_history(
+    current: list[dict[str, Any]],
+    previous: list[dict[str, Any]],
+    *,
+    now: float | None = None,
+    ttl_seconds: int = HISTORY_TTL_SECONDS,
+    max_stale_per_country: int = HISTORY_MAX_STALE_PER_COUNTRY,
+    max_total: int = HISTORY_MAX_NODES,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Keep a short rolling history; old profiles remain candidates, never proof of liveness."""
+    now = time.time() if now is None else float(now)
+    records: dict[tuple[str, int, str], dict[str, Any]] = {}
+    stats = {
+        "history_loaded": 0,
+        "history_expired": 0,
+        "history_invalid": 0,
+        "current_new": 0,
+        "current_refreshed": 0,
+    }
+    for record in previous:
+        if not isinstance(record, dict):
+            stats["history_invalid"] += 1
+            continue
+        node = record.get("node")
+        identity = _candidate_identity(node) if isinstance(node, dict) else None
+        last_seen = record.get("last_seen_at")
+        first_seen = record.get("first_seen_at", last_seen)
+        if (
+            identity is None
+            or isinstance(last_seen, bool)
+            or not isinstance(last_seen, (int, float))
+            or isinstance(first_seen, bool)
+            or not isinstance(first_seen, (int, float))
+            or last_seen > now + 300
+        ):
+            stats["history_invalid"] += 1
+            continue
+        if now - last_seen > ttl_seconds:
+            stats["history_expired"] += 1
+            continue
+        existing = records.get(identity)
+        normalized = {
+            "node": node,
+            "first_seen_at": float(first_seen),
+            "last_seen_at": float(last_seen),
+        }
+        if existing is None or normalized["last_seen_at"] > existing["last_seen_at"]:
+            records[identity] = normalized
+        stats["history_loaded"] += 1
+
+    current_ids: set[tuple[str, int, str]] = set()
+    for node in current:
+        identity = _candidate_identity(node) if isinstance(node, dict) else None
+        if identity is None:
+            continue
+        current_ids.add(identity)
+        existing = records.get(identity)
+        if existing is None:
+            records[identity] = {
+                "node": node,
+                "first_seen_at": now,
+                "last_seen_at": now,
+            }
+            stats["current_new"] += 1
+        else:
+            existing["node"] = node
+            existing["last_seen_at"] = now
+            stats["current_refreshed"] += 1
+
+    grouped: dict[str, list[tuple[tuple[str, int, str], dict[str, Any]]]] = {}
+    for identity, record in records.items():
+        grouped.setdefault(_candidate_country(record["node"]), []).append((identity, record))
+
+    retained: list[tuple[tuple[str, int, str], dict[str, Any]]] = []
+    for items in grouped.values():
+        current_items = [item for item in items if item[0] in current_ids]
+        stale_items = [item for item in items if item[0] not in current_ids]
+        stale_items.sort(
+            key=lambda item: (item[1]["last_seen_at"], item[1]["node"].get("name", "")),
+            reverse=True,
+        )
+        retained.extend(current_items)
+        retained.extend(stale_items[:max_stale_per_country])
+
+    retained.sort(
+        key=lambda item: (
+            _candidate_country(item[1]["node"]) != "US",
+            item[0] not in current_ids,
+            -item[1]["last_seen_at"],
+            item[1]["node"].get("name", ""),
+        )
+    )
+    retained = retained[:max_total]
+    result = [record for _, record in retained]
+    stats["history_retained"] = len(result)
+    stats["off_window_retained"] = sum(identity not in current_ids for identity, _ in retained)
+    return result, stats
+
+
+def select_history_candidates(
+    records: list[dict[str, Any]],
+    *,
+    limit: int = HISTORY_PROBE_LIMIT,
+    rotation: int = 0,
+) -> list[dict[str, Any]]:
+    """Select a country-balanced rotating sample, giving US-labelled sources first look."""
+    if limit < 1:
+        raise ValueError("VPN Gate history probe limit must be positive")
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for record in records:
+        node = record.get("node") if isinstance(record, dict) else None
+        if isinstance(node, dict) and _candidate_identity(node) is not None:
+            groups.setdefault(_candidate_country(node), []).append(record)
+    countries = sorted(groups, key=lambda country: (country != "US", country))
+    rotation = max(0, int(rotation))
+    for country in countries:
+        group = sorted(
+            groups[country],
+            key=lambda record: (
+                record.get("last_seen_at", 0),
+                record["node"].get("name", ""),
+            ),
+            reverse=True,
+        )
+        offset = rotation % len(group)
+        groups[country] = group[offset:] + group[:offset]
+
+    selected: list[dict[str, Any]] = []
+    cursor = {country: 0 for country in countries}
+    while len(selected) < limit:
+        progressed = False
+        for country in countries:
+            position = cursor[country]
+            if position < len(groups[country]):
+                selected.append(groups[country][position]["node"])
+                cursor[country] += 1
+                progressed = True
+                if len(selected) >= limit:
+                    break
+        if not progressed:
+            break
+    return selected
+
+
+def save_candidate_history(
+    records: list[dict[str, Any]],
+    *,
+    path: Path = HISTORY_FILE,
+    now: float | None = None,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema_version": 1,
+        "source": VPNGATE_API,
+        "updated_at": time.time() if now is None else float(now),
+        "history_ttl_seconds": HISTORY_TTL_SECONDS,
+        "candidates": records,
+    }
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def collect_vpngate() -> dict[str, Any]:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
+    now = time.time()
+    previous = load_candidate_history()
     try:
         csv_text = fetch_directory()
-        proxies, report = parse_directory(csv_text)
+        current, report = parse_directory(csv_text)
         if not MIHOMO.is_file():
             raise VPNGateError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
-        valid, rejected = _validate_batch(proxies, MIHOMO)
-        report["mihomo_validated"] = len(valid)
-        report["mihomo_rejected"] = rejected
-        report["status"] = "ok" if valid else "empty"
+        current_valid, current_rejected = _validate_batch(current, MIHOMO)
+        history, history_stats = merge_candidate_history(current_valid, previous, now=now)
+        try:
+            rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
+        except ValueError:
+            rotation = 0
+        selected = select_history_candidates(
+            history, limit=HISTORY_PROBE_LIMIT, rotation=rotation
+        )
+        valid, rejected = _validate_batch(selected, MIHOMO)
+        valid_ids = {_candidate_identity(node) for node in valid}
+        selected_ids = {_candidate_identity(node) for node in selected}
+        invalid_ids = selected_ids - valid_ids
+        history = [
+            record for record in history
+            if _candidate_identity(record["node"]) not in invalid_ids
+        ]
+        save_candidate_history(history, now=now)
+        report.update({
+            "current_mihomo_validated": len(current_valid),
+            "current_mihomo_rejected": current_rejected,
+            "history_candidates_available": len(history),
+            "history_candidates_selected": len(selected),
+            "history_off_window_retained": history_stats["off_window_retained"],
+            "history_expired": history_stats["history_expired"],
+            "history_invalid": history_stats["history_invalid"],
+            "history_ttl_days": HISTORY_TTL_SECONDS // (24 * 60 * 60),
+            "probe_rotation": rotation,
+            "mihomo_validated": len(valid),
+            "mihomo_rejected": rejected,
+            "status": "ok" if valid else "empty",
+        })
         OUTPUT.write_text(
             yaml.safe_dump({"proxies": valid}, allow_unicode=True, sort_keys=False),
             encoding="utf-8",
         )
     except Exception as error:
+        try:
+            rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
+        except ValueError:
+            rotation = 0
+        fallback_history, history_stats = merge_candidate_history([], previous, now=now)
+        valid: list[dict[str, Any]] = []
+        rejected = 0
+        if MIHOMO.is_file():
+            selected = select_history_candidates(
+                fallback_history, limit=HISTORY_PROBE_LIMIT, rotation=rotation
+            )
+            valid, rejected = _validate_batch(selected, MIHOMO)
+            valid_ids = {_candidate_identity(node) for node in valid}
+            selected_ids = {_candidate_identity(node) for node in selected}
+            invalid_ids = selected_ids - valid_ids
+            fallback_history = [
+                record for record in fallback_history
+                if _candidate_identity(record["node"]) not in invalid_ids
+            ]
+            save_candidate_history(fallback_history, now=now)
         report = {
             "source": "vpngate_official_csv",
             "endpoint": VPNGATE_API,
-            "status": "unavailable",
+            "api_status": "unavailable",
+            "status": "history_fallback" if valid else "unavailable",
             "error": f"{type(error).__name__}: {' '.join(str(error).split())[:240]}",
-            "mihomo_validated": 0,
+            "history_candidates_available": len(fallback_history),
+            "history_candidates_selected": len(valid),
+            "history_off_window_retained": history_stats["off_window_retained"],
+            "history_expired": history_stats["history_expired"],
+            "history_invalid": history_stats["history_invalid"],
+            "history_ttl_days": HISTORY_TTL_SECONDS // (24 * 60 * 60),
+            "probe_rotation": rotation,
+            "mihomo_validated": len(valid),
+            "mihomo_rejected": rejected,
         }
-        OUTPUT.write_text(yaml.safe_dump({"proxies": []}, sort_keys=False), encoding="utf-8")
-    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        OUTPUT.write_text(
+            yaml.safe_dump({"proxies": valid}, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+    REPORT.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     print("VPN Gate discovery:", json.dumps(report, ensure_ascii=False, sort_keys=True), flush=True)
     return report
-
 
 if __name__ == "__main__":
     collect_vpngate()
