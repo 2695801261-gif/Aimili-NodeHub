@@ -58,5 +58,57 @@ class ExitEchoRetryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "positive"):
             echo_pair(attempts=0)
 
+
+class IPWhoMetadataTests(unittest.TestCase):
+    def test_ipwho_metadata_preserves_type_and_security_flags(self):
+        from scripts.classify_exits import lookup_ip_metadata
+
+        response = {
+            "success": True,
+            "ip": "203.0.113.20",
+            "country_code": "US",
+            "type": "ISP",
+            "connection": {
+                "asn": 7922,
+                "isp": "Comcast Cable Communications, LLC",
+                "org": "Comcast Cable",
+            },
+            "security": {
+                "hosting": False,
+                "proxy": False,
+                "vpn": True,
+                "tor": False,
+            },
+        }
+        with patch("scripts.classify_exits.request_json", return_value=response), patch(
+            "scripts.classify_exits.time.sleep"
+        ):
+            metadata, source = lookup_ip_metadata("203.0.113.20")
+        self.assertEqual(source, "ipwho.is")
+        self.assertEqual(metadata["ipwho_type"], "isp")
+        self.assertEqual(metadata["ipwho_security"], {
+            "hosting": False, "proxy": False, "vpn": True, "tor": False,
+        })
+
+    def test_ipinfo_fallback_does_not_fabricate_ipwho_evidence(self):
+        from scripts.classify_exits import lookup_ip_metadata
+
+        def response_for(url, **kwargs):
+            if "ipwho.is" in url:
+                raise LookupFailure("IPWHO unavailable")
+            return {
+                "ip": "203.0.113.21",
+                "country": "US",
+                "org": "AS7922 Comcast Cable",
+            }
+
+        with patch("scripts.classify_exits.request_json", side_effect=response_for), patch(
+            "scripts.classify_exits.time.sleep"
+        ):
+            metadata, source = lookup_ip_metadata("203.0.113.21")
+        self.assertEqual(source, "ipinfo.io")
+        self.assertNotIn("ipwho_type", metadata)
+        self.assertNotIn("ipwho_security", metadata)
+
 if __name__ == "__main__":
     unittest.main()
