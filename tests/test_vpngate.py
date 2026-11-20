@@ -32,7 +32,7 @@ key-direction 1
 """
 
 
-def csv_row(config, *, hostname="public-vpn.example.net", ip="8.8.8.20",
+def csv_row(config, *, hostname="volunteer.example.net", ip="8.8.8.20",
             country="JP", score="1000", ping="20"):
     encoded = base64.b64encode(config.encode()).decode()
     return (
@@ -112,7 +112,7 @@ class VPNGateParserTests(unittest.TestCase):
     def test_excludes_vpngate_operated_public_vpn_hostname(self):
         header = (
             "#HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,"
-            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\\n"
+            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n"
         )
         row = csv_row(profile(), hostname="public-vpn-255", ip="8.8.8.20")
         proxies, report = parse_directory(header + row, limit=10)
@@ -122,7 +122,7 @@ class VPNGateParserTests(unittest.TestCase):
     def test_excludes_vpngate_operated_public_vpn_ipv4_range(self):
         header = (
             "#HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,"
-            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\\n"
+            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n"
         )
         ip = "219.100.37.224"
         row = csv_row(profile(f"{ip} 443 udp"), hostname="relay.example.net", ip=ip)
@@ -133,7 +133,7 @@ class VPNGateParserTests(unittest.TestCase):
     def test_keeps_non_operated_vpngate_volunteer_endpoint(self):
         header = (
             "#HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,"
-            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\\n"
+            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n"
         )
         row = csv_row(profile("8.8.8.21 443 udp"), hostname="volunteer-home.example.net", ip="8.8.8.21")
         proxies, report = parse_directory(header + row, limit=10)
