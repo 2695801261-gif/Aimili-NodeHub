@@ -34,6 +34,7 @@ HISTORY_TTL_SECONDS = 14 * 24 * 60 * 60
 # Keep a wider rotating candidate reservoir; every selected profile is still
 # revalidated by Mihomo and then by the full live exit/risk classifier.
 HISTORY_MAX_STALE_PER_COUNTRY = 40
+HISTORY_MAX_STALE_US = 200
 HISTORY_MAX_NODES = 2000
 HISTORY_PROBE_LIMIT = 100
 TCP_PRESCREEN_WORKERS = 64
@@ -437,6 +438,7 @@ def merge_candidate_history(
     now: float | None = None,
     ttl_seconds: int = HISTORY_TTL_SECONDS,
     max_stale_per_country: int = HISTORY_MAX_STALE_PER_COUNTRY,
+    max_stale_us_per_country: int = HISTORY_MAX_STALE_US,
     max_total: int = HISTORY_MAX_NODES,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Keep a short rolling history; old profiles remain candidates, never proof of liveness."""
@@ -512,7 +514,12 @@ def merge_candidate_history(
             reverse=True,
         )
         retained.extend(current_items)
-        retained.extend(stale_items[:max_stale_per_country])
+        stale_limit = (
+            max_stale_us_per_country
+            if items and _candidate_country(items[0][1]["node"]) == "US"
+            else max_stale_per_country
+        )
+        retained.extend(stale_items[:stale_limit])
 
     retained.sort(
         key=lambda item: (
