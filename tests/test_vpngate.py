@@ -66,10 +66,15 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertEqual(proxy["cert"], cert)
         self.assertEqual(proxy["key"], key)
 
-    def test_rejects_mixed_authentication_modes(self):
-        text = profile() + "<cert>\nCERT\n</cert>\n<key>\nKEY\n</key>\n"
-        with self.assertRaisesRegex(VPNGateError, "mixes username/password"):
-            parse_ovpn_config(text, "bad")
+    def test_supports_combined_username_password_and_client_certificate_auth(self):
+        cert = "-----BEGIN CERTIFICATE-----\nMIIBclient\n-----END CERTIFICATE-----"
+        key = "-----BEGIN PRIVATE KEY-----\nMIIBprivate\n-----END PRIVATE KEY-----"
+        text = profile() + f"<cert>\n{cert}\n</cert>\n<key>\n{key}\n</key>\n"
+        proxy = parse_ovpn_config(text, "VPNBook-US1-combined", ("vpnbook", "current-pass"))
+        self.assertEqual(proxy["username"], "vpnbook")
+        self.assertEqual(proxy["password"], "current-pass")
+        self.assertEqual(proxy["cert"], cert)
+        self.assertEqual(proxy["key"], key)
 
     def test_uses_provider_supplied_credentials_for_vpnbook(self):
         proxy = parse_ovpn_config(profile(), "VPNBook-US1", ("vpnbook", "current-pass"))
