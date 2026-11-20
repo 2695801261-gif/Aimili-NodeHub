@@ -137,6 +137,47 @@ class ClassificationTests(unittest.TestCase):
         evidence["layer3_risk_reasons"] = ["hosting", "datacenter_proxy"]
         self.assertIsNone(classify(evidence).pool)
 
+
+    def test_vpngate_vpn_on_isp_access_is_separated_as_unverified_candidate(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-192-0-2-10-example"
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "vpngate_isp_access_relay_candidate_unverified")
+
+    def test_same_vpn_signal_from_non_vpngate_source_remains_generic_quarantine(self):
+        evidence = base()
+        evidence["node_name"] = "OtherSource-US-example"
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "layer3_anonymizer_signal")
+
+    def test_vpngate_relay_candidate_with_proxy_or_tor_signal_is_not_separated(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-example"
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn", "proxy"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        evidence["layer3_flags"]["proxy"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "layer3_anonymizer_signal")
+
     def test_vpn_asn_signal_quarantines(self):
         evidence = base()
         evidence["asn_kind"] = ["isp", "vpn"]
