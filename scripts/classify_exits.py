@@ -288,7 +288,9 @@ def combine_candidate_sources(
     return merged, counts
 
 
-def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+def select_exit_candidates(
+    candidates: list[dict[str, Any]], limit: int, *, rotation: int = 0
+) -> list[dict[str, Any]]:
     """Spread probes across the full ranked pool and preserve source representation.
 
     VPN Gate is intentionally capped to a minority of the combined pool. A
@@ -298,6 +300,7 @@ def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list
     """
     if limit < 1:
         raise ValueError("candidate limit must be positive")
+    rotation = max(0, rotation)
     if len(candidates) <= limit:
         return list(candidates)
 
@@ -311,7 +314,7 @@ def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list
     ]
     if not vpn_indices:
         selected = [
-            ((2 * index + 1) * len(candidates)) // (2 * limit)
+            (((2 * index + 1) * len(candidates)) // (2 * limit) + rotation) % len(candidates)
             for index in range(limit)
         ]
         return [candidates[index] for index in selected]
@@ -328,7 +331,7 @@ def select_exit_candidates(candidates: list[dict[str, Any]], limit: int) -> list
         if budget <= 0:
             continue
         chosen.update(
-            group[((2 * index + 1) * len(group)) // (2 * budget)]
+            group[((((2 * index + 1) * len(group)) // (2 * budget)) + rotation) % len(group)]
             for index in range(budget)
         )
     return [item for index, item in enumerate(candidates) if index in chosen]
@@ -366,7 +369,8 @@ def run() -> None:
             source_discovery = {"status": "unreadable"}
     if not candidates:
         raise SystemExit("No usable proxies found across FreeNodes and VPN Gate sources")
-    candidates = select_exit_candidates(candidates, MAX_CANDIDATES)
+    rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
+    candidates = select_exit_candidates(candidates, MAX_CANDIDATES, rotation=rotation)
 
     proxy_names = [item["name"] for item in candidates]
     if len(proxy_names) != len(set(proxy_names)):

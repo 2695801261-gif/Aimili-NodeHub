@@ -63,6 +63,22 @@ class NodeHubPipelineTests(unittest.TestCase):
         self.assertEqual(sum(item["name"].startswith("VPNGate-") for item in selected), 5)
         self.assertEqual(sum(item["name"].startswith("free-") for item in selected), 20)
 
+    def test_vpngate_source_sampling_rotates_between_scheduled_runs(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = (
+            [{"name": f"free-{i}"} for i in range(400)]
+            + [{"name": f"VPNGate-JP-{i}"} for i in range(100)]
+        )
+        first = select_exit_candidates(candidates, 25, rotation=0)
+        second = select_exit_candidates(candidates, 25, rotation=1)
+        first_vpn = {item["name"] for item in first if item["name"].startswith("VPNGate-")}
+        second_vpn = {item["name"] for item in second if item["name"].startswith("VPNGate-")}
+
+        self.assertEqual(len(first_vpn), 5)
+        self.assertEqual(len(second_vpn), 5)
+        self.assertTrue(first_vpn.isdisjoint(second_vpn))
+
     def test_exit_probe_selection_returns_all_when_pool_is_smaller_than_budget(self):
         from scripts.classify_exits import select_exit_candidates
 
