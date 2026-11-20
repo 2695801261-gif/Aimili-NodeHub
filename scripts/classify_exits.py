@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import os
 import re
@@ -340,7 +340,7 @@ def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
     # two services disagreed or one timed out, wasting the bounded run budget.
     with ThreadPoolExecutor(max_workers=len(endpoints)) as executor:
         futures = [executor.submit(query, endpoint) for endpoint in endpoints]
-        for future in futures:
+        for future in as_completed(futures):
             try:
                 results.append(future.result())
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
