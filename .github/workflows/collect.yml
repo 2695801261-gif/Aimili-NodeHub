@@ -70,6 +70,14 @@ jobs:
         run: |
           uv sync --locked
 
+      - name: Restore recent VPNGate candidate snapshots
+        uses: actions/cache/restore@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.2.0
+        with:
+          path: .cache/vpngate/candidate-history.json
+          key: vpngate-candidates-main-${{ github.run_id }}
+          restore-keys: |
+            vpngate-candidates-main-
+
       - name: Enable all pinned FreeNodes discovery adapters
         shell: bash
         run: |
@@ -96,7 +104,7 @@ jobs:
           PY
 
       - name: Run classification and publication-gate unit tests
-        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py tests/test_nodehub.py tests/test_vpngate.py tests/test_vpnbook.py
+        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py tests/test_nodehub.py tests/test_vpngate.py tests/test_vpnbook.py tests/test_snapshot_vpngate.py
 
       - name: Build, classify and publish the NodeHub module
         id: classify
