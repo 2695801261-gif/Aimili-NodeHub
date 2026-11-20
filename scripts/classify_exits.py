@@ -226,6 +226,7 @@ def run() -> None:
                         ip_info = request_json(f"https://ipwho.is/{exit_ip}")
                         if ip_info.get("success") is not True or ip_info.get("ip") != exit_ip:
                             raise LookupFailure("IPWhois did not verify the observed exit IP")
+                        time.sleep(1.25)
                         ip_status, ip_data = oxl_lookup("ip", exit_ip)
                         ip_cache[exit_ip] = (ip_status, ip_data, ip_info)
 
