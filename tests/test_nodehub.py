@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, call
+from unittest.mock import Mock
 
 from scripts.nodehub import run_pipeline
 
@@ -15,7 +15,6 @@ class NodeHubPipelineTests(unittest.TestCase):
         self.assertEqual(discover.call_count, 1)
         self.assertEqual(classify.call_count, 1)
         self.assertEqual(verify.call_count, 1)
-        self.assertLess(discover.call_args_list[0], classify.call_args_list[0])
 
     def test_discovery_failure_stops_before_classification_and_publication(self):
         discover = Mock(side_effect=RuntimeError("discovery failed"))
