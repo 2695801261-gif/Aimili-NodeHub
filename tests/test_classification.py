@@ -173,6 +173,36 @@ class ClassificationTests(unittest.TestCase):
         evidence["oxl_asn_status"] = "not_reported"
         self.assertIsNone(classify(evidence).pool)
 
+
+    def test_unreported_asn_can_use_strict_independent_layer3_isp_evidence(self):
+        evidence = base()
+        evidence["oxl_asn_status"] = "not_reported"
+        evidence["asn_kind"] = []
+        evidence.pop("asn_reports")
+        self.assertEqual(classify(evidence).pool, "us-residential")
+
+    def test_unreported_asn_without_layer3_isp_confirmation_is_quarantined(self):
+        evidence = base()
+        evidence["oxl_asn_status"] = "not_reported"
+        evidence["asn_kind"] = []
+        evidence["layer3_network_type"] = "unknown"
+        self.assertIsNone(classify(evidence).pool)
+
+    def test_unreported_hosting_asn_requires_independent_layer3_hosting_evidence(self):
+        evidence = base()
+        evidence["oxl_asn_status"] = "not_reported"
+        evidence["asn_kind"] = []
+        evidence["layer3_type"] = "hosting"
+        evidence["layer3_network_type"] = "hosting"
+        evidence["layer3_flags"]["hosting"] = True
+        evidence["layer3_risk_reasons"] = ["hosting"]
+        self.assertEqual(classify(evidence).pool, "low-risk-datacenter")
+
+    def test_unreported_asn_with_provider_error_remains_quarantined(self):
+        evidence = base()
+        evidence["oxl_asn_status"] = "unavailable"
+        self.assertIsNone(classify(evidence).pool)
+
     def test_bad_oxl_network_reputation_quarantines(self):
         evidence = base()
         evidence["net_reputation"] = "warn"

@@ -100,15 +100,21 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     if not isinstance(isp_name, str) or not isp_name.strip():
         return Verdict(None, "network_operator_name_missing")
 
-    if evidence.get("oxl_asn_status") != "ok":
+    asn_status = evidence.get("oxl_asn_status")
+    if asn_status == "ok":
+        asn_reports = evidence.get("asn_reports")
+        if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
+            return Verdict(None, "asn_risk_count_missing")
+        if asn_reports != 0:
+            return Verdict(None, "asn_has_abuse_reports")
+        if asn_kinds & DISQUALIFYING_KINDS:
+            return Verdict(None, "asn_has_disqualifying_signal")
+    elif asn_status != "not_reported":
+        # Provider errors and rate limits are not equivalent to an empty record.
         return Verdict(None, "asn_intelligence_unavailable")
-    asn_reports = evidence.get("asn_reports")
-    if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
-        return Verdict(None, "asn_risk_count_missing")
-    if asn_reports != 0:
-        return Verdict(None, "asn_has_abuse_reports")
-    if asn_kinds & DISQUALIFYING_KINDS:
-        return Verdict(None, "asn_has_disqualifying_signal")
+    # A missing O-X-L ASN record is only eligible for consideration when the
+    # independent Layer3 response later confirms the exact exit IP, ASN, prefix,
+    # country, low risk score, and network/address type.
 
     ip_status = evidence.get("ip_risk_status")
     if ip_status not in {"ok", "not_reported"}:
@@ -156,8 +162,11 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             return Verdict(None, "residential_hosting_signal")
         if evidence.get("layer3_risk_reasons") != []:
             return Verdict(None, "residential_risk_reason_present")
-        if "isp" not in asn_kinds or "hosting" in asn_kinds:
-            return Verdict(None, "isp_asn_not_confirmed")
+        if asn_status == "ok":
+            if "isp" not in asn_kinds or "hosting" in asn_kinds:
+                return Verdict(None, "isp_asn_not_confirmed")
+        elif evidence.get("layer3_network_type") != "access":
+            return Verdict(None, "unreported_asn_lacks_independent_isp_confirmation")
         if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
             return Verdict(None, "isp_network_conflict")
         if "hosting" in ip_kinds:
@@ -175,8 +184,11 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         allowed_reasons = {"hosting"}
         if any(reason not in allowed_reasons for reason in evidence.get("layer3_risk_reasons", [])):
             return Verdict(None, "hosting_risk_reason_present")
-        if "hosting" not in asn_kinds:
-            return Verdict(None, "hosting_asn_not_confirmed")
+        if asn_status == "ok":
+            if "hosting" not in asn_kinds:
+                return Verdict(None, "hosting_asn_not_confirmed")
+        elif evidence.get("layer3_network_type") != "hosting":
+            return Verdict(None, "unreported_asn_lacks_independent_hosting_confirmation")
         if net_status == "ok" and ("hosting" not in net_kinds or "isp" in net_kinds):
             return Verdict(None, "hosting_network_conflict")
         if "isp" in ip_kinds:
