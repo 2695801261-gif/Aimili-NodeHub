@@ -15,7 +15,7 @@
 
 采集工作流使用固定版本 FreeNodes 中完整的受支持来源配置，包括 GitHub 订阅文件、网页订阅发现、受限密码页和 YouTube 资源适配器；不会再把来源过滤成只有 GitHub 文件。具体来源覆盖和兼容性说明见 [发现来源说明](docs/DISCOVERY_SOURCES.md)。
 
-**VPN Gate 已接入：** 适配器读取官方 CSV API 中的 OpenVPN 配置，解码并转换为 Mihomo 原生 `type: openvpn` 节点；每个配置先通过固定版本 Mihomo 语法检查，再进入按来源配额并随 GitHub 运行编号轮换的真实出口检测和风险分类，避免均匀索引周期性地漏掉 VPN Gate，也避免每轮重复测试同一批节点。每轮最多纳入 100 个 VPN Gate 候选，合并后的候选池总量仍限制为 500。VPN Gate 的国家、服务器 IP、上游评分只用于来源记录和候选排序，不作为出口国家或住宅属性证据。
+**VPN Gate 与 VPNBook 已接入：** VPN Gate 读取官方 CSV API；VPNBook 从官网动态获取 OpenVPN ZIP 配置及当前共享凭据。两类配置都转换为 Mihomo 原生 `type: openvpn` 节点，并先通过固定版本 Mihomo 语法检查。两个补充来源每轮各最多纳入 50 个候选，共享 100 个名额；再与 FreeNodes 合并，候选池总量不超过 500。最多 25 个真实出口探测名额按来源分配并随 GitHub 运行编号轮换，避免某一来源长期得不到抽样。VPN Gate 的国家、服务器 IP、上游评分只用于来源记录和候选排序，不作为出口国家或住宅属性证据；VPNBook 的动态密码不会写入仓库、日志或诊断文件。
 
 ## 三类目标订阅
 
