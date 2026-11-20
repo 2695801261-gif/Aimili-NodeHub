@@ -16,7 +16,7 @@ All lookups apply to the **proxy's observed exit IP**, never the configured serv
 - Role: independent address type, risk score/reasons, anonymizer flags, country, ASN, announced prefix and network type.
 - The classifier requires exact IP, country, ASN and prefix agreement with the observed exit and the separate IP metadata result.
 - Residential admission requires `type=residential`, `network.type=access`, a low risk score below 25, no risk reasons, no anonymizer/proxy/VPN/Tor/relay/hosting flags and no shared-address/crawler/drop-list signal.
-- Datacenter admission requires `type=hosting`, `network.type=hosting`, a low risk score below 25, no anonymizer/proxy/VPN/Tor/relay flags, and no risk reason other than the ordinary `hosting` classification.
+- Datacenter admission requires `type=hosting`, `network.type=hosting`, Layer3's ordinary-hosting baseline (`risk.level=medium`, `risk.score=50`, `risk.reasons=["hosting"]`), no anonymizer/proxy/VPN/Tor/relay flags, and no additional risk reason. This is not a numerically low Layer3 risk score; the subscription filename is retained for compatibility.
 - The Open API does not include the paid-only live residential-proxy flag. A residential result is an address-type candidate, not proof that the exit is not being resold as a residential proxy.
 
 ### O-X-L Risk Database
@@ -29,7 +29,7 @@ All lookups apply to the **proxy's observed exit IP**, never the configured serv
 - Role: IP- and ASN-level kind/report checks, plus network reputation and network-kind checks when a network record exists.
 - O-X-L documents network 404 as “Network not reported”. This is not treated as a positive clean reputation; independent Layer3 risk and prefix evidence must still pass. If an O-X-L network record exists, it must have zero reports, reputation `ok/info`, a matching ASN/CIDR and compatible network kind.
 - O-X-L documents IP 404 as “not reported or temporary lookup failure”. The classifier retries once and retains `not_reported` as an uncertainty signal, not proof of zero abuse.
-- If an O-X-L ASN record exists, its ASN kind must positively support the target class and contain no disqualifying kind. The ASN report total is retained as network-level context, not treated as a report against every address in the ASN; exact IP and network records retain zero-report requirements. If O-X-L explicitly reports no ASN record, that absence is not a clean result: the candidate can proceed only when the independent Layer3 response matches the exact exit IP, country, ASN and announced prefix, has low risk, and confirms the target address/network type. O-X-L timeouts, rate limits and server errors are quarantined.
+- If an O-X-L ASN record exists, its ASN kind must positively support the target class and contain no disqualifying kind. The ASN report total is retained as network-level context, not treated as a report against every address in the ASN; exact IP and network records retain zero-report requirements. If O-X-L explicitly reports no ASN record, that absence is not a clean result: the candidate can proceed only when the independent Layer3 response matches the exact exit IP, country, ASN and announced prefix, has the class-specific risk rule, and confirms the target address/network type. O-X-L timeouts, rate limits and server errors are quarantined.
 - O-X-L warns that reports can contain false positives; these are risk signals, not proof of malicious intent.
 - Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 40 and caches repeated IP/network/ASN lookups within each run.
 
@@ -54,9 +54,9 @@ Every candidate must pass all of these gates:
 
 ### Low-risk datacenter pool
 - Layer3 must label both address and network `hosting`.
-- Layer3 risk must be `low` with score below 25; anonymizer/proxy/VPN/Tor/relay flags must be false, and no risk reason other than `hosting` is accepted.
-- If an O-X-L ASN record exists, it must positively include `hosting` and have no conflicting kind. Aggregate ASN report totals are recorded but do not override exact-IP evidence. If explicitly not reported, Layer3 must independently confirm the exact IP/ASN/country/prefix and hosting/hosting type at low risk.
-- Any O-X-L network record must also confirm hosting, have zero reports and reputation `ok/info`. If no O-X-L network record exists, Layer3's independent low-risk and prefix evidence is required.
+- Layer3 must return the ordinary hosting baseline exactly: `risk.level=medium`, `risk.score=50`, and `risk.reasons=["hosting"]`. Anonymizer/proxy/VPN/Tor/relay flags must be false; any extra reason (including `nearby_vpn` or `recent_reassignment`) is rejected.
+- If an O-X-L ASN record exists, it must positively include `hosting` and have no conflicting kind. Aggregate ASN report totals are recorded but do not override exact-IP evidence. If explicitly not reported, Layer3 must independently confirm the exact IP/ASN/country/prefix and hosting/hosting type at the exact ordinary-hosting baseline.
+- Any O-X-L network record must also confirm hosting, have zero reports and reputation `ok/info`. If no O-X-L network record exists, Layer3's independent exact-IP, prefix and ordinary-hosting-baseline evidence is required.
 - “Low-risk” means only that the selected public sources did not return the configured exclusion signals at check time. It is not a safety guarantee.
 
 ## Quarantine and publication
