@@ -1,3 +1,4 @@
+import os
 import subprocess
 import unittest
 from unittest.mock import patch
@@ -57,6 +58,53 @@ class ExitEchoRetryTests(unittest.TestCase):
     def test_zero_echo_attempts_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "positive"):
             echo_pair(attempts=0)
+
+
+class IPApiIsMetadataTests(unittest.TestCase):
+    def test_optional_ipapi_is_lookup_keeps_key_in_post_body(self):
+        from scripts.classify_exits import lookup_ipapi_is
+
+        response = {
+            "203.0.113.20": {
+                "ip": "203.0.113.20",
+                "is_datacenter": False,
+                "is_proxy": False,
+                "is_tor": False,
+                "is_abuser": False,
+                "is_mobile": False,
+                "is_satellite": False,
+                "is_anycast": False,
+                "is_crawler": False,
+                "is_vpn": True,
+                "company": {"name": "Comcast Cable", "type": "isp"},
+                "asn": {"asn": 7922, "type": "isp"},
+                "location": {"country_code": "US"},
+            },
+            "total_elapsed_ms": 1.0,
+        }
+        with patch.dict(os.environ, {"IPAPI_IS_API_KEY": "test-secret"}), patch(
+            "scripts.classify_exits.request_json", return_value=response
+        ) as request, patch("scripts.classify_exits.time.sleep"):
+            evidence = lookup_ipapi_is("203.0.113.20")
+        self.assertEqual(evidence["ipapi_is_status"], "ok")
+        self.assertTrue(evidence["ipapi_is_vpn"])
+        self.assertEqual(evidence["ipapi_is_asn"], 7922)
+        request.assert_called_once_with(
+            "https://api.ipapi.is",
+            method="POST",
+            payload={"ips": ["203.0.113.20"], "key": "test-secret"},
+            timeout=10,
+        )
+
+    def test_ipapi_is_without_key_is_optional_and_skipped(self):
+        from scripts.classify_exits import lookup_ipapi_is
+
+        with patch.dict(os.environ, {}, clear=True), patch(
+            "scripts.classify_exits.request_json"
+        ) as request:
+            evidence = lookup_ipapi_is("203.0.113.20")
+        self.assertEqual(evidence, {"ipapi_is_status": "not_configured"})
+        request.assert_not_called()
 
 
 class IPWhoMetadataTests(unittest.TestCase):
