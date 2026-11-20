@@ -65,6 +65,8 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, "exit_ip_lookup_failed")
     if evidence.get("net_asn_match") is not True:
         return Verdict(None, "exit_asn_network_mismatch")
+    if evidence.get("net_prefix_match") is not True:
+        return Verdict(None, "exit_ip_outside_reported_network")
     if evidence.get("oxl_asn_status") != "ok":
         return Verdict(None, "asn_intelligence_unavailable")
     if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
