@@ -236,7 +236,7 @@ def run() -> None:
                     if exit_ip in ip_cache:
                         ip_status, ip_data, ip_info = ip_cache[exit_ip]
                     else:
-                        time.sleep(0.35)
+                        time.sleep(1.0)
                         ip_info = request_json(f"https://ipwho.is/{exit_ip}")
                         if ip_info.get("success") is not True or ip_info.get("ip") != exit_ip:
                             raise LookupFailure("IPWhois did not verify the observed exit IP")
