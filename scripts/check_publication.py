@@ -19,7 +19,12 @@ EVIDENCE_FILE = ROOT / "classification" / "evidence.json"
 def validate_publication(
     profiles: dict[str, dict[str, Any]], evidence: dict[str, Any]
 ) -> dict[str, int]:
-    """Reject empty, malformed, overlapping, or evidence-inconsistent pools."""
+    """Reject malformed, overlapping, or evidence-inconsistent pools.
+
+    Empty pools are valid only when explicitly marked as preserved-empty. This
+    allows first-time operation without fabricating nodes while preventing an
+    accidental empty rewrite of an existing non-empty subscription.
+    """
     if set(profiles) != set(POOL_FILES):
         raise ValueError("publication must contain exactly the three configured pools")
 

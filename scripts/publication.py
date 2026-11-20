@@ -64,13 +64,40 @@ def publish_atomically(
     additional_files: Mapping[Path, str] | None = None,
 ) -> dict[str, int]:
     """Validate all outputs first, then replace them as one rollback-safe batch."""
-    sizes = validate_publication(dict(profiles), evidence)
+    # An empty result for one class must not erase its last known-good pool.
+    # Reuse the previous profile when available; on first publication, keep a
+    # valid empty profile and explicitly mark it as preserved-empty.
+    effective_profiles = dict(profiles)
+    preserved = evidence.setdefault("preserved_pools", {})
+    for pool, target in profile_paths.items():
+        profile = effective_profiles[pool]
+        proxies = profile.get("proxies") if isinstance(profile, dict) else None
+        if isinstance(proxies, list) and proxies:
+            preserved.setdefault(pool, 0)
+            continue
+        previous = None
+        if target.is_file():
+            try:
+                previous = yaml.safe_load(target.read_text(encoding="utf-8"))
+            except (OSError, yaml.YAMLError):
+                previous = None
+        previous_proxies = previous.get("proxies") if isinstance(previous, dict) else None
+        if isinstance(previous_proxies, list) and previous_proxies:
+            effective_profiles[pool] = previous
+            preserved[pool] = len(previous_proxies)
+        else:
+            preserved[pool] = 0
+    evidence["pool_sizes"] = {
+        pool: len(effective_profiles[pool].get("proxies", []))
+        for pool in profile_paths
+    }
+    sizes = validate_publication(effective_profiles, evidence)
 
     staged: dict[Path, Path] = {}
     targets: dict[Path, bytes] = {}
     replaced: list[Path] = []
     for pool, target in profile_paths.items():
-        rendered = yaml.safe_dump(profiles[pool], allow_unicode=True, sort_keys=False)
+        rendered = yaml.safe_dump(effective_profiles[pool], allow_unicode=True, sort_keys=False)
         if validate_profile is not None:
             validate_profile(pool, rendered)
         targets[target] = rendered.encode("utf-8")

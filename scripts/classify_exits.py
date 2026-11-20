@@ -566,6 +566,7 @@ def run() -> None:
             "Residential pool means ISP-network candidates, not proof of a household line.",
             "Low-risk means no disqualifying signal was found in the selected sources; it is not a safety guarantee.",
             "Unverified, conflicting, or failed lookups are quarantined.",
+            "A pool with no new verified candidates keeps its last known-good profile; first-run empty pools remain explicitly empty.",
         ],
     }
     from scripts.diagnostics import build_diagnostics

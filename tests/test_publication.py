@@ -23,12 +23,22 @@ class PublicationGateTests(unittest.TestCase):
         profiles, evidence = valid_inputs()
         self.assertEqual(validate_publication(profiles, evidence), {pool: 1 for pool in POOLS})
 
-    def test_rejects_empty_pool(self):
+    def test_rejects_unmarked_empty_pool(self):
         profiles, evidence = valid_inputs()
         profiles["other-residential"] = profile()
         evidence["pool_sizes"]["other-residential"] = 0
-        with self.assertRaisesRegex(ValueError, "no verified proxies"):
+        with self.assertRaisesRegex(ValueError, "not marked as preserved-empty"):
             validate_publication(profiles, evidence)
+
+    def test_accepts_explicit_first_run_empty_pool(self):
+        profiles, evidence = valid_inputs()
+        profiles["other-residential"] = profile()
+        evidence["pool_sizes"]["other-residential"] = 0
+        evidence["preserved_pools"] = {"other-residential": 0}
+        self.assertEqual(
+            validate_publication(profiles, evidence),
+            {"us-residential": 1, "other-residential": 0, "low-risk-datacenter": 1},
+        )
 
     def test_rejects_cross_pool_duplicate(self):
         profiles, evidence = valid_inputs()
@@ -50,26 +60,30 @@ class PublicationGateTests(unittest.TestCase):
 
 
 class AtomicPublicationTests(unittest.TestCase):
-    def test_empty_pool_preserves_all_previous_files(self):
+    def test_empty_pool_preserves_previous_last_good_profile(self):
         from pathlib import Path
         from tempfile import TemporaryDirectory
+        import yaml
         from scripts.publication import publish_atomically
 
         with TemporaryDirectory() as directory:
             root = Path(directory)
             paths = {pool: root / f"{pool}.yaml" for pool in POOLS}
             evidence_path = root / "evidence.json"
-            for path in [*paths.values(), evidence_path]:
-                path.write_text("previous-good", encoding="utf-8")
             profiles, evidence = valid_inputs()
+            previous = profile("last-known-good-node")
+            paths["other-residential"].write_text(
+                yaml.safe_dump(previous, sort_keys=False), encoding="utf-8"
+            )
             profiles["other-residential"] = profile()
             evidence["pool_sizes"]["other-residential"] = 0
 
-            with self.assertRaisesRegex(ValueError, "no verified proxies"):
-                publish_atomically(paths, profiles, evidence_path, evidence)
+            sizes = publish_atomically(paths, profiles, evidence_path, evidence)
 
-            self.assertTrue(all(path.read_text(encoding="utf-8") == "previous-good"
-                                for path in [*paths.values(), evidence_path]))
+            self.assertEqual(sizes["other-residential"], 1)
+            self.assertEqual(evidence["preserved_pools"]["other-residential"], 1)
+            saved = yaml.safe_load(paths["other-residential"].read_text(encoding="utf-8"))
+            self.assertEqual(saved["proxies"][0]["name"], "last-known-good-node")
 
     def test_mihomo_preflight_failure_preserves_previous_files(self):
         from pathlib import Path
