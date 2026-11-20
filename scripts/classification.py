@@ -63,7 +63,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         return Verdict(None, "exit_echo_mismatch")
     if evidence.get("ipwhois_success") is not True:
         return Verdict(None, "exit_ip_lookup_failed")
-    if evidence.get("oxl_asn_status") not in {"ok", "not_reported"}:
+    if evidence.get("oxl_asn_status") != "ok":
         return Verdict(None, "asn_intelligence_unavailable")
     if isinstance(asn_reports, bool) or not isinstance(asn_reports, (int, float)):
         return Verdict(None, "asn_risk_count_missing")
@@ -92,7 +92,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             return Verdict(None, "conflicting_isp_hosting_signals")
         return Verdict(
             "us-residential" if country == "US" else "other-residential",
-            "isp_asn_list_confirmed_no_known_disqualifying_signal",
+            "isp_asn_api_confirmed_no_known_disqualifying_signal",
         )
 
     if "hosting" in asn_kinds:
