@@ -278,6 +278,31 @@ class ClassificationTests(unittest.TestCase):
         self.assertIsNone(classify(evidence).pool)
 
 
+    def test_vpngate_expanded_us_fixed_isp_brands_are_supporting_evidence(self):
+        for isp in (
+            "Cox Communications, Inc.",
+            "AT&T Internet Services",
+            "Verizon Fios",
+            "Optimum / Altice USA",
+            "Astound Broadband",
+            "Google Fiber",
+            "Mediacom Communications",
+            "Ziply Fiber",
+        ):
+            evidence = self._vpngate_access_candidate()
+            evidence["isp"] = isp
+            with self.subTest(isp=isp):
+                self.assertEqual(classify(evidence).pool, "us-residential")
+
+    def test_vpngate_mobile_or_wireless_brand_overlap_is_not_fixed_broadband(self):
+        for isp in ("AT&T Mobility", "Verizon Wireless", "T-Mobile Home Internet", "US Cellular"):
+            evidence = self._vpngate_access_candidate()
+            evidence["isp"] = isp
+            with self.subTest(isp=isp):
+                verdict = classify(evidence)
+                self.assertIsNone(verdict.pool)
+                self.assertEqual(verdict.reason, "vpngate_isp_access_relay_candidate_unverified")
+
     def test_vpngate_fixed_isp_access_exit_passes_with_oxl_isp_asn(self):
         evidence = self._vpngate_access_candidate()
         verdict = classify(evidence)
