@@ -1,6 +1,7 @@
 """Single end-to-end NodeHub module: discover, classify, validate, publish.
 
-The pinned FreeNodes engine remains the discovery implementation. This module
+FreeNodes supplies the multi-adapter subscription discovery, while VPN Gate
+is collected independently as a native Mihomo OpenVPN source. This module
 owns the orchestration boundary and only returns success after all three
 non-empty subscriptions pass the publication gate.
 """
@@ -47,7 +48,7 @@ def discover_nodes() -> None:
     # An empty primary profile still allows the independent VPN Gate source to run.
     if freenodes_status != "ok" or not FREE_NODES_PROFILE.is_file() or FREE_NODES_PROFILE.stat().st_size == 0:
         FREE_NODES_PROFILE.parent.mkdir(parents=True, exist_ok=True)
-        FREE_NODES_PROFILE.write_text("proxies: []\\n", encoding="utf-8")
+        FREE_NODES_PROFILE.write_text("proxies: []\n", encoding="utf-8")
 
     missing_optional = [
         str(path.relative_to(ROOT)) for path in OPTIONAL_DISCOVERY_OUTPUTS
@@ -63,7 +64,7 @@ def discover_nodes() -> None:
     }
     SOURCE_REPORT.parent.mkdir(parents=True, exist_ok=True)
     SOURCE_REPORT.write_text(
-        json.dumps(source_report, ensure_ascii=False, indent=2) + "\\n",
+        json.dumps(source_report, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
     print("Combined discovery source report:", json.dumps(source_report, ensure_ascii=False, sort_keys=True), flush=True)
