@@ -71,7 +71,12 @@ class VPNGateParserTests(unittest.TestCase):
         with self.assertRaisesRegex(VPNGateError, "mixes username/password"):
             parse_ovpn_config(text, "bad")
 
-    def test_uses_provider_supplied_credentials_for_vpnbook(self):\n        proxy = parse_ovpn_config(profile(), "VPNBook-US1", ("vpnbook", "current-pass"))\n        self.assertEqual(proxy["username"], "vpnbook")\n        self.assertEqual(proxy["password"], "current-pass")\n\n    def test_rejects_missing_ca(self):
+    def test_uses_provider_supplied_credentials_for_vpnbook(self):
+        proxy = parse_ovpn_config(profile(), "VPNBook-US1", ("vpnbook", "current-pass"))
+        self.assertEqual(proxy["username"], "vpnbook")
+        self.assertEqual(proxy["password"], "current-pass")
+
+    def test_rejects_missing_ca(self):
         with self.assertRaisesRegex(VPNGateError, "CA certificate"):
             parse_ovpn_config("client\nremote 8.8.8.20 1194\n", "bad")
 

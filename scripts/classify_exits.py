@@ -31,7 +31,8 @@ OUTPUTS = {
 }
 EVIDENCE_PATH = ROOT / "classification" / "evidence.json"
 DIAGNOSTICS_PATH = ROOT / "classification" / "diagnostics.json"
-VPNGATE_PROFILE = ROOT / ".cache" / "vpngate" / "candidates.yaml"\nVPNBOOK_PROFILE = ROOT / ".cache" / "vpnbook" / "candidates.yaml"
+VPNGATE_PROFILE = ROOT / ".cache" / "vpngate" / "candidates.yaml"
+VPNBOOK_PROFILE = ROOT / ".cache" / "vpnbook" / "candidates.yaml"
 SOURCE_REPORT = ROOT / "classification" / "source-discovery.json"
 MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "25"))
 MAX_TOTAL_CANDIDATES = 500
@@ -554,11 +555,13 @@ def run() -> None:
         candidate_limit=MAX_CANDIDATES,
     )
     report["diagnostics"] = diagnostics
-    diagnostic_text = json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n"
+    diagnostic_text = json.dumps(diagnostics, ensure_ascii=False, indent=2) + "
+"
     # Persist failure evidence before the publication gate; subscriptions stay untouched.
     write_reports_atomically(
         EVIDENCE_PATH,
-        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        json.dumps(report, ensure_ascii=False, indent=2) + "
+",
         {DIAGNOSTICS_PATH: diagnostic_text},
     )
     print("Classification diagnostics:", json.dumps(diagnostics, sort_keys=True), flush=True)
