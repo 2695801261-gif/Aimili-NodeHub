@@ -514,7 +514,9 @@ def merge_candidate_history(
             reverse=True,
         )
         retained.extend(current_items)
-        stale_limit = max_stale_us_per_country if country == "US" else max_stale_per_country
+        stale_limit = (
+            max_stale_us_per_country if country == "US" else max_stale_per_country
+        )
         retained.extend(stale_items[:stale_limit])
 
     retained.sort(
