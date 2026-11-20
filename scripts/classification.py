@@ -24,6 +24,37 @@ def _kinds(value: Any) -> set[str]:
     return {x.strip().casefold() for x in value}
 
 
+
+US_RESIDENTIAL_ISP_BRANDS = (
+    "comcast", "charter communications", "spectrum", "frontier communications",
+    "fidium", "consolidated communications", "wave broadband",
+)
+OTHER_FIXED_RESIDENTIAL_ISP_BRANDS = (
+    "korea telecom", "kt corporation", "sk broadband", "lg u+",
+    "lgu+", "lg uplus", "lg hellovision", "hellovision",
+    "so-net", "sony network communications", "jcom",
+    "chubu telecommunications", "commufa", "ctcx", "asahi net",
+    "asahi-net", "ocn", "ntt-me", "wakwak", "biglobe", "plala",
+    "nifty", "@nifty", "orange", "etisalat", "arteria",
+    "hawaiian telcom", "tt dotcom", "ttnet",
+)
+
+
+def _vpngate_residential_brand_candidate(evidence: dict[str, Any]) -> str | None:
+    """Use XEHN-style fixed-ISP brand evidence for audit labels, never admission."""
+    if not str(evidence.get("node_name") or "").startswith("VPNGate-"):
+        return None
+    isp = str(evidence.get("isp") or "").casefold()
+    if not isp or "mobile" in isp or "wireless" in isp:
+        return None
+    country = str(evidence.get("country_code") or "").upper()
+    if country == "US" and any(brand in isp for brand in US_RESIDENTIAL_ISP_BRANDS):
+        return "us"
+    if country != "US" and any(brand in isp for brand in OTHER_FIXED_RESIDENTIAL_ISP_BRANDS):
+        return "other"
+    return None
+
+
 def _is_vpngate_relay_transport_signal(evidence: dict[str, Any]) -> bool:
     """Recognize only VPNGate's exact VPN-on-ISP-access signature for audit.
 
@@ -224,6 +255,11 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         if asn_status == "ok" and "isp" in asn_kinds and "hosting" not in asn_kinds:
             if net_status == "ok" and ("isp" not in net_kinds or "hosting" in net_kinds):
                 return Verdict(None, "vpngate_isp_access_candidate_network_conflict")
+            brand_class = _vpngate_residential_brand_candidate(evidence)
+            if brand_class == "us":
+                return Verdict(None, "vpngate_us_consumer_isp_candidate_unverified")
+            if brand_class == "other":
+                return Verdict(None, "vpngate_other_consumer_isp_candidate_unverified")
             return Verdict(None, "vpngate_isp_access_relay_candidate_unverified")
         return Verdict(None, "vpngate_relay_without_isp_confirmation")
 
