@@ -562,8 +562,7 @@ def run() -> None:
     # Persist failure evidence before the publication gate; subscriptions stay untouched.
     write_reports_atomically(
         EVIDENCE_PATH,
-        json.dumps(report, ensure_ascii=False, indent=2) + "
-",
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
         {DIAGNOSTICS_PATH: diagnostic_text},
     )
     print("Classification diagnostics:", json.dumps(diagnostics, sort_keys=True), flush=True)
