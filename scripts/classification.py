@@ -26,8 +26,12 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     """Classify only when every required evidence field is present and consistent."""
     country = evidence.get("country_code")
     asn = evidence.get("asn")
+    if not isinstance(evidence.get("asn_kind"), list):
+        return Verdict(None, "asn_network_type_missing")
     asn_kinds = _kinds(evidence.get("asn_kind"))
     ip_status = evidence.get("ip_risk_status")
+    if ip_status == "ok" and not isinstance(evidence.get("ip_kind"), list):
+        return Verdict(None, "ip_network_type_missing")
     ip_kinds = _kinds(evidence.get("ip_kind", []))
     asn_reports = evidence.get("asn_reports")
     ip_reports = evidence.get("ip_reports")
