@@ -177,6 +177,64 @@ def layer3_lookup(exit_ip: str) -> dict[str, Any]:
     }
 
 
+NETWORK_KIND_LISTS = ("crawler", "dynamic", "education", "hosting", "isp", "scanner", "vpn")
+
+
+def load_network_kind_index() -> dict[tuple[int, int, int], set[str]]:
+    """Load O-X-L's published network CIDR kind lists once per run."""
+    index: dict[tuple[int, int, int], set[str]] = {}
+    for kind in NETWORK_KIND_LISTS:
+        url = f"https://raw.githubusercontent.com/O-X-L/risk-db-lists/main/net/kind_{kind}.txt"
+        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                raw = response.read()
+        except (urllib.error.URLError, TimeoutError) as error:
+            raise SystemExit(
+                f"Cannot load O-X-L network kind list ({kind}); preserving previous subscriptions"
+            ) from error
+        if not raw:
+            if kind == "dynamic":
+                continue
+            raise SystemExit(
+                f"O-X-L network kind list ({kind}) is unexpectedly empty; preserving previous subscriptions"
+            )
+        loaded = 0
+        for line in raw.decode("utf-8", errors="strict").splitlines():
+            value = line.strip()
+            if not value or value.startswith("#"):
+                continue
+            try:
+                network = ipaddress.ip_network(value, strict=False)
+            except ValueError as error:
+                raise SystemExit(
+                    f"Invalid CIDR in O-X-L {kind} list: {value!r}"
+                ) from error
+            key = (network.version, network.prefixlen, int(network.network_address))
+            index.setdefault(key, set()).add(kind)
+            loaded += 1
+        if kind != "dynamic" and loaded == 0:
+            raise SystemExit(
+                f"O-X-L network kind list ({kind}) had no valid CIDRs; preserving previous subscriptions"
+            )
+        print(f"Loaded O-X-L {kind} network ranges: {loaded}", flush=True)
+    return index
+
+
+def network_kinds_for_ip(
+    exit_ip: str, index: dict[tuple[int, int, int], set[str]]
+) -> set[str]:
+    address = ipaddress.ip_address(exit_ip)
+    bits = address.max_prefixlen
+    value = int(address)
+    kinds: set[str] = set()
+    for prefix in range(bits + 1):
+        mask = ((1 << prefix) - 1) << (bits - prefix) if prefix else 0
+        network_address = value & mask
+        kinds.update(index.get((address.version, prefix, network_address), set()))
+    return kinds
+
+
 def report_sum(data: dict[str, Any] | None) -> float | None:
     if not data:
         return None
@@ -248,6 +306,7 @@ def run() -> None:
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
     ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any], str]] = {}
     net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
+    network_kind_index = load_network_kind_index()
 
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
         work = Path(temporary)
@@ -335,6 +394,7 @@ def run() -> None:
                     net_status, net_data = net_cache[exit_ip]
                     row["net_status"] = net_status
                     if net_data:
+                        row["net_source"] = "oxl-api"
                         row["net_kind"] = net_data.get("kind", [])
                         row["net_reports"] = report_sum(net_data)
                         row["net_reputation"] = net_data.get("reputation")
@@ -344,6 +404,17 @@ def run() -> None:
                             row["net_prefix_match"] = ipaddress.ip_address(exit_ip) in network
                         except (TypeError, ValueError):
                             row["net_prefix_match"] = False
+                    elif net_status == "not_reported":
+                        # The O-X-L lookup API only returns network objects for reported
+                        # networks. Use its separately published CIDR kind lists to
+                        # establish network class; absence of an API record is recorded
+                        # as "not_reported", never as an "ok" reputation verdict.
+                        static_kinds = network_kinds_for_ip(exit_ip, network_kind_index)
+                        row["net_source"] = "oxl-kind-cidr-list"
+                        row["net_kind"] = sorted(static_kinds)
+                        row["net_reports"] = 0
+                        row["net_reputation"] = "not_reported"
+                        row["net_prefix_match"] = bool(static_kinds)
                     if ip_data:
                         row["ip_kind"] = ip_data.get("kind", [])
                         row["ip_reports"] = report_sum(ip_data)
@@ -360,6 +431,10 @@ def run() -> None:
                     else:
                         row["asn_kind"] = []
                         row["asn_reports"] = 0
+                    if net_status == "not_reported":
+                        row["net_asn_match"] = bool(
+                            set(row.get("net_kind", [])) & set(row.get("asn_kind", []))
+                        )
 
                     verdict = classify(row)
                     row["pool"] = verdict.pool
