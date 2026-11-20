@@ -177,38 +177,6 @@ def layer3_lookup(exit_ip: str) -> dict[str, Any]:
     }
 
 
-def lookup_layer3(exit_ip: str) -> dict[str, Any]:
-    address = ipaddress.ip_address(exit_ip)
-    if address.version != 4:
-        raise LookupFailure("Layer3 Open API currently supports IPv4 only")
-    data = request_json(f"https://api.layer3intel.com/open/{exit_ip}", timeout=10)
-    if data.get("ip") != exit_ip:
-        raise LookupFailure("Layer3 returned a mismatched exit IP")
-    risk = data.get("risk") or {}
-    flags = data.get("flags") or {}
-    location = data.get("location") or {}
-    network = data.get("network") or {}
-    try:
-        prefix = ipaddress.ip_network(network.get("prefix"), strict=False)
-        prefix_match = address in prefix
-    except (TypeError, ValueError):
-        prefix_match = False
-    return {
-        "layer3_status": "ok",
-        "layer3_type": data.get("type"),
-        "layer3_country": location.get("country"),
-        "layer3_asn": network.get("asn"),
-        "layer3_network_type": network.get("type"),
-        "layer3_prefix": network.get("prefix"),
-        "layer3_prefix_match": prefix_match,
-        "layer3_risk_score": risk.get("score"),
-        "layer3_risk_level": risk.get("level"),
-        "layer3_risk_reasons": risk.get("reasons"),
-        "layer3_flags": flags,
-        "layer3_sharing": data.get("sharing"),
-    }
-
-
 def report_sum(data: dict[str, Any] | None) -> float | None:
     if not data:
         return None
@@ -280,7 +248,6 @@ def run() -> None:
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
     ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any], str]] = {}
     net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
-    layer3_cache: dict[str, dict[str, Any]] = {}
 
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
         work = Path(temporary)
@@ -362,10 +329,6 @@ def run() -> None:
                     time.sleep(0.5)
                     row.update(layer3_lookup(exit_ip))
                     row["ip_risk_status"] = ip_status
-                    if exit_ip not in layer3_cache:
-                        time.sleep(0.5)
-                        layer3_cache[exit_ip] = lookup_layer3(exit_ip)
-                    row.update(layer3_cache[exit_ip])
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
                         net_cache[exit_ip] = oxl_lookup("net", exit_ip)
