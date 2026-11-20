@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "candidate_limit": 25,
+  "checked": 25,
+  "accepted": 0,
+  "quarantined": 25,
+  "pool_sizes": {
+    "low-risk-datacenter": 0,
+    "other-residential": 0,
+    "us-residential": 0
+  },
+  "reason_counts": {
+    "asn_has_abuse_reports": 12,
+    "layer3_address_type_not_publishable": 3,
+    "layer3_risk_not_low": 7,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 2,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 1
+  },
+  "provider_status_counts": {
+    "metadata_source": {
+      "ipwho.is": 22,
+      "not_checked": 3
+    },
+    "metadata_status": {
+      "not_checked": 3,
+      "ok": 22
+    },
+    "ip_risk_status": {
+      "not_checked": 3,
+      "not_reported": 22
+    },
+    "net_status": {
+      "not_checked": 3,
+      "not_reported": 22
+    },
+    "oxl_asn_status": {
+      "not_checked": 3,
+      "not_reported": 10,
+      "ok": 12
+    },
+    "layer3_status": {
+      "not_checked": 3,
+      "ok": 22
+    }
+  },
+  "exit_echo": {
+    "agreement": 22,
+    "disagreement": 0,
+    "not_checked": 3
+  }
+}

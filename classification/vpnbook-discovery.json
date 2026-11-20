@@ -1,0 +1,12 @@
+{
+  "source": "vpnbook_official_api",
+  "servers_seen": 10,
+  "candidates_parsed": 10,
+  "rejection_reasons": {},
+  "limit": 20,
+  "servers_discovered": 10,
+  "download_failures": {},
+  "mihomo_validated": 10,
+  "mihomo_rejected": 0,
+  "status": "ok"
+}
