@@ -48,18 +48,18 @@ Every candidate must pass all of these gates:
 ### Residential pools
 - Layer3 must positively label the observed exit address `residential` and its network `access`.
 - Layer3 risk must be `low` with score below 25 and an empty risk-reasons list.
-- O-X-L ASN must positively include `isp`, have zero reports, and have no conflicting kind.
+- If an O-X-L ASN record exists, it must positively include `isp`, have zero reports, and have no conflicting kind. If explicitly not reported, Layer3 must independently confirm the exact IP/ASN/country/prefix and residential/access type at low risk.
 - The country comes from IPWhois/IPinfo and must agree with Layer3. US goes to the US pool; all other valid countries go to the international pool.
 - These are high-confidence residential-address candidates, not proof of a particular household line. Layer3's live residential-proxy detection is paid-only, so the free Open API cannot guarantee an address is not being used by a residential proxy service.
 
 ### Low-risk datacenter pool
 - Layer3 must label both address and network `hosting`.
 - Layer3 risk must be `low` with score below 25; anonymizer/proxy/VPN/Tor/relay flags must be false, and no risk reason other than `hosting` is accepted.
-- O-X-L ASN must positively include `hosting` and report zero.
+- If an O-X-L ASN record exists, it must positively include `hosting` and report zero. If explicitly not reported, Layer3 must independently confirm the exact IP/ASN/country/prefix and hosting/hosting type at low risk.
 - Any O-X-L network record must also confirm hosting, have zero reports and reputation `ok/info`. If no O-X-L network record exists, Layer3's independent low-risk and prefix evidence is required.
 - “Low-risk” means only that the selected public sources did not return the configured exclusion signals at check time. It is not a safety guarantee.
 
 ## Quarantine and publication
-Unknown or unsupported address/network types, IPv6 addresses not covered by the Layer3 Open address endpoint, missing exit IP, echo disagreement, metadata disagreement, API errors, rate limits, missing ASN evidence, risk signals or conflicting sources are not published.
+Unknown or unsupported address/network types, IPv6 addresses not covered by the Layer3 Open address endpoint, missing exit IP, echo disagreement, metadata disagreement, API errors, rate limits, missing required ASN confirmation, risk signals or conflicting sources are not published.
 
 The workflow writes all three profiles and the evidence report only after classification completes and Mihomo validates every generated profile. A failed run leaves the last committed subscriptions untouched. Public nodes and evidence are readable by anyone; do not use the subscriptions for sensitive traffic.
