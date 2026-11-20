@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Callable
 
 ROOT = Path(__file__).resolve().parents[1]
-DISCOVERY_TIMEOUT_SECONDS = 25 * 60
+DISCOVERY_TIMEOUT_SECONDS = 10 * 60
 
 FREE_NODES_PROFILE = ROOT / "nodes" / "merged.yaml"
 SOURCE_REPORT = ROOT / "classification" / "source-discovery.json"
