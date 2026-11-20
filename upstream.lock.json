@@ -1,0 +1,7 @@
+{
+  "name": "FreeNodes",
+  "repository": "https://github.com/nostalume/FreeNodes",
+  "license": "MIT",
+  "commit": "5a4f4ecf8c06b49b503046179d10933a6a63ef69",
+  "purpose": "Discovery, semantic deduplication, Mihomo capability validation, and profile generation"
+}
