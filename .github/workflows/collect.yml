@@ -98,6 +98,7 @@ jobs:
         run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py tests/test_nodehub.py tests/test_vpngate.py tests/test_vpnbook.py
 
       - name: Build, classify and publish the NodeHub module
+        id: classify
         timeout-minutes: 55
         env:
           GH_TOKEN: ${{ github.token }}
@@ -123,13 +124,23 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          for path in nodes subscriptions classification; do
-            if [ -d "$path" ]; then git add "$path/"; fi
-          done
-          if git diff --cached --quiet; then
-            echo "No subscription changes."
+          if [ "${{ steps.classify.outcome }}" = "success" ]; then
+            for path in nodes subscriptions classification; do
+              if [ -d "$path" ]; then git add "$path/"; fi
+            done
           else
-            git commit -m "auto: update verified nodes and classified pools"
+            # Failed verification may publish diagnostics only. Never advance
+            # candidate snapshots or subscription pools from a failed run.
+            if [ -d classification ]; then git add classification/; fi
+          fi
+          if git diff --cached --quiet; then
+            echo "No generated artifacts to commit."
+          else
+            if [ "${{ steps.classify.outcome }}" = "success" ]; then
+              git commit -m "auto: update verified nodes and classified pools"
+            else
+              git commit -m "ci: preserve failed-run classification diagnostics"
+            fi
             for attempt in 1 2 3; do
               git fetch origin main
               if ! git rebase origin/main; then
