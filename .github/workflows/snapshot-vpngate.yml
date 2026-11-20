@@ -1,6 +1,12 @@
 name: Snapshot VPNGate candidates
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/vpngate.py"
+      - "scripts/snapshot_vpngate.py"
+      - ".github/workflows/snapshot-vpngate.yml"
   schedule:
     - cron: "*/20 * * * *"
   workflow_dispatch:
