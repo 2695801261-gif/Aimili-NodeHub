@@ -69,6 +69,13 @@ jobs:
               raise SystemExit("Pinned FreeNodes node_limit layout changed; refusing unsafe pool expansion")
           s = s.replace(old, new, 1).replace(old_limit, new_limit, 1)
           p.write_text(s, encoding="utf-8")
+          probe_path = Path("freenodes/probe.py")
+          probe_source = probe_path.read_text(encoding="utf-8")
+          old_deadline = "deadline: float = 300.0"
+          new_deadline = "deadline: float = 600.0"
+          if probe_source.count(old_deadline) != 1:
+              raise SystemExit("Pinned FreeNodes probe deadline layout changed; refusing unsafe timeout expansion")
+          probe_path.write_text(probe_source.replace(old_deadline, new_deadline, 1), encoding="utf-8")
           PY
 
       - name: Install dependencies
