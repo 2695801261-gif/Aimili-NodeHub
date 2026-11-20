@@ -7,7 +7,7 @@ All lookups apply to the **proxy's observed exit IP**, never the configured serv
 ### Exit-IP identity
 - IPWhois: https://ipwho.is/{exit-ip}; primary country, ASN and ISP/organization metadata.
 - IPinfo legacy public endpoint: https://ipinfo.io/{exit-ip}/json; fallback only when IPWhois is unavailable or incomplete.
-- Both are queried only after two independent HTTPS echo services agree on the exit IP.
+- These metadata services are queried only after at least two of three independent HTTPS echo services agree on the exit IP.
 
 ### Layer3 Intel Open API
 - Documentation: https://docs.layer3intel.com/docs/intel-api/open-api
@@ -31,13 +31,13 @@ All lookups apply to the **proxy's observed exit IP**, never the configured serv
 - O-X-L documents IP 404 as “not reported or temporary lookup failure”. The classifier retries once and retains `not_reported` as an uncertainty signal, not proof of zero abuse.
 - If an O-X-L ASN record exists, its ASN kind must positively support the target class and contain no disqualifying kind. The ASN report total is retained as network-level context, not treated as a report against every address in the ASN; exact IP and network records retain zero-report requirements. If O-X-L explicitly reports no ASN record, that absence is not a clean result: the candidate can proceed only when the independent Layer3 response matches the exact exit IP, country, ASN and announced prefix, has the class-specific risk rule, and confirms the target address/network type. O-X-L timeouts, rate limits and server errors are quarantined.
 - O-X-L warns that reports can contain false positives; these are risk signals, not proof of malicious intent.
-- Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 60 and caches repeated IP/network/ASN lookups within each run.
+- Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 160 and caches repeated IP/network/ASN lookups within each run.
 
 ## Admission policy
 Every candidate must pass all of these gates:
 
 1. Mihomo selects the exact requested node.
-2. Two independent HTTPS exit-echo services return the same globally routable IP.
+2. At least two of three independent HTTPS exit-echo services return the same globally routable IP.
 3. IPWhois or the IPinfo fallback resolves that exact IP to a valid country, ASN and non-empty operator name.
 4. Layer3 returns the exact IP, matching country/ASN and an announced prefix containing the exit IP, plus a low-risk result under the class-specific rules above.
 5. If O-X-L ASN lookup returns a record, its ASN kind must positively confirm `isp` or `hosting` as appropriate and contain no disqualifying kind; its aggregate report count is recorded as context, not treated as an IP-level report. An explicit ASN `not_reported` result is not treated as clean; it can proceed only when Layer3 independently confirms the exact exit IP, country, ASN, announced prefix, low risk and target network type. Provider errors and rate limits remain quarantined.

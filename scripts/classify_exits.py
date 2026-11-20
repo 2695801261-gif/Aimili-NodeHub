@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ipaddress
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
 import os
 import re
@@ -311,7 +311,7 @@ def curl_exit_ip(url: str) -> str:
 
 
 def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
-    """Confirm the tunnel egress by two-of-three independent echo services."""
+    """Confirm tunnel egress with a parallel two-of-three independent quorum."""
     if attempts < 1:
         raise ValueError("echo attempts must be positive")
 
@@ -331,25 +331,24 @@ def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
     endpoints = (
         "https://api.ipify.org",
         "https://checkip.amazonaws.com",
+        "https://icanhazip.com",
     )
-    results: list[str] = []
+    results_by_endpoint: dict[str, str] = {}
     errors: list[Exception] = []
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        futures = [executor.submit(query, endpoint) for endpoint in endpoints]
-        for future in futures:
+    # Probe all independent services concurrently. The former sequential
+    # third-provider fallback added another full timeout whenever the first
+    # two services disagreed or one timed out, wasting the bounded run budget.
+    with ThreadPoolExecutor(max_workers=len(endpoints)) as executor:
+        futures = {executor.submit(query, endpoint): endpoint for endpoint in endpoints}
+        for future in as_completed(futures):
+            endpoint = futures[future]
             try:
-                results.append(future.result())
+                results_by_endpoint[endpoint] = future.result()
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
                 errors.append(error)
 
-    if len(results) == 2 and results[0] == results[1]:
-        return results[0], True
-
-    try:
-        results.append(query("https://icanhazip.com"))
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
-        errors.append(error)
-
+    # Restore source order for deterministic diagnostics when no quorum exists.
+    results = [results_by_endpoint[endpoint] for endpoint in endpoints if endpoint in results_by_endpoint]
     if results:
         ip, votes = Counter(results).most_common(1)[0]
         return ip, votes >= 2
