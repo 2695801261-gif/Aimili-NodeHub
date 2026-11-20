@@ -131,7 +131,7 @@ def make_fixture(now):
         "ip": udp_ip,
         "country_code": "US",
         "country_name": "United States",
-        "score": 500,
+        "score": 2000,
         "ping_ms": 45,
         "speed_bps": 500000,
         "num_vpn_sessions": 2,
@@ -236,6 +236,7 @@ class VPNGateRollingMirrorTests(unittest.TestCase):
         )
 
         self.assertEqual([row["country_code"] for row in selected], ["US", "JP"])
+        self.assertEqual(selected[0]["probe_reason"], "tcp")
         self.assertEqual(report["eligible_recent_tcp"], 2)
         self.assertEqual(report["eligible_recent_udp"], 1)
         self.assertEqual(report["eligible_recent_transport_total"], 3)
