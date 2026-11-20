@@ -57,6 +57,34 @@ class ClassificationTests(unittest.TestCase):
         evidence["asn_kind"] = []
         self.assertIsNone(classify(evidence).pool)
 
+    def test_hosting_ip_signal_is_allowed_for_dc(self):
+        evidence = base()
+        evidence["asn_kind"] = ["hosting"]
+        evidence["ip_risk_status"] = "ok"
+        evidence["ip_kind"] = ["hosting"]
+        evidence["ip_reports"] = 0
+        self.assertEqual(classify(evidence).pool, "low-risk-datacenter")
+
+    def test_vpn_ip_signal_quarantines_isp(self):
+        evidence = base()
+        evidence["ip_risk_status"] = "ok"
+        evidence["ip_kind"] = ["vpn"]
+        evidence["ip_reports"] = 0
+        self.assertIsNone(classify(evidence).pool)
+
+    def test_missing_asn_report_count_quarantines(self):
+        evidence = base()
+        evidence["asn_reports"] = None
+        self.assertIsNone(classify(evidence).pool)
+
+    def test_conflicting_isp_and_hosting_ip_signals_quarantine(self):
+        evidence = base()
+        evidence["asn_kind"] = ["isp"]
+        evidence["ip_risk_status"] = "ok"
+        evidence["ip_kind"] = ["hosting"]
+        evidence["ip_reports"] = 0
+        self.assertIsNone(classify(evidence).pool)
+
 
 if __name__ == "__main__":
     unittest.main()
