@@ -89,7 +89,7 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
         time.sleep(1.0)
         data = request_json(f"https://ipinfo.io/{exit_ip}/json")
         org = data.get("org")
-        match = re.match(r"^AS(\\d+)\\s+(.+)$", org.strip()) if isinstance(org, str) else None
+        match = re.match(r"^AS(\d+)\s+(.+)$", org.strip()) if isinstance(org, str) else None
         country = data.get("country")
         if data.get("ip") != exit_ip or not match:
             raise LookupFailure("IPinfo returned incomplete or mismatched metadata")
