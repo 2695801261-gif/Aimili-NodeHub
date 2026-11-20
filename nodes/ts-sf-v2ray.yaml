@@ -1,18 +1,4 @@
 proxies:
-- name: US · VMESS · ts-sf-v2ray · 75395C0C
-  type: vmess
-  server: 188.114.99.137
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: guanwang.awsno.com
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
 - name: US · VMESS · ts-sf-v2ray · F2DC9BA9
   type: vmess
   server: 67.220.95.49
@@ -53,9 +39,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · FF3F4D4A
+- name: US · VMESS · ts-sf-v2ray · 2D0D4DB3
   type: vmess
-  server: 172.111.36.137
+  server: 162.251.62.42
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -63,9 +49,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 2D0D4DB3
+- name: US · VMESS · ts-sf-v2ray · FF3F4D4A
   type: vmess
-  server: 162.251.62.42
+  server: 172.111.36.137
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -83,3 +69,17 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
+- name: US · VMESS · ts-sf-v2ray · 75395C0C
+  type: vmess
+  server: 188.114.99.137
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: guanwang.awsno.com
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      Host: guanwang.awsno.com

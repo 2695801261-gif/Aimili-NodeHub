@@ -8,20 +8,6 @@ proxies:
   tls: true
   skip-cert-verify: true
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-- name: US · VMESS · ts-sf-clash · 65DF96BE
-  type: vmess
-  server: 188.114.99.137
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: ws
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      host: guanwang.awsno.com
 - name: US · VMESS · ts-sf-clash · 3F0E9AD3
   type: vmess
   server: 67.220.95.49
@@ -62,9 +48,9 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · A9CFAA7C
+- name: US · VMESS · ts-sf-clash · 71FD423B
   type: vmess
-  server: 172.111.36.137
+  server: 162.251.62.42
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -72,9 +58,9 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · 71FD423B
+- name: US · VMESS · ts-sf-clash · A9CFAA7C
   type: vmess
-  server: 162.251.62.42
+  server: 172.111.36.137
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -92,3 +78,17 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
+- name: US · VMESS · ts-sf-clash · 65DF96BE
+  type: vmess
+  server: 188.114.99.137
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      host: guanwang.awsno.com
