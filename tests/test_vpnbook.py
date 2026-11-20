@@ -1,8 +1,12 @@
-import io
 import unittest
-import zipfile
 
-from scripts.vpnbook import VPNBookError, parse_archives, parse_vpnbook_page
+from scripts.vpnbook import (
+    VPNBookError,
+    build_config_url,
+    parse_configs,
+    parse_vpnbook_page,
+)
+
 CA = """-----BEGIN CERTIFICATE-----
 MIIBtestcertificate
 -----END CERTIFICATE-----"""
@@ -11,10 +15,10 @@ TLS_AUTH = """-----BEGIN OpenVPN Static key V1-----
 -----END OpenVPN Static key V1-----"""
 
 
-def profile(remote="8.8.8.20 443 udp"):
+def profile(remote="us16.vpnbook.com 443 tcp"):
     return f"""client
 dev tun
-proto udp
+proto tcp
 remote {remote}
 auth-user-pass
 cipher AES-128-CBC
@@ -30,39 +34,64 @@ key-direction 1
 
 
 class VPNBookSourceTests(unittest.TestCase):
-    def test_extracts_runtime_credentials_and_only_official_zip_links(self):
+    def setUp(self):
+        self.server = {
+            "id": "us16",
+            "hostname": "us16.vpnbook.com",
+            "ip": "147.135.15.16",
+            "country": "US",
+        }
+
+    def test_parses_current_nextjs_credentials_and_server_directory(self):
         page = """
-        <div>VPN Password Updated: Nov 18, 2026</div>
-        <h3>VPN Credentials</h3>
-        <div>Use these credentials for all VPN servers</div>
-        <div>Username <strong>vpnbook</strong></div>
-        <div>Password <strong>CurrentPass123</strong></div>
-        <div>Last updated: Nov 18, 2026</div>
-        <a href="/free-openvpn-account/VPNBook.com-OpenVPN-US1.zip">US</a>
-        <a href="https://evil.example/free-openvpn-account/evil.zip">bad</a>
+        <label>Username</label><code>vpnbook</code>
+        <label>Password</label><code>CurrentPass123</code>
+        <script>
+        self.__next_f.push([1,"{&quot;id&quot;:&quot;us16&quot;,&quot;name&quot;:&quot;US Server 1&quot;,&quot;hostname&quot;:&quot;us16.vpnbook.com&quot;,&quot;ipAddress&quot;:&quot;147.135.15.16&quot;,&quot;countryCode&quot;:&quot;US&quot;}"])
+        </script>
         """
-        credentials, links = parse_vpnbook_page(page)
+        credentials, servers = parse_vpnbook_page(page)
         self.assertEqual(credentials, ("vpnbook", "CurrentPass123"))
-        self.assertEqual(links, ["https://www.vpnbook.com/free-openvpn-account/VPNBook.com-OpenVPN-US1.zip"])
+        self.assertEqual(servers, [self.server])
 
-    def test_rejects_missing_password_or_archive_links(self):
-        with self.assertRaises(VPNBookError):
-            parse_vpnbook_page("<a href='/free-openvpn-account/x.zip'>x</a>")
-        with self.assertRaises(VPNBookError):
-            parse_vpnbook_page("<div>Password: <strong>validpass</strong></div>")
+    def test_supports_legacy_strong_credential_markup(self):
+        page = """
+        <div>Username: <strong>vpnbook</strong></div>
+        <div>Password: <strong>LegacyPass123</strong></div>
+        {"id":"us16","hostname":"us16.vpnbook.com","ipAddress":"147.135.15.16","countryCode":"US"}
+        """
+        credentials, servers = parse_vpnbook_page(page)
+        self.assertEqual(credentials, ("vpnbook", "LegacyPass123"))
+        self.assertEqual(servers[0]["id"], "us16")
 
-    def test_converts_ovpn_profiles_with_dynamic_credentials(self):
-        buffer = io.BytesIO()
-        with zipfile.ZipFile(buffer, "w") as archive:
-            archive.writestr("vpnbook-us1-tcp443.ovpn", profile("8.8.8.20 443 tcp"))
-        proxies, report = parse_archives(
-            [("https://www.vpnbook.com/free-openvpn-account/test.zip", buffer.getvalue())],
-            ("vpnbook", "current-pass"),
+    def test_rejects_pages_without_credentials_or_valid_servers(self):
+        with self.assertRaises(VPNBookError):
+            parse_vpnbook_page('<label>Username</label><code>vpnbook</code>')
+        page = """
+        <label>Username</label><code>vpnbook</code>
+        <label>Password</label><code>CurrentPass123</code>
+        {"id":"lan","hostname":"localhost","ipAddress":"127.0.0.1","countryCode":"US"}
+        """
+        with self.assertRaises(VPNBookError):
+            parse_vpnbook_page(page)
+
+    def test_builds_official_api_url_from_validated_server_record(self):
+        url = build_config_url(self.server)
+        self.assertEqual(
+            url,
+            "https://www.vpnbook.com/api/openvpn?hostname=us16.vpnbook.com&protocol=tcp443&ip=147.135.15.16",
+        )
+
+    def test_parses_profiles_with_runtime_credentials(self):
+        proxies, report = parse_configs(
+            [(self.server, profile())],
+            ("vpnbook", "CurrentPass123"),
         )
         self.assertEqual(len(proxies), 1)
-        self.assertEqual(proxies[0]["name"], "VPNBook-vpnbook-us1-tcp443")
+        self.assertEqual(proxies[0]["name"], "VPNBook-us16-tcp443")
         self.assertEqual(proxies[0]["username"], "vpnbook")
-        self.assertEqual(proxies[0]["password"], "current-pass")
+        self.assertEqual(proxies[0]["password"], "CurrentPass123")
+        self.assertEqual(proxies[0]["source"], "vpnbook_official")
         self.assertEqual(report["candidates_parsed"], 1)
 
 

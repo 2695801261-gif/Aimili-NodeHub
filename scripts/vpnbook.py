@@ -1,33 +1,56 @@
-"""Official VPNBook OpenVPN source adapter. Credentials are runtime-only."""
+"""Official VPNBook OpenVPN API adapter; credentials are runtime-only."""
 from __future__ import annotations
-import io, json, re, urllib.error, urllib.parse, urllib.request, zipfile
+
+import ipaddress
+import json
+import re
+import urllib.error
+import urllib.parse
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from html import unescape
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
-from collections import Counter
 from pathlib import Path
 from typing import Any
+
 import yaml
+
 from scripts.vpngate import MIHOMO, VPNGateError, _validate_batch, parse_ovpn_config
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE_URL = "https://www.vpnbook.com/freevpn/openvpn"
-BASE_URL = "https://www.vpnbook.com"
+API_URL = "https://www.vpnbook.com/api/openvpn"
 OUTPUT = ROOT / ".cache" / "vpnbook" / "candidates.yaml"
 REPORT = ROOT / "classification" / "vpnbook-discovery.json"
 MAX_PAGE_BYTES = 2 * 1024 * 1024
-MAX_ARCHIVE_BYTES = 8 * 1024 * 1024
-MAX_PROFILES = 60
+MAX_CONFIG_BYTES = 256 * 1024
+MAX_SERVERS = 20
+MAX_PROFILES = 20
+USER_AGENT = (
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36"
+)
+
 
 class VPNBookError(RuntimeError):
     pass
+
 
 def _fetch(url: str, limit: int) -> bytes:
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme != "https" or parsed.hostname != "www.vpnbook.com":
         raise VPNBookError("refusing non-official VPNBook URL")
-    req = urllib.request.Request(url, headers={"User-Agent":"Aimili-NodeHub/0.1","Accept":"*/*"})
+    if parsed.path not in {"/freevpn/openvpn", "/api/openvpn"}:
+        raise VPNBookError("refusing unexpected VPNBook endpoint")
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "text/html,application/octet-stream,text/plain,*/*",
+        "Referer": PAGE_URL,
+    }
+    request = urllib.request.Request(url, headers=headers)
     try:
-        with urllib.request.urlopen(req, timeout=25) as response:
+        with urllib.request.urlopen(request, timeout=25) as response:
+            if response.status != 200:
+                raise VPNBookError(f"VPNBook returned HTTP {response.status}")
             data = response.read(limit + 1)
     except (urllib.error.URLError, TimeoutError, OSError) as error:
         raise VPNBookError(f"VPNBook request failed: {type(error).__name__}") from error
@@ -35,40 +58,170 @@ def _fetch(url: str, limit: int) -> bytes:
         raise VPNBookError("VPNBook response exceeded configured size limit")
     return data
 
-def parse_vpnbook_page(page: str) -> tuple[tuple[str,str], list[str]]:
-    # Parse visible text rather than relying on a particular HTML element name.
-    # The official page also mentions the password update date elsewhere, so
-    # prefer the dedicated VPN Credentials section before looking at the FAQ.
-    plain = unescape(re.sub(r"<[^>]+>", " ", page))
-    plain = re.sub(r"\s+", " ", plain)
-    section = plain
-    if re.search(r"VPN\s+Credentials", plain, re.I):
-        section = re.split(r"VPN\s+Credentials", plain, maxsplit=1, flags=re.I)[1]
-        section = re.split(r"Last\s+updated", section, maxsplit=1, flags=re.I)[0]
-    password = re.search(
-        r"\bPassword\b\s*:?[\s]+([A-Za-z0-9!@#$%^&*()_+\-]{4,64})",
-        section,
-        re.I,
+
+def parse_vpnbook_page(page: str) -> tuple[tuple[str, str], list[dict[str, str]]]:
+    """Parse current Next.js page credentials and its embedded server directory."""
+    user_match = re.search(
+        r">Username</label>.*?<code[^>]*>\s*([^<\s]{1,64})\s*</code>",
+        page,
+        re.I | re.S,
     )
-    if not password:
-        # Legacy page variants label the value directly in the FAQ.
-        password = re.search(
-            r"Username\s*:\s*vpnbook[.\s]+Password\s*:\s*([A-Za-z0-9!@#$%^&*()_+\-]{4,64})",
-            plain,
+    password_match = re.search(
+        r">Password</label>.*?<code[^>]*>\s*([^<\s]{4,64})\s*</code>",
+        page,
+        re.I | re.S,
+    )
+
+    # Older official page variants used strong tags rather than label/code.
+    if not user_match:
+        user_match = re.search(
+            r"Username\s*:?[\s\S]{0,180}?<(?:strong|b)[^>]*>\s*([^<\s]{1,64})\s*</",
+            page,
             re.I,
         )
-    if not password:
-        raise VPNBookError("current shared password not found on official page")
-    links = re.findall(r"""href=["']([^"']+\.zip(?:\?[^"']*)?)["']""", page, re.I)
-    urls = []
-    for link in links:
-        absolute = urllib.parse.urljoin(BASE_URL, link)
-        parsed = urllib.parse.urlparse(absolute)
-        if parsed.scheme == "https" and parsed.hostname == "www.vpnbook.com" and parsed.path.startswith("/free-openvpn-account/") and parsed.path.lower().endswith(".zip"):
-            if absolute not in urls:
-                urls.append(absolute)
-    if not urls:
-        raise VPNBookError("official page exposed no OpenVPN ZIP links")
-    return ("vpnbook", password.group(1).strip()), urls
+    if not password_match:
+        password_match = re.search(
+            r"Password\s*:?[\s\S]{0,180}?<(?:strong|b)[^>]*>\s*([^<\s]{4,64})\s*</",
+            page,
+            re.I,
+        )
+    if not user_match or not password_match:
+        raise VPNBookError("current shared credentials not found in official page")
+
+    decoded = unescape(page)
+    server_pattern = re.compile(
+        r'"id"\s*:\s*"([a-z0-9]+)"'
+        r'.*?"hostname"\s*:\s*"([^"]+)"'
+        r'.*?"ipAddress"\s*:\s*"([^"]+)"'
+        r'.*?"countryCode"\s*:\s*"([A-Z]{2})"',
+        re.I | re.S,
+    )
+    servers: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for match in server_pattern.finditer(decoded):
+        server_id, hostname, ip_text, country = match.groups()
+        hostname = hostname.lower().rstrip(".")
+        try:
+            address = ipaddress.ip_address(ip_text)
+        except ValueError:
+            continue
+        if (
+            server_id in seen
+            or not address.is_global
+            or not re.fullmatch(r"[a-z0-9-]+\.vpnbook\.com", hostname)
+        ):
+            continue
+        seen.add(server_id)
+        servers.append({
+            "id": server_id,
+            "hostname": hostname,
+            "ip": str(address),
+            "country": country.upper(),
+        })
+        if len(servers) >= MAX_SERVERS:
+            break
+    if not servers:
+        raise VPNBookError("official page exposed no valid OpenVPN server records")
+    return (
+        user_match.group(1).strip(),
+        password_match.group(1).strip(),
+    ), servers
 
 
+def build_config_url(server: dict[str, str]) -> str:
+    """Build the documented official per-host OpenVPN configuration API URL."""
+    query = urllib.parse.urlencode({
+        "hostname": server["hostname"],
+        "protocol": "tcp443",
+        "ip": server["ip"],
+    })
+    return f"{API_URL}?{query}"
+
+
+def parse_configs(
+    configs: list[tuple[dict[str, str], str]],
+    credentials: tuple[str, str],
+    limit: int = MAX_PROFILES,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    proxies: list[dict[str, Any]] = []
+    rejected: dict[str, int] = {}
+    seen: set[tuple[str, int, str]] = set()
+    for server, profile in configs:
+        if len(proxies) >= limit:
+            break
+        try:
+            proxy = parse_ovpn_config(
+                profile,
+                f"VPNBook-{server['id']}-tcp443",
+                credentials,
+            )
+            identity = (proxy["server"], proxy["port"], proxy["proto"])
+            if identity in seen:
+                rejected["duplicate_endpoint"] = rejected.get("duplicate_endpoint", 0) + 1
+                continue
+            seen.add(identity)
+            proxy["source"] = "vpnbook_official"
+            proxies.append(proxy)
+        except (VPNGateError, KeyError) as error:
+            reason = f"{type(error).__name__}:{str(error)[:120]}"
+            rejected[reason] = rejected.get(reason, 0) + 1
+    return proxies, {
+        "source": "vpnbook_official_api",
+        "servers_seen": len(configs),
+        "candidates_parsed": len(proxies),
+        "rejection_reasons": rejected,
+        "limit": limit,
+    }
+
+
+def collect_vpnbook() -> dict[str, Any]:
+    OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+    REPORT.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        page = _fetch(PAGE_URL, MAX_PAGE_BYTES).decode("utf-8", errors="replace")
+        credentials, servers = parse_vpnbook_page(page)
+        downloaded: list[tuple[dict[str, str], str]] = []
+        failures: dict[str, int] = {}
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            pending = {
+                executor.submit(_fetch, build_config_url(server), MAX_CONFIG_BYTES): server
+                for server in servers
+            }
+            for future in as_completed(pending, timeout=60):
+                server = pending[future]
+                try:
+                    profile = future.result().decode("utf-8-sig", errors="strict")
+                    if not profile.lstrip().startswith("client"):
+                        raise VPNBookError("official API response is not an OpenVPN profile")
+                    downloaded.append((server, profile))
+                except Exception as error:
+                    reason = type(error).__name__
+                    failures[reason] = failures.get(reason, 0) + 1
+        proxies, report = parse_configs(downloaded, credentials)
+        report["servers_discovered"] = len(servers)
+        report["download_failures"] = failures
+        if not MIHOMO.is_file():
+            raise VPNBookError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
+        valid, rejected = _validate_batch(proxies, MIHOMO)
+        report["mihomo_validated"] = len(valid)
+        report["mihomo_rejected"] = rejected
+        report["status"] = "ok" if valid else "empty"
+        OUTPUT.write_text(
+            yaml.safe_dump({"proxies": valid}, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+    except Exception as error:
+        report = {
+            "source": "vpnbook_official_api",
+            "status": "unavailable",
+            "error": f"{type(error).__name__}: {' '.join(str(error).split())[:220]}",
+            "candidates_parsed": 0,
+        }
+        OUTPUT.write_text(yaml.safe_dump({"proxies": []}, sort_keys=False), encoding="utf-8")
+    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print("VPNBook discovery:", json.dumps(report, ensure_ascii=False, sort_keys=True), flush=True)
+    return report
+
+
+if __name__ == "__main__":
+    collect_vpnbook()
