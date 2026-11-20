@@ -134,6 +134,20 @@ def atomic_write(path: Path, content: str) -> None:
     os.replace(temporary, path)
 
 
+def validate_profile_content(content: str, pool: str) -> None:
+    with tempfile.TemporaryDirectory(prefix="nodehub-profile-check-") as temporary:
+        home = Path(temporary)
+        profile_path = home / f"{pool}.yaml"
+        profile_path.write_text(content, encoding="utf-8")
+        result = subprocess.run(
+            [str(MIHOMO), "-t", "-d", str(home), "-f", str(profile_path)],
+            capture_output=True, text=True, timeout=20,
+        )
+        if result.returncode != 0:
+            detail = (result.stderr or result.stdout)[-1200:]
+            raise LookupFailure(f"Mihomo rejected {pool} profile: {detail}")
+
+
 def run() -> None:
     if not SOURCE_PROFILE.is_file() or not MIHOMO.is_file():
         raise SystemExit("Required merged profile or pinned Mihomo binary is missing")
@@ -285,9 +299,14 @@ def run() -> None:
     if not any(row.get("ipwhois_success") for row in evidence_rows):
         raise SystemExit("No exit IPs could be independently verified; keeping previous classified subscriptions")
 
+    rendered_profiles: list[tuple[Path, str]] = []
     for pool, path in OUTPUTS.items():
         profile = make_profile(grouped[pool], pool)
-        atomic_write(path, yaml.safe_dump(profile, allow_unicode=True, sort_keys=False))
+        rendered = yaml.safe_dump(profile, allow_unicode=True, sort_keys=False)
+        validate_profile_content(rendered, pool)
+        rendered_profiles.append((path, rendered))
+    for path, rendered in rendered_profiles:
+        atomic_write(path, rendered)
 
     report = {
         "schema_version": 1,
