@@ -582,32 +582,96 @@ def save_candidate_history(
 def collect_vpngate() -> dict[str, Any]:
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
+    now = time.time()
+    previous = load_candidate_history()
     try:
         csv_text = fetch_directory()
-        proxies, report = parse_directory(csv_text)
+        current, report = parse_directory(csv_text)
         if not MIHOMO.is_file():
             raise VPNGateError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
-        valid, rejected = _validate_batch(proxies, MIHOMO)
-        report["mihomo_validated"] = len(valid)
-        report["mihomo_rejected"] = rejected
-        report["status"] = "ok" if valid else "empty"
+        current_valid, current_rejected = _validate_batch(current, MIHOMO)
+        history, history_stats = merge_candidate_history(current_valid, previous, now=now)
+        try:
+            rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
+        except ValueError:
+            rotation = 0
+        selected = select_history_candidates(
+            history, limit=HISTORY_PROBE_LIMIT, rotation=rotation
+        )
+        valid, rejected = _validate_batch(selected, MIHOMO)
+        valid_ids = {_candidate_identity(node) for node in valid}
+        selected_ids = {_candidate_identity(node) for node in selected}
+        invalid_ids = selected_ids - valid_ids
+        history = [
+            record for record in history
+            if _candidate_identity(record["node"]) not in invalid_ids
+        ]
+        save_candidate_history(history, now=now)
+        report.update({
+            "current_mihomo_validated": len(current_valid),
+            "current_mihomo_rejected": current_rejected,
+            "history_candidates_available": len(history),
+            "history_candidates_selected": len(selected),
+            "history_off_window_retained": history_stats["off_window_retained"],
+            "history_expired": history_stats["history_expired"],
+            "history_invalid": history_stats["history_invalid"],
+            "history_ttl_days": HISTORY_TTL_SECONDS // (24 * 60 * 60),
+            "probe_rotation": rotation,
+            "mihomo_validated": len(valid),
+            "mihomo_rejected": rejected,
+            "status": "ok" if valid else "empty",
+        })
         OUTPUT.write_text(
             yaml.safe_dump({"proxies": valid}, allow_unicode=True, sort_keys=False),
             encoding="utf-8",
         )
     except Exception as error:
+        try:
+            rotation = int(os.getenv("GITHUB_RUN_NUMBER", "0"))
+        except ValueError:
+            rotation = 0
+        fallback_history, history_stats = merge_candidate_history([], previous, now=now)
+        valid: list[dict[str, Any]] = []
+        rejected = 0
+        if MIHOMO.is_file():
+            selected = select_history_candidates(
+                fallback_history, limit=HISTORY_PROBE_LIMIT, rotation=rotation
+            )
+            valid, rejected = _validate_batch(selected, MIHOMO)
+            valid_ids = {_candidate_identity(node) for node in valid}
+            selected_ids = {_candidate_identity(node) for node in selected}
+            invalid_ids = selected_ids - valid_ids
+            fallback_history = [
+                record for record in fallback_history
+                if _candidate_identity(record["node"]) not in invalid_ids
+            ]
+            save_candidate_history(fallback_history, now=now)
         report = {
             "source": "vpngate_official_csv",
             "endpoint": VPNGATE_API,
-            "status": "unavailable",
+            "api_status": "unavailable",
+            "status": "history_fallback" if valid else "unavailable",
             "error": f"{type(error).__name__}: {' '.join(str(error).split())[:240]}",
-            "mihomo_validated": 0,
+            "history_candidates_available": len(fallback_history),
+            "history_candidates_selected": len(valid),
+            "history_off_window_retained": history_stats["off_window_retained"],
+            "history_expired": history_stats["history_expired"],
+            "history_invalid": history_stats["history_invalid"],
+            "history_ttl_days": HISTORY_TTL_SECONDS // (24 * 60 * 60),
+            "probe_rotation": rotation,
+            "mihomo_validated": len(valid),
+            "mihomo_rejected": rejected,
         }
-        OUTPUT.write_text(yaml.safe_dump({"proxies": []}, sort_keys=False), encoding="utf-8")
-    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        OUTPUT.write_text(
+            yaml.safe_dump({"proxies": valid}, allow_unicode=True, sort_keys=False),
+            encoding="utf-8",
+        )
+    REPORT.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     print("VPN Gate discovery:", json.dumps(report, ensure_ascii=False, sort_keys=True), flush=True)
     return report
-
 
 if __name__ == "__main__":
     collect_vpngate()
