@@ -223,6 +223,61 @@ class ClassificationTests(unittest.TestCase):
         evidence["asn_kind"] = ["isp"]
         return evidence
 
+    def test_vpngate_optional_ipapi_is_evidence_must_confirm_fixed_isp_and_clean_flags(self):
+        evidence = self._vpngate_access_candidate()
+        evidence.update({
+            "ipapi_is_status": "ok",
+            "ipapi_is_flags": {
+                "is_datacenter": False, "is_proxy": False, "is_tor": False,
+                "is_abuser": False, "is_mobile": False, "is_satellite": False,
+                "is_anycast": False, "is_crawler": False,
+            },
+            "ipapi_is_vpn": True,
+            "ipapi_is_company_type": "isp",
+            "ipapi_is_asn_type": "isp",
+            "ipapi_is_asn": 64500,
+            "ipapi_is_country": "US",
+        })
+        self.assertEqual(classify(evidence).pool, "us-residential")
+
+    def test_vpngate_ipapi_is_datacenter_or_mobile_flag_blocks_residential(self):
+        for flag in ("is_datacenter", "is_mobile", "is_proxy", "is_tor", "is_abuser"):
+            evidence = self._vpngate_access_candidate()
+            evidence.update({
+                "ipapi_is_status": "ok",
+                "ipapi_is_flags": {
+                    "is_datacenter": False, "is_proxy": False, "is_tor": False,
+                    "is_abuser": False, "is_mobile": False, "is_satellite": False,
+                    "is_anycast": False, "is_crawler": False,
+                },
+                "ipapi_is_company_type": "isp",
+                "ipapi_is_asn_type": "isp",
+                "ipapi_is_asn": 64500,
+                "ipapi_is_country": "US",
+            })
+            evidence["ipapi_is_flags"][flag] = True
+            self.assertIsNone(classify(evidence).pool, flag)
+
+    def test_vpngate_ipapi_is_asn_and_country_must_match(self):
+        evidence = self._vpngate_access_candidate()
+        evidence.update({
+            "ipapi_is_status": "ok",
+            "ipapi_is_flags": {
+                "is_datacenter": False, "is_proxy": False, "is_tor": False,
+                "is_abuser": False, "is_mobile": False, "is_satellite": False,
+                "is_anycast": False, "is_crawler": False,
+            },
+            "ipapi_is_company_type": "isp",
+            "ipapi_is_asn_type": "isp",
+            "ipapi_is_asn": 64501,
+            "ipapi_is_country": "US",
+        })
+        self.assertIsNone(classify(evidence).pool)
+        evidence["ipapi_is_asn"] = 64500
+        evidence["ipapi_is_country"] = "CA"
+        self.assertIsNone(classify(evidence).pool)
+
+
     def test_vpngate_fixed_isp_access_exit_passes_with_oxl_isp_asn(self):
         evidence = self._vpngate_access_candidate()
         verdict = classify(evidence)
