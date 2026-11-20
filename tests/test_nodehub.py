@@ -110,11 +110,27 @@ class NodeHubPipelineTests(unittest.TestCase):
         vpn = [{"name": f"VPNGate-JP-{i}"} for i in range(120)]
         combined, counts = combine_candidate_sources(primary, vpn)
 
-        self.assertEqual(len(combined), 500)
-        self.assertEqual(counts["freenodes_included"], 400)
-        self.assertEqual(counts["vpngate_included"], 100)
+        self.assertEqual(len(combined), 620)
+        self.assertEqual(counts["freenodes_included"], 500)
+        self.assertEqual(counts["vpngate_included"], 120)
         self.assertEqual(combined[4]["name"], "VPNGate-JP-0")
         self.assertEqual(combined[9]["name"], "VPNGate-JP-1")
+
+    def test_combines_official_and_rolling_vpngate_sources_with_expanded_budget(self):
+        from scripts.classify_exits import combine_candidate_sources
+
+        primary = [{"name": f"free-{i}"} for i in range(500)]
+        supplemental = (
+            [{"name": f"VPNGate-US-official-{i}"} for i in range(100)]
+            + [{"name": f"VPNGate-US-rolling-{i}"} for i in range(200)]
+            + [{"name": f"VPNBook-US-{i}"} for i in range(10)]
+        )
+        combined, counts = combine_candidate_sources(primary, supplemental)
+
+        self.assertEqual(len(combined), 810)
+        self.assertEqual(counts["freenodes_included"], 500)
+        self.assertEqual(counts["vpngate_included"], 300)
+        self.assertEqual(counts["vpnbook_included"], 10)
 
     def test_vpngate_candidates_remain_usable_when_freenodes_pool_is_empty(self):
         from scripts.classify_exits import combine_candidate_sources
@@ -131,7 +147,7 @@ class NodeHubPipelineTests(unittest.TestCase):
 
         primary = [{"name": f"free-{i}"} for i in range(600)]
         combined, counts = combine_candidate_sources(primary, [])
-        self.assertEqual(len(combined), 500)
+        self.assertEqual(len(combined), 600)
         self.assertEqual(counts["vpngate_included"], 0)
 
     def test_publication_verification_runs_only_after_classification(self):

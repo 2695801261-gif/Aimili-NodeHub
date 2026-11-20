@@ -32,11 +32,13 @@ OUTPUTS = {
 EVIDENCE_PATH = ROOT / "classification" / "evidence.json"
 DIAGNOSTICS_PATH = ROOT / "classification" / "diagnostics.json"
 VPNGATE_PROFILE = ROOT / ".cache" / "vpngate" / "candidates.yaml"
+VPNGATE_ROLLING_PROFILE = ROOT / ".cache" / "vpngate" / "rolling-candidates.yaml"
 VPNBOOK_PROFILE = ROOT / ".cache" / "vpnbook" / "candidates.yaml"
 SOURCE_REPORT = ROOT / "classification" / "source-discovery.json"
 MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "80"))
-MAX_TOTAL_CANDIDATES = 500
-MAX_VPNGATE_CANDIDATES = 100
+MAX_TOTAL_CANDIDATES = 1000
+MAX_VPNGATE_CANDIDATES = 300
+MAX_SUPPLEMENTAL_CANDIDATES = MAX_VPNGATE_CANDIDATES + 10
 CONTROLLER = "http://127.0.0.1:9090"
 SOCKS = "socks5h://127.0.0.1:7891"
 SECRET = "nodehub-local-controller-secret"
@@ -308,7 +310,7 @@ def validate_profile_content(content: str, pool: str) -> None:
 
 
 
-def combine_candidate_sources(primary, supplemental, *, total_limit=MAX_TOTAL_CANDIDATES, supplemental_limit=MAX_VPNGATE_CANDIDATES):
+def combine_candidate_sources(primary, supplemental, *, total_limit=MAX_TOTAL_CANDIDATES, supplemental_limit=MAX_SUPPLEMENTAL_CANDIDATES):
     """Interleave FreeNodes and bounded supplemental OpenVPN candidates."""
     if total_limit < 1 or supplemental_limit < 0:
         raise ValueError("candidate limits are invalid")
@@ -439,14 +441,18 @@ def run() -> None:
     candidates = [item for item in candidates if isinstance(item, dict) and isinstance(item.get("name"), str)]
     primary_candidates = candidates
     supplemental_candidates: list[dict[str, Any]] = []
-    for source_name, source_path in (("VPN Gate", VPNGATE_PROFILE), ("VPNBook", VPNBOOK_PROFILE)):
+    for source_name, source_path, source_limit in (
+        ("VPN Gate", VPNGATE_PROFILE, 100),
+        ("VPN Gate rolling mirror", VPNGATE_ROLLING_PROFILE, MAX_VPNGATE_CANDIDATES - 100),
+        ("VPNBook", VPNBOOK_PROFILE, 10),
+    ):
         if source_path.is_file():
             try:
                 supplemental_doc = yaml.safe_load(source_path.read_text(encoding="utf-8"))
                 raw_supplemental = supplemental_doc.get("proxies") if isinstance(supplemental_doc, dict) else None
                 if isinstance(raw_supplemental, list):
                     supplemental_candidates.extend(
-                        x for x in raw_supplemental[:50]
+                        x for x in raw_supplemental[:source_limit]
                         if isinstance(x, dict) and isinstance(x.get("name"), str)
                     )
             except (OSError, yaml.YAMLError) as error:

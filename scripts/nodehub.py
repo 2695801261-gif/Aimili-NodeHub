@@ -56,8 +56,10 @@ def discover_nodes() -> None:
         if not path.is_file() or path.stat().st_size == 0
     ]
     from scripts.vpngate import collect_vpngate
+    from scripts.vpngate_pool_mirror import collect_vpngate_rolling
 
     source_report = collect_vpngate()
+    source_report["vpngate_rolling_mirror"] = collect_vpngate_rolling()
     from scripts.vpnbook import collect_vpnbook
 
     source_report["vpnbook"] = collect_vpnbook()
