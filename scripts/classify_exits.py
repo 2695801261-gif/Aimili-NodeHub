@@ -333,19 +333,22 @@ def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
         "https://checkip.amazonaws.com",
         "https://icanhazip.com",
     )
-    results: list[str] = []
+    results_by_endpoint: dict[str, str] = {}
     errors: list[Exception] = []
     # Probe all independent services concurrently. The former sequential
     # third-provider fallback added another full timeout whenever the first
     # two services disagreed or one timed out, wasting the bounded run budget.
     with ThreadPoolExecutor(max_workers=len(endpoints)) as executor:
-        futures = [executor.submit(query, endpoint) for endpoint in endpoints]
+        futures = {executor.submit(query, endpoint): endpoint for endpoint in endpoints}
         for future in as_completed(futures):
+            endpoint = futures[future]
             try:
-                results.append(future.result())
+                results_by_endpoint[endpoint] = future.result()
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
                 errors.append(error)
 
+    # Restore source order for deterministic diagnostics when no quorum exists.
+    results = [results_by_endpoint[endpoint] for endpoint in endpoints if endpoint in results_by_endpoint]
     if results:
         ip, votes = Counter(results).most_common(1)[0]
         return ip, votes >= 2
