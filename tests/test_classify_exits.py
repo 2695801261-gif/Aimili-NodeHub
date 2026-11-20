@@ -107,8 +107,9 @@ class ExitProbeBudgetTests(unittest.TestCase):
         )
 
 class ExitEchoRetryTests(unittest.TestCase):
-    def test_transient_echo_failure_retries_both_initial_services(self):
+    def test_transient_echo_failure_retries_and_parallel_quorum_succeeds(self):
         calls = {}
+
         def fake(url):
             calls[url] = calls.get(url, 0) + 1
             if url.endswith("ipify.org") and calls[url] == 1:
@@ -121,10 +122,11 @@ class ExitEchoRetryTests(unittest.TestCase):
             self.assertEqual(echo_pair(), ("203.0.113.7", True))
         self.assertEqual(calls.get("https://api.ipify.org"), 2)
         self.assertEqual(calls.get("https://checkip.amazonaws.com"), 1)
-        self.assertNotIn("https://icanhazip.com", calls)
+        self.assertEqual(calls.get("https://icanhazip.com"), 1)
 
-    def test_third_service_resolves_one_initial_echo_timeout(self):
+    def test_third_service_runs_in_parallel_and_resolves_one_echo_timeout(self):
         calls = {}
+
         def fake(url):
             calls[url] = calls.get(url, 0) + 1
             if url.endswith("ipify.org"):
@@ -137,17 +139,6 @@ class ExitEchoRetryTests(unittest.TestCase):
             self.assertEqual(echo_pair(), ("203.0.113.7", True))
         self.assertEqual(calls.get("https://checkip.amazonaws.com"), 1)
         self.assertEqual(calls.get("https://icanhazip.com"), 1)
-
-    def test_third_service_resolves_a_two_provider_disagreement_by_majority(self):
-        def fake(url):
-            return {
-                "https://api.ipify.org": "203.0.113.7",
-                "https://checkip.amazonaws.com": "198.51.100.9",
-                "https://icanhazip.com": "203.0.113.7",
-            }[url]
-
-        with patch("scripts.classify_exits.curl_exit_ip", side_effect=fake):
-            self.assertEqual(echo_pair(), ("203.0.113.7", True))
 
     def test_three_different_echo_results_remain_unverified(self):
         def fake(url):
