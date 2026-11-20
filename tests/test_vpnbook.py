@@ -4,6 +4,7 @@ from scripts.vpnbook import (
     VPNBookError,
     build_config_url,
     parse_configs,
+    resolve_server_ip,
     parse_vpnbook_page,
 )
 
@@ -74,6 +75,35 @@ class VPNBookSourceTests(unittest.TestCase):
         """
         with self.assertRaises(VPNBookError):
             parse_vpnbook_page(page)
+
+    def test_falls_back_to_public_server_hostnames_when_embedded_json_changes(self):
+        page = """
+        <label>Username</label><code>vpnbook</code>
+        <label>Password</label><code>CurrentPass123</code>
+        <div>US Server 1 us16.vpnbook.com</div>
+        <div>US Server 2 us178.vpnbook.com</div>
+        <div>Canada Server 1 ca149.vpnbook.com</div>
+        """
+        credentials, servers = parse_vpnbook_page(page)
+        self.assertEqual(credentials, ("vpnbook", "CurrentPass123"))
+        self.assertEqual([item["hostname"] for item in servers], [
+            "us16.vpnbook.com", "us178.vpnbook.com", "ca149.vpnbook.com"
+        ])
+        self.assertTrue(all(item["ip"] == "" for item in servers))
+
+    def test_resolves_only_public_ipv4_for_official_server_hostname(self):
+        from unittest.mock import patch
+
+        records = [(None, None, None, None, ("147.135.15.16", 443))]
+        with patch("scripts.vpnbook.socket.getaddrinfo", return_value=records):
+            self.assertEqual(resolve_server_ip("us16.vpnbook.com"), "147.135.15.16")
+        with patch("scripts.vpnbook.socket.getaddrinfo", return_value=[
+            (None, None, None, None, ("127.0.0.1", 443))
+        ]):
+            with self.assertRaisesRegex(VPNBookError, "no public IPv4"):
+                resolve_server_ip("us16.vpnbook.com")
+        with self.assertRaisesRegex(VPNBookError, "non-server"):
+            resolve_server_ip("localhost")
 
     def test_builds_official_api_url_from_validated_server_record(self):
         url = build_config_url(self.server)

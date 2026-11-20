@@ -4,6 +4,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import re
+import socket
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -121,11 +122,55 @@ def parse_vpnbook_page(page: str) -> tuple[tuple[str, str], list[dict[str, str]]
         if len(servers) >= MAX_SERVERS:
             break
     if not servers:
+        # The current page also renders the OpenVPN server hostnames as visible
+        # text. Resolve those names at runtime rather than falling back to
+        # stale IP literals when its embedded JSON shape changes.
+        hostnames = re.findall(
+            r"\\b([a-z]{2}\\d{1,4})\\.vpnbook\\.com\\b",
+            decoded,
+            re.I,
+        )
+        for server_id in hostnames:
+            hostname = f"{server_id.lower()}.vpnbook.com"
+            if server_id.lower() in seen:
+                continue
+            seen.add(server_id.lower())
+            servers.append({
+                "id": server_id.lower(),
+                "hostname": hostname,
+                "ip": "",
+                "country": server_id[:2].upper(),
+            })
+            if len(servers) >= MAX_SERVERS:
+                break
+    if not servers:
         raise VPNBookError("official page exposed no valid OpenVPN server records")
     return (
         user_match.group(1).strip(),
         password_match.group(1).strip(),
     ), servers
+
+
+def resolve_server_ip(hostname: str) -> str:
+    if not re.fullmatch(r"[a-z]{2}\\d{1,4}\\.vpnbook\\.com", hostname, re.I):
+        raise VPNBookError("refusing to resolve a non-server VPNBook hostname")
+    try:
+        records = socket.getaddrinfo(
+            hostname,
+            443,
+            family=socket.AF_INET,
+            type=socket.SOCK_STREAM,
+        )
+    except OSError as error:
+        raise VPNBookError(f"VPNBook server DNS lookup failed: {type(error).__name__}") from error
+    for record in records:
+        try:
+            address = ipaddress.ip_address(record[4][0])
+        except (ValueError, IndexError):
+            continue
+        if address.is_global:
+            return str(address)
+    raise VPNBookError("VPNBook server hostname resolved to no public IPv4 address")
 
 
 def build_config_url(server: dict[str, str]) -> str:
@@ -184,7 +229,10 @@ def collect_vpnbook() -> dict[str, Any]:
     try:
         page = _fetch(PAGE_URL, MAX_PAGE_BYTES).decode("utf-8", errors="replace")
         credentials, servers = parse_vpnbook_page(page)
-        downloaded: list[tuple[dict[str, str], str]] = []
+        for server in servers:
+            if not server.get("ip"):
+                server["ip"] = resolve_server_ip(server["hostname"])
+        downloaded: list[tuple[dict[str, str], str]] =
         failures: dict[str, int] = {}
         with ThreadPoolExecutor(max_workers=5) as executor:
             pending = {
