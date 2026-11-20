@@ -1,43 +1,23 @@
 proxies:
-- name: HK · VMESS · radikal · 0177B65B
+- name: US · VMESS · radikal · 1C29F2BB
   type: vmess
-  server: 206.237.11.17
-  port: 50376
-  uuid: 9091fd64-7e8e-4b7a-8ae7-84474f234926
+  server: 38.91.100.16
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
   cipher: auto
   network: tcp
-- name: US · VMESS · radikal · 143310FC
-  type: vmess
-  server: 84.17.41.2
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-- name: CA · VMESS · radikal · 06E1923D
-  type: vmess
-  server: 104.18.42.163
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
-  alterId: 0
-  cipher: auto
-  network: ws
   tls: true
-  servername: guanwang.awsno.com
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
-- name: US · VMESS · radikal · 011B03AA
+  servername: xmfhlpy.com
+- name: CA · VMESS · radikal · 2AECE103
   type: vmess
-  server: 84.17.41.2
+  server: 134.195.196.211
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
   cipher: auto
   network: tcp
-  servername: bj1aa2zyjxyamyuk.v%3dns.vip
+  servername: 134.195.196.211
 - name: US · VMESS · radikal · 2799C252
   type: vmess
   server: 67.220.85.46
@@ -47,62 +27,18 @@ proxies:
   cipher: auto
   network: tcp
   servername: community.fastly.steamstatic.com
-- name: US · VMESS · radikal · 09BAF23C
+- name: CA · VMESS · radikal · 0152E890
   type: vmess
-  server: 67.220.85.46
+  server: 134.195.196.211
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
   cipher: auto
   network: tcp
-- name: US · VMESS · radikal · 040E2FD9
-  type: vmess
-  server: 67.220.95.3
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: community.fastly.steamstatic.com
-- name: US · VMESS · radikal · 124A8884
-  type: vmess
-  server: 67.220.95.3
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: learn.healthcarejobshubenhancemedicalprofessionalskillstoday.com
-- name: US · VMESS · radikal · 0E434DEC
-  type: vmess
-  server: 67.220.95.3
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-- name: US · VMESS · radikal · 21E59C69
-  type: vmess
-  server: 67.220.95.3
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: 67.220.95.3
+  servername: '@vpnine1'
 - name: US · VMESS · radikal · 296E425C
   type: vmess
   server: 167.88.62.56
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  network: tcp
-  tls: true
-  servername: xmfhlpy.com
-- name: US · VMESS · radikal · 1C29F2BB
-  type: vmess
-  server: 38.91.100.16
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -120,52 +56,13 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · radikal · 1D62496C
+- name: US · VMESS · radikal · 11B3A86E
   type: vmess
-  server: 172.111.36.253
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  network: tcp
-  tls: true
-  servername: xmfhlpy.com
-- name: US · VMESS · radikal · 1583C945
-  type: vmess
-  server: 172.111.36.126
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  network: tcp
-  tls: true
-  servername: xmfhlpy.com
-- name: US · VMESS · radikal · 1BFA65AE
-  type: vmess
-  server: 172.111.36.147
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  network: tcp
-  tls: true
-  servername: xmfhlpy.com
-- name: US · VMESS · radikal · 10F4119C
-  type: vmess
-  server: 38.110.1.246
+  server: 38.91.107.49
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
-  cipher: auto
-  network: tcp
-  servername: guanwang.awsno.com
-- name: US · VMESS · radikal · 02F7973A
-  type: vmess
-  server: 38.110.1.246
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
+  cipher: none
   network: tcp
 - name: US · VMESS · radikal · 069039AA
   type: vmess
@@ -187,14 +84,34 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · radikal · 11B3A86E
+- name: US · VMESS · radikal · 1BFA65AE
   type: vmess
-  server: 38.91.107.49
+  server: 172.111.36.147
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  network: tcp
+  tls: true
+  servername: xmfhlpy.com
+- name: US · VMESS · radikal · 02F7973A
+  type: vmess
+  server: 38.110.1.246
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
-  cipher: none
+  cipher: auto
   network: tcp
+- name: US · VMESS · radikal · 1583C945
+  type: vmess
+  server: 172.111.36.126
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  network: tcp
+  tls: true
+  servername: xmfhlpy.com
 - name: US · VMESS · radikal · 1728AFD8
   type: vmess
   server: 38.91.107.49
@@ -203,9 +120,17 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: NL · VMESS · radikal · 0E007C57
+- name: HK · VMESS · radikal · 0177B65B
   type: vmess
-  server: 209.38.42.238
+  server: 206.237.11.17
+  port: 50376
+  uuid: 9091fd64-7e8e-4b7a-8ae7-84474f234926
+  alterId: 0
+  cipher: auto
+  network: tcp
+- name: US · VMESS · radikal · 1D62496C
+  type: vmess
+  server: 172.111.36.253
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -213,37 +138,47 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: SG · VMESS · radikal · 2B08AFB1
+- name: US · VMESS · radikal · 011B03AA
   type: vmess
-  server: 149.88.23.202
+  server: 84.17.41.2
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
   cipher: auto
   network: tcp
-  servername: 149.88.23.202
-- name: SG · VMESS · radikal · 205A3F98
+  servername: bj1aa2zyjxyamyuk.v%3dns.vip
+- name: US · VMESS · radikal · 143310FC
   type: vmess
-  server: 149.88.23.207
+  server: 84.17.41.2
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
   cipher: auto
   network: tcp
-  servername: ww11.levikogjgfdd.ir
-- name: GB · VMESS · radikal · 19A53B0E
+- name: US · VMESS · radikal · 10F4119C
   type: vmess
-  server: 57.129.132.223
-  port: 80
-  uuid: a25cbf11-2908-4a1b-a3a8-9a571777dca3
+  server: 38.110.1.246
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+  servername: guanwang.awsno.com
+- name: US · VMESS · radikal · 07673546
+  type: vmess
+  server: 129.146.77.248
+  port: 39495
+  uuid: f836c736-87fc-4fde-aabc-00857ecdff3e
   alterId: 0
   cipher: auto
   network: ws
   ws-opts:
-    path: /vmess/
-- name: SE · VMESS · radikal · 03AFB5A6
+    path: /cctv13.m3u8
+    headers:
+      Host: 129.146.77.248
+- name: NL · VMESS · radikal · 0E007C57
   type: vmess
-  server: 138.199.55.230
+  server: 209.38.42.238
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -261,9 +196,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: AT · VMESS · radikal · 25B9E2B9
+- name: SE · VMESS · radikal · 03AFB5A6
   type: vmess
-  server: 154.47.19.225
+  server: 138.199.55.230
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -281,14 +216,30 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: SG · VMESS · radikal · 1C3A5196
+- name: CA · VMESS · radikal · 06E1923D
   type: vmess
-  server: 149.88.23.202
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  server: 104.18.42.163
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: guanwang.awsno.com
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      Host: guanwang.awsno.com
+- name: AT · VMESS · radikal · 25B9E2B9
+  type: vmess
+  server: 154.47.19.225
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
   cipher: auto
   network: tcp
+  tls: true
+  servername: xmfhlpy.com
 - name: BR · VMESS · radikal · 2C2C9F7C
   type: vmess
   server: 103.14.27.207
@@ -299,6 +250,14 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
+- name: HK · VMESS · radikal · 140FCEFC
+  type: vmess
+  server: zfd-hkv2.kunlun01dns.com
+  port: 16116
+  uuid: 0802ac03-7973-39ef-a019-ba02de6c01e1
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: BR · VMESS · radikal · 2805B740
   type: vmess
   server: 103.88.232.55
@@ -329,48 +288,32 @@ proxies:
   network: ws
   ws-opts:
     path: /cctv13.m3u8
-- name: US · VMESS · radikal · 07673546
+- name: SG · VMESS · radikal · 205A3F98
   type: vmess
-  server: 129.146.77.248
-  port: 39495
-  uuid: f836c736-87fc-4fde-aabc-00857ecdff3e
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /cctv13.m3u8
-    headers:
-      Host: 129.146.77.248
-- name: KR · VMESS · radikal · 07EB2C37
-  type: vmess
-  server: 132.145.80.230
-  port: 80
-  uuid: 5155860e-d07d-46c3-9128-3afbd84626c7
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /cctv13.m3u8
-    headers:
-      Host: 132.145.80.230
-- name: CA · VMESS · radikal · 0152E890
-  type: vmess
-  server: 134.195.196.211
+  server: 149.88.23.207
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
   cipher: auto
   network: tcp
-  servername: '@vpnine1'
-- name: CA · VMESS · radikal · 2AECE103
+  servername: ww11.levikogjgfdd.ir
+- name: SG · VMESS · radikal · 2B08AFB1
   type: vmess
-  server: 134.195.196.211
+  server: 149.88.23.202
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
   cipher: auto
   network: tcp
-  servername: 134.195.196.211
+  servername: 149.88.23.202
+- name: SG · VMESS · radikal · 1C3A5196
+  type: vmess
+  server: 149.88.23.202
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: PL · VMESS · radikal · 1731E40C
   type: vmess
   server: 54.37.131.126
@@ -383,6 +326,41 @@ proxies:
     path: /
     headers:
       Host: google.whatsapp.snapp.torob.basalam.hesanid8.ir.
+- name: US · VMESS · radikal · 21E59C69
+  type: vmess
+  server: 67.220.95.3
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+  servername: 67.220.95.3
+- name: US · VMESS · radikal · 124A8884
+  type: vmess
+  server: 67.220.95.3
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+  servername: learn.healthcarejobshubenhancemedicalprofessionalskillstoday.com
+- name: US · VMESS · radikal · 040E2FD9
+  type: vmess
+  server: 67.220.95.3
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+  servername: community.fastly.steamstatic.com
+- name: US · VMESS · radikal · 0E434DEC
+  type: vmess
+  server: 67.220.95.3
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
 - name: HK · VMESS · radikal · 1ED0F3BB
   type: vmess
   server: 156.245.232.239
@@ -396,42 +374,17 @@ proxies:
     path: /
     headers:
       Host: www.pubgmobile.com
-- name: HK · VMESS · radikal · 267B0C21
+- name: CA · VMESS · radikal · 0DC03299
   type: vmess
-  server: 156.245.232.239
-  port: 35043
-  uuid: b15e481d-17e4-41a8-84c2-23d4f0514d9a
+  server: 172.66.0.1
+  port: 8443
+  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
   alterId: 0
   cipher: auto
   network: ws
+  tls: true
+  servername: v2ray1.dozapp.xyz
   ws-opts:
-    path: /
-- name: KR · VMESS · radikal · 124B83C0
-  type: vmess
-  server: 140.238.2.250
-  port: 443
-  uuid: 41a7089a-040b-4538-8b8d-010902405bde
-  alterId: 0
-  cipher: auto
-  network: none
-- name: US · VMESS · radikal · 26CD7097
-  type: vmess
-  server: 129.146.143.80
-  port: 48111
-  uuid: d4603cc2-e0ee-4651-83f5-1db5b7168177
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: 129.146.143.80
-- name: CA · VMESS · radikal · 0C73C79F
-  type: vmess
-  server: 104.21.7.133
-  port: 80
-  uuid: 0cf6d970-3f1d-4aae-a989-92a8f76ae3db
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /ws?ed=2048
+    path: /lMnsZUN4/
     headers:
-      Host: vmess.lbw666.dpdns.org
+      Host: v2ray1.dozapp.xyz

@@ -9,9 +9,9 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · 310BDA8D
+- name: US · VMESS · ts-sf-clash · 0B46754D
   type: vmess
-  server: 167.88.63.99
+  server: 167.88.63.39
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -22,6 +22,16 @@ proxies:
 - name: US · VMESS · ts-sf-clash · AA0CE97F
   type: vmess
   server: 38.22.17.64
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
+- name: US · VMESS · ts-sf-clash · 310BDA8D
+  type: vmess
+  server: 167.88.63.99
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -59,27 +69,17 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · 0B46754D
+- name: ZZ · VMESS · ts-sf-clash · E99BF272
   type: vmess
-  server: 167.88.63.39
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
-- name: ZZ · VMESS · ts-sf-clash · 0BB58EA4
-  type: vmess
-  server: 104.16.0.1
-  port: 2083
-  uuid: ac251237-576f-40c8-a543-554960c958b1
+  server: 188.114.96.3
+  port: 8443
+  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
   alterId: 0
   cipher: auto
   tls: true
   skip-cert-verify: true
   network: ws
   ws-opts:
-    path: /or3
+    path: /lMnsZUN4/
     headers:
-      host: or3.sfacg.uk
+      host: v2ray1.dozapp.xyz

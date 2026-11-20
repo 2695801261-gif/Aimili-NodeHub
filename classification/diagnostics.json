@@ -1,59 +1,59 @@
 {
   "schema_version": 1,
-  "candidate_limit": 40,
-  "checked": 40,
-  "accepted": 4,
-  "quarantined": 36,
+  "candidate_limit": 60,
+  "checked": 60,
+  "accepted": 7,
+  "quarantined": 53,
   "pool_sizes": {
-    "low-risk-datacenter": 2,
-    "other-residential": 2,
+    "low-risk-datacenter": 4,
+    "other-residential": 3,
     "us-residential": 0
   },
   "reason_counts": {
     "asn_has_disqualifying_signal": 3,
-    "hosting_risk_exceeds_baseline": 1,
-    "layer3_address_type_not_publishable": 4,
-    "layer3_anonymizer_signal": 18,
-    "layer3_drop_listed": 1,
-    "layer3_low_risk_hosting_and_asn_confirmed": 2,
-    "layer3_residential_access_and_isp_asn_confirmed": 2,
-    "network_has_abuse_reports": 2,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 2,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 2,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 2,
-    "quarantined:ValueError:independent exit-IP echo services disagree": 1
+    "hosting_network_type_not_confirmed": 1,
+    "hosting_risk_exceeds_baseline": 4,
+    "isp_asn_not_confirmed": 1,
+    "layer3_address_type_not_publishable": 6,
+    "layer3_anonymizer_signal": 23,
+    "layer3_asn_mismatch": 1,
+    "layer3_low_risk_hosting_and_asn_confirmed": 4,
+    "layer3_residential_access_and_isp_asn_confirmed": 3,
+    "network_has_abuse_reports": 1,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 9,
+    "quarantined:ValueError:independent exit-IP echo services disagree": 4
   },
   "provider_status_counts": {
     "metadata_source": {
-      "ipwho.is": 33,
-      "not_checked": 7
+      "ipwho.is": 47,
+      "not_checked": 13
     },
     "metadata_status": {
-      "not_checked": 7,
-      "ok": 33
+      "not_checked": 13,
+      "ok": 47
     },
     "ip_risk_status": {
-      "not_checked": 7,
-      "not_reported": 33
+      "not_checked": 13,
+      "not_reported": 47
     },
     "net_status": {
-      "not_checked": 7,
-      "not_reported": 31,
-      "ok": 2
+      "not_checked": 13,
+      "not_reported": 46,
+      "ok": 1
     },
     "oxl_asn_status": {
-      "not_checked": 7,
-      "not_reported": 11,
-      "ok": 22
+      "not_checked": 13,
+      "not_reported": 18,
+      "ok": 29
     },
     "layer3_status": {
-      "not_checked": 7,
-      "ok": 33
+      "not_checked": 13,
+      "ok": 47
     }
   },
   "exit_echo": {
-    "agreement": 33,
-    "disagreement": 1,
-    "not_checked": 6
+    "agreement": 47,
+    "disagreement": 4,
+    "not_checked": 9
   }
 }
