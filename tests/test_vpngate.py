@@ -317,6 +317,24 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertEqual(merged, [])
         self.assertEqual(stats["history_invalid"], 2)
 
+    def test_history_selection_reserves_half_of_sample_for_us(self):
+        records = []
+        for country, base_ip in (("US", 20), ("JP", 40)):
+            for index in range(100):
+                ip = f"8.8.{base_ip}.{index}"
+                node = {
+                    "name": f"VPNGate-{country}-{ip.replace('.', '-')}-volunteer",
+                    "type": "openvpn", "server": ip,
+                    "port": 443, "proto": "udp" if index % 2 else "tcp",
+                }
+                records.append({"node": node, "first_seen_at": 100.0, "last_seen_at": 100.0 + index})
+        selected = select_history_candidates(records, limit=100, rotation=17)
+        us_count = sum(node["name"].startswith("VPNGate-US-") for node in selected)
+        jp_count = sum(node["name"].startswith("VPNGate-JP-") for node in selected)
+        self.assertEqual(len(selected), 100)
+        self.assertEqual(us_count, 50)
+        self.assertEqual(jp_count, 50)
+
     def test_history_selection_prioritizes_us_and_rotates_us_candidates(self):
         records = []
         for country, base_ip in (("JP", 30), ("US", 20)):
