@@ -113,8 +113,12 @@ jobs:
                 conflicts="$(git diff --name-only --diff-filter=U)"
                 if [ -z "$conflicts" ]; then exit 1; fi
                 while IFS= read -r path; do
-                  git checkout --theirs -- "$path"
-                  git add -- "$path"
+                  if git cat-file -e "REBASE_HEAD:$path" 2>/dev/null; then
+                    git checkout --theirs -- "$path"
+                    git add -- "$path"
+                  else
+                    git rm -f -- "$path"
+                  fi
                 done <<< "$conflicts"
                 GIT_EDITOR=true git rebase --continue
               fi
