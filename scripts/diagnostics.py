@@ -9,7 +9,7 @@ def build_diagnostics(rows: Iterable[dict[str, Any]], *, pool_sizes: dict[str, i
                       candidate_limit: int) -> dict[str, Any]:
     evidence = list(rows)
     reasons = Counter(str(row.get("reason") or "reason_missing") for row in evidence)
-    fields = ("metadata_source", "ip_risk_status", "net_status", "oxl_asn_status")
+    fields = ("metadata_source", "ip_risk_status", "net_status", "oxl_asn_status", "layer3_status")
     statuses = {
         field: dict(sorted(Counter(str(row.get(field) or "not_checked")
                                     for row in evidence).items()))
@@ -27,6 +27,6 @@ def build_diagnostics(rows: Iterable[dict[str, Any]], *, pool_sizes: dict[str, i
         "exit_echo": {
             "agreement": sum(1 for row in evidence if row.get("exit_echo_agreement") is True),
             "disagreement": sum(1 for row in evidence if row.get("exit_echo_agreement") is False),
-            "not_checked": sum(1 for row in evidence if "exit_echo_agreement" not in row),
+            "not_checked": sum(1 for row in evidence if row.get("exit_echo_agreement") is None),
         },
     }

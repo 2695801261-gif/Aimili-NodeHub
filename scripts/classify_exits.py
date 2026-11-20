@@ -301,7 +301,8 @@ def run() -> None:
                 row: dict[str, Any] = {
                     "node_name": name,
                     "checked_at": datetime.now(UTC).isoformat(),
-                    "exit_echo_agreement": False,
+                    "exit_echo_agreement": None,
+                    "layer3_status": "not_checked",
                     "ip_metadata_success": False,
                     "oxl_asn_status": "not_checked",
                     "ip_risk_status": "not_checked",
@@ -335,10 +336,12 @@ def run() -> None:
                     row.update(metadata)
                     row["metadata_source"] = metadata_source
                     row["ip_metadata_success"] = True
+                    row["layer3_status"] = "pending"
                     if exit_ip not in layer3_cache:
                         time.sleep(0.5)
                         layer3_cache[exit_ip] = layer3_lookup(exit_ip)
                     row.update(layer3_cache[exit_ip])
+                    row["layer3_status"] = "ok"
                     row["ip_risk_status"] = ip_status
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
@@ -396,6 +399,8 @@ def run() -> None:
                     else:
                         counters["quarantined"] += 1
                 except (LookupFailure, ValueError, subprocess.CalledProcessError, urllib.error.HTTPError) as error:
+                    if row.get("layer3_status") == "pending":
+                        row["layer3_status"] = "unavailable"
                     row["pool"] = None
                     detail = " ".join(str(error).split())[:220]
                     row["reason"] = f"quarantined:{type(error).__name__}:{detail}"
@@ -409,19 +414,6 @@ def run() -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait(timeout=5)
-
-    if not any(row.get("ip_metadata_success") for row in evidence_rows):
-        failures = Counter(row.get("reason", "unknown") for row in evidence_rows)
-        print("Exit verification failure summary:", failures.most_common(10), flush=True)
-        raise SystemExit("No exit IPs could be independently verified; keeping previous classified subscriptions")
-
-    profiles = {
-        pool: make_profile(grouped[pool], pool)
-        for pool in OUTPUTS
-    }
-    for pool, profile in profiles.items():
-        rendered = yaml.safe_dump(profile, allow_unicode=True, sort_keys=False)
-        validate_profile_content(rendered, pool)
 
     report = {
         "schema_version": 1,
@@ -439,7 +431,7 @@ def run() -> None:
         ],
     }
     from scripts.diagnostics import build_diagnostics
-    from scripts.publication import publish_atomically
+    from scripts.publication import publish_atomically, write_reports_atomically
 
     diagnostics = build_diagnostics(
         evidence_rows,
@@ -447,6 +439,25 @@ def run() -> None:
         candidate_limit=MAX_CANDIDATES,
     )
     report["diagnostics"] = diagnostics
+    diagnostic_text = json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n"
+    # Persist failure evidence before the publication gate; subscriptions stay untouched.
+    write_reports_atomically(
+        EVIDENCE_PATH,
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n",
+        {DIAGNOSTICS_PATH: diagnostic_text},
+    )
+    print("Classification diagnostics:", json.dumps(diagnostics, sort_keys=True), flush=True)
+
+    if not any(row.get("ip_metadata_success") for row in evidence_rows):
+        raise SystemExit("No exit IPs could be independently verified; previous subscriptions preserved")
+
+    profiles = {
+        pool: make_profile(grouped[pool], pool)
+        for pool in OUTPUTS
+    }
+    for pool, profile in profiles.items():
+        rendered = yaml.safe_dump(profile, allow_unicode=True, sort_keys=False)
+        validate_profile_content(rendered, pool)
 
     # Validate every pool and every Mihomo profile before touching the last
     # known-good subscriptions. A failed run must never replace them with empties.
@@ -457,7 +468,7 @@ def run() -> None:
         report,
         validate_profile=validate_profile_content,
         additional_files={
-            DIAGNOSTICS_PATH: json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n"
+            DIAGNOSTICS_PATH: diagnostic_text
         },
     )
     print("Classification summary:", json.dumps(report["pool_sizes"], sort_keys=True))

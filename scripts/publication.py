@@ -12,6 +12,48 @@ import yaml
 from scripts.check_publication import validate_publication
 
 
+def write_reports_atomically(
+    evidence_path: Path,
+    evidence_text: str,
+    additional_files: Mapping[Path, str],
+) -> None:
+    """Persist failure diagnostics without modifying subscription outputs."""
+    targets = {evidence_path: evidence_text, **additional_files}
+    staged: dict[Path, Path] = {}
+    replaced: list[Path] = []
+    backups: dict[Path, bytes | None] = {}
+    try:
+        for target, content in targets.items():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            descriptor, name = tempfile.mkstemp(
+                prefix=f".{target.name}.", suffix=".stage", dir=target.parent
+            )
+            temporary = Path(name)
+            staged[target] = temporary
+            with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+                stream.write(content)
+            backups[target] = target.read_bytes() if target.exists() else None
+        for target, temporary in staged.items():
+            os.replace(temporary, target)
+            replaced.append(target)
+    except Exception:
+        for target in reversed(replaced):
+            previous = backups[target]
+            if previous is None:
+                target.unlink(missing_ok=True)
+            else:
+                descriptor, name = tempfile.mkstemp(
+                    prefix=f".{target.name}.", suffix=".restore", dir=target.parent
+                )
+                with os.fdopen(descriptor, "wb") as stream:
+                    stream.write(previous)
+                os.replace(name, target)
+        raise
+    finally:
+        for temporary in staged.values():
+            temporary.unlink(missing_ok=True)
+
+
 def publish_atomically(
     profile_paths: Mapping[str, Path],
     profiles: Mapping[str, dict[str, Any]],

@@ -147,5 +147,27 @@ class AtomicPublicationTests(unittest.TestCase):
                              '{"checked": 3}\\n')
 
 
+    def test_failure_reports_are_written_without_touching_subscriptions(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from scripts.publication import write_reports_atomically
+
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            subscriptions = [root / f"{pool}.yaml" for pool in POOLS]
+            for path in subscriptions:
+                path.write_text("last-good", encoding="utf-8")
+            evidence = root / "classification" / "evidence.json"
+            diagnostics = root / "classification" / "diagnostics.json"
+            write_reports_atomically(
+                evidence, '{"checked": 2}\\n',
+                {diagnostics: '{"quarantined": 2}\\n'},
+            )
+            self.assertEqual(evidence.read_text(encoding="utf-8"), '{"checked": 2}\\n')
+            self.assertEqual(diagnostics.read_text(encoding="utf-8"), '{"quarantined": 2}\\n')
+            self.assertTrue(all(path.read_text(encoding="utf-8") == "last-good"
+                                for path in subscriptions))
+
+
 if __name__ == "__main__":
     unittest.main()

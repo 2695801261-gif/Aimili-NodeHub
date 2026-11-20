@@ -123,6 +123,33 @@ jobs:
           test -s subscriptions/low-risk-datacenter.yaml
           uv run --locked python -m scripts.check_publication
 
+      - name: Publish failure diagnostics to job summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -s classification/diagnostics.json ]; then
+            echo "## NodeHub classification diagnostics" >> "$GITHUB_STEP_SUMMARY"
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+            import json
+            from pathlib import Path
+            data = json.loads(Path("classification/diagnostics.json").read_text())
+            print("| Metric | Count |")
+            print("|---|---:|")
+            for key in ("checked", "accepted", "quarantined"):
+                print(f"| {key} | {data.get(key, 0)} |")
+            print()
+            print("### Rejection reasons")
+            for reason, count in data.get("reason_counts", {}).items():
+                print(f"- `{reason}`: {count}")
+            print()
+            print("### Provider states")
+            for provider, states in data.get("provider_status_counts", {}).items():
+                print(f"- **{provider}**: " + ", ".join(f"{k}={v}" for k, v in states.items()))
+            PY
+          else
+            echo "No classification diagnostics were produced." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Commit changed subscriptions
         shell: bash
         run: |
