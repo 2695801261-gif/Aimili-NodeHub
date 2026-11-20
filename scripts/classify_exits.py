@@ -533,7 +533,7 @@ def run() -> None:
         "source_profile": "nodes/merged.yaml",
         "candidate_limit": MAX_CANDIDATES,
         "candidate_selection": {
-            "strategy": "evenly_spaced_across_combined_mihomo_ranked_pool",
+            "strategy": "rotating_source_stratified_across_mihomo_ranked_pool",
             "available": available_candidates,
             "selected": len(candidates),
         },
