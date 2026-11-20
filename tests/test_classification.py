@@ -14,6 +14,10 @@ def base():
         "ip_kind": [],
         "ip_reports": None,
         "ipwhois_success": True,
+        "net_status": "ok",
+        "net_kind": ["isp"],
+        "net_reports": 0,
+        "net_reputation": "ok",
         "oxl_asn_status": "ok",
         "exit_echo_agreement": True,
     }
@@ -31,6 +35,7 @@ class ClassificationTests(unittest.TestCase):
     def test_hosting_without_risk_is_low_risk_dc(self):
         evidence = base()
         evidence["asn_kind"] = ["hosting"]
+        evidence["net_kind"] = ["hosting"]
         self.assertEqual(classify(evidence).pool, "low-risk-datacenter")
 
     def test_vpn_signal_quarantines(self):
@@ -61,6 +66,7 @@ class ClassificationTests(unittest.TestCase):
     def test_hosting_ip_signal_is_allowed_for_dc(self):
         evidence = base()
         evidence["asn_kind"] = ["hosting"]
+        evidence["net_kind"] = ["hosting"]
         evidence["ip_risk_status"] = "ok"
         evidence["ip_kind"] = ["hosting"]
         evidence["ip_reports"] = 0
@@ -106,6 +112,21 @@ class ClassificationTests(unittest.TestCase):
         evidence = base()
         evidence["asn_kind"] = ["hosting"]
         evidence["oxl_asn_status"] = "not_reported"
+        self.assertIsNone(classify(evidence).pool)
+
+    def test_missing_network_reputation_quarantines(self):
+        evidence = base()
+        evidence["net_status"] = "not_reported"
+        self.assertIsNone(classify(evidence).pool)
+
+    def test_bad_network_reputation_quarantines(self):
+        evidence = base()
+        evidence["net_reputation"] = "warn"
+        self.assertIsNone(classify(evidence).pool)
+
+    def test_network_kind_must_match_isp(self):
+        evidence = base()
+        evidence["net_kind"] = ["hosting"]
         self.assertIsNone(classify(evidence).pool)
 
 if __name__ == "__main__":
