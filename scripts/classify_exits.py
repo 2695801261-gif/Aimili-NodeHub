@@ -311,7 +311,7 @@ def curl_exit_ip(url: str) -> str:
 
 
 def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
-    """Confirm the tunnel egress by two-of-three independent echo services."""
+    """Confirm tunnel egress with a parallel two-of-three independent quorum."""
     if attempts < 1:
         raise ValueError("echo attempts must be positive")
 
@@ -331,24 +331,20 @@ def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
     endpoints = (
         "https://api.ipify.org",
         "https://checkip.amazonaws.com",
+        "https://icanhazip.com",
     )
     results: list[str] = []
     errors: list[Exception] = []
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    # Probe all independent services concurrently. The former sequential
+    # third-provider fallback added another full timeout whenever the first
+    # two services disagreed or one timed out, wasting the bounded run budget.
+    with ThreadPoolExecutor(max_workers=len(endpoints)) as executor:
         futures = [executor.submit(query, endpoint) for endpoint in endpoints]
         for future in futures:
             try:
                 results.append(future.result())
             except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
                 errors.append(error)
-
-    if len(results) == 2 and results[0] == results[1]:
-        return results[0], True
-
-    try:
-        results.append(query("https://icanhazip.com"))
-    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
-        errors.append(error)
 
     if results:
         ip, votes = Counter(results).most_common(1)[0]
