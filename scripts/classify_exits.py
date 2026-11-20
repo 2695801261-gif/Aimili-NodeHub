@@ -344,7 +344,7 @@ def _is_us_advertised(candidate: dict[str, Any]) -> bool:
     name = str(candidate.get("name", "")).strip()
     return bool(
         re.match(r"^(?:VPNGate|VPNBook)-US(?:-|$)", name, re.IGNORECASE)
-        or re.match(r"^US(?:\\s|[·:_-])", name, re.IGNORECASE)
+        or re.match(r"^US(?:\s|[·:_-])", name, re.IGNORECASE)
     )
 
 
