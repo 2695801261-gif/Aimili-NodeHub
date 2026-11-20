@@ -324,7 +324,10 @@ def run() -> None:
                 supplemental_doc = yaml.safe_load(source_path.read_text(encoding="utf-8"))
                 raw_supplemental = supplemental_doc.get("proxies") if isinstance(supplemental_doc, dict) else None
                 if isinstance(raw_supplemental, list):
-                    supplemental_candidates.extend(x for x in raw_supplemental if isinstance(x,dict) and isinstance(x.get("name"),str))
+                    supplemental_candidates.extend(
+                        x for x in raw_supplemental[:50]
+                        if isinstance(x, dict) and isinstance(x.get("name"), str)
+                    )
             except (OSError, yaml.YAMLError) as error:
                 print(f"{source_name} candidate artifact unavailable: {type(error).__name__}: {error}", flush=True)
     candidates, source_candidate_counts = combine_candidate_sources(

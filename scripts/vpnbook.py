@@ -5,7 +5,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 import yaml
-from scripts.vpngate import VPNGateError, parse_ovpn_config
+from scripts.vpngate import MIHOMO, VPNGateError, _validate_batch, parse_ovpn_config
 
 ROOT = Path(__file__).resolve().parents[1]
 PAGE_URL = "https://www.vpnbook.com/freevpn/openvpn"
@@ -34,9 +34,7 @@ def _fetch(url: str, limit: int) -> bytes:
     return data
 
 def parse_vpnbook_page(page: str) -> tuple[tuple[str,str], list[str]]:
-    password = re.search(r"Password:\s*(?:</?[^>]+>\s*)*<strong>\s*([^<]{4,64})", page, re.I)
-    if not password:
-        password = re.search(r"Password\s*</?[^>]*>\s*(?:<[^>]+>\s*){0,3}<strong>\s*([^<]{4,64})", page, re.I)
+    password = re.search(r"Password(?:\\s|&nbsp;|<[^>]*>)*:?(?:\\s|&nbsp;|<[^>]*>)*<strong>\\s*([^<]{4,64})", page, re.I)
     if not password:
         raise VPNBookError("current shared password not found on official page")
     links = re.findall(r"""href=["']([^"']+\.zip(?:\?[^"']*)?)["']""", page, re.I)
@@ -94,8 +92,13 @@ def collect_vpnbook() -> dict[str,Any]:
         credentials, links = parse_vpnbook_page(page)
         archives = [(url, _fetch(url, MAX_ARCHIVE_BYTES)) for url in links]
         proxies, report = parse_archives(archives, credentials)
-        report["status"] = "ok" if proxies else "empty"
-        OUTPUT.write_text(yaml.safe_dump({"proxies":proxies},allow_unicode=True,sort_keys=False),encoding="utf-8")
+        if not MIHOMO.is_file():
+            raise VPNBookError("pinned Mihomo binary is missing; cannot validate OpenVPN profiles")
+        valid, rejected = _validate_batch(proxies, MIHOMO)
+        report["mihomo_validated"] = len(valid)
+        report["mihomo_rejected"] = rejected
+        report["status"] = "ok" if valid else "empty"
+        OUTPUT.write_text(yaml.safe_dump({"proxies":valid},allow_unicode=True,sort_keys=False),encoding="utf-8")
     except Exception as error:
         report = {"source":"vpnbook_official","status":"unavailable","error":f"{type(error).__name__}: {' '.join(str(error).split())[:220]}","candidates_parsed":0}
         OUTPUT.write_text(yaml.safe_dump({"proxies":[]},sort_keys=False),encoding="utf-8")
