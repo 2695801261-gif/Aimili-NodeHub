@@ -263,10 +263,35 @@ def parse_directory(csv_text: str, *, limit: int = MAX_NODES) -> tuple[list[dict
         scored.append((-score, ping, index, row))
     scored.sort(key=lambda item: (item[0], item[1], item[2]))
 
+    # CountryShort is only a discovery-diversity hint, never classification
+    # evidence. Round-robin the ranked list by advertised server country so
+    # one large country cannot crowd every other region out of the 100-node
+    # candidate budget. Rotate the starting country between scheduled runs.
+    by_country: dict[str, list[tuple[int, int, int, dict[str, str]]]] = {}
+    for item in scored:
+        country = (item[3].get("countryshort") or "XX").upper()
+        by_country.setdefault(country, []).append(item)
+    countries = sorted(by_country)
+    if countries:
+        offset = int(os.getenv("GITHUB_RUN_NUMBER", "0")) % len(countries)
+        countries = countries[offset:] + countries[:offset]
+    diversified: list[tuple[int, int, int, dict[str, str]]] = []
+    cursor = {country: 0 for country in countries}
+    while len(diversified) < len(scored):
+        progressed = False
+        for country in countries:
+            position = cursor[country]
+            if position < len(by_country[country]):
+                diversified.append(by_country[country][position])
+                cursor[country] += 1
+                progressed = True
+        if not progressed:
+            break
+
     accepted: list[dict[str, Any]] = []
     rejected: Counter[str] = Counter()
     seen: set[tuple[str, int, str]] = set()
-    for _, _, _, row in scored:
+    for _, _, _, row in diversified:
         if len(accepted) >= limit:
             break
         try:

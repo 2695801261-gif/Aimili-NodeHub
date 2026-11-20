@@ -112,6 +112,22 @@ class VPNGateParserTests(unittest.TestCase):
         self.assertEqual(proxies, [])
         self.assertIn("CSV server IP does not match the embedded OpenVPN remote", report["rejection_reasons"])
 
+    def test_selection_diversifies_advertised_countries_before_filling_by_score(self):
+        header = (
+            "#HostName,IP,Score,Ping,Speed,CountryLong,CountryShort,NumVpnSessions,"
+            "Uptime,TotalUsers,TotalTraffic,LogType,Operator,Message,OpenVPN_ConfigData_Base64\n"
+        )
+        rows = [
+            csv_row(profile("8.8.8.20 443 udp"), ip="8.8.8.20", country="JP", score="100"),
+            csv_row(profile("8.8.8.21 443 udp"), ip="8.8.8.21", country="JP", score="90"),
+            csv_row(profile("8.8.8.22 443 udp"), ip="8.8.8.22", country="JP", score="80"),
+            csv_row(profile("8.8.8.23 443 udp"), ip="8.8.8.23", country="US", score="10"),
+        ]
+        proxies, report = parse_directory(header + "\n".join(rows), limit=2)
+        self.assertEqual(len(proxies), 2)
+        self.assertEqual({item["name"].split("-")[1] for item in proxies}, {"JP", "US"})
+        self.assertEqual(report["selection_strategy"], "rotating_country_round_robin_then_score")
+
     def test_selects_top_scored_candidates_with_limit(self):
         rows = [
             csv_row(profile(f"8.8.8.{20+i} 443 udp"), ip=f"8.8.8.{20+i}",
