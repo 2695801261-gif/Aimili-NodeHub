@@ -86,7 +86,20 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
         isp = connection.get("isp") or connection.get("org")
         if data.get("success") is True and data.get("ip") == exit_ip:
             if isinstance(country, str) and len(country) == 2 and country.upper() not in {"ZZ", "XX", "T1", "A1", "EU", "AP"} and isinstance(isp, str) and isp.strip():
-                return {"country_code": country.upper(), "asn": asn, "isp": isp.strip()}, "ipwho.is"
+                security = data.get("security") or {}
+                if not isinstance(security, dict):
+                    security = {}
+                ipwho_security = {
+                    key: security.get(key) if isinstance(security.get(key), bool) else None
+                    for key in ("hosting", "proxy", "vpn", "tor")
+                }
+                return {
+                    "country_code": country.upper(),
+                    "asn": asn,
+                    "isp": isp.strip(),
+                    "ipwho_type": str(data.get("type") or "").strip().casefold(),
+                    "ipwho_security": ipwho_security,
+                }, "ipwho.is"
         failures.append("ipwho.is returned incomplete or mismatched metadata")
     except (LookupFailure, urllib.error.HTTPError, TypeError, ValueError) as error:
         failures.append(f"ipwho.is: {type(error).__name__}: {error}")
