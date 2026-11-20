@@ -94,8 +94,8 @@ jobs:
           print("Active direct GitHub sources:", len(config["sources"]))
           PY
 
-      - name: Run classification unit tests
-        run: uv run --locked pytest -q tests/test_classification.py
+      - name: Run classification and publication-gate unit tests
+        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py
 
       - name: Discover, validate and generate profiles
         env:
@@ -120,57 +120,7 @@ jobs:
           test -s subscriptions/us-residential.yaml
           test -s subscriptions/other-residential.yaml
           test -s subscriptions/low-risk-datacenter.yaml
-          uv run --locked python - <<'PY'
-          import json
-          from pathlib import Path
-          import yaml
-
-          pools = {
-              "us-residential": Path("subscriptions/us-residential.yaml"),
-              "other-residential": Path("subscriptions/other-residential.yaml"),
-              "low-risk-datacenter": Path("subscriptions/low-risk-datacenter.yaml"),
-          }
-          evidence = json.loads(Path("classification/evidence.json").read_text(encoding="utf-8"))
-          seen = set()
-          actual_sizes = {}
-          for pool, path in pools.items():
-              profile = yaml.safe_load(path.read_text(encoding="utf-8"))
-              proxies = profile.get("proxies") if isinstance(profile, dict) else None
-              if not isinstance(proxies, list) or not proxies:
-                  raise SystemExit(f"Publication blocked: {pool} contains no verified proxies")
-              names = [item.get("name") for item in proxies if isinstance(item, dict)]
-              if len(names) != len(proxies) or any(not isinstance(name, str) or not name for name in names):
-                  raise SystemExit(f"Publication blocked: {pool} contains malformed proxy entries")
-              if len(names) != len(set(names)):
-                  raise SystemExit(f"Publication blocked: {pool} contains duplicate proxy names")
-              overlap = seen.intersection(names)
-              if overlap:
-                  raise SystemExit(f"Publication blocked: proxies appear in multiple pools: {sorted(overlap)[:5]}")
-              seen.update(names)
-              groups = profile.get("proxy-groups")
-              if not isinstance(groups, list) or not groups:
-                  raise SystemExit(f"Publication blocked: {pool} has no proxy group")
-              group_proxy_names = {
-                  name
-                  for group in groups if isinstance(group, dict)
-                  for name in (group.get("proxies") or [])
-                  if isinstance(name, str)
-              }
-              if not set(names).issubset(group_proxy_names):
-                  raise SystemExit(f"Publication blocked: {pool} proxy group references are incomplete")
-              actual_sizes[pool] = len(proxies)
-
-          reported_sizes = evidence.get("pool_sizes")
-          if not isinstance(reported_sizes, dict):
-              raise SystemExit("Publication blocked: evidence report has no pool_sizes")
-          for pool, count in actual_sizes.items():
-              if reported_sizes.get(pool) != count:
-                  raise SystemExit(
-                      f"Publication blocked: {pool} evidence count "
-                      f"{reported_sizes.get(pool)!r} does not match profile count {count}"
-                  )
-          print("Publication gate passed:", json.dumps(actual_sizes, sort_keys=True))
-          PY
+          uv run --locked python -m scripts.check_publication
 
       - name: Commit changed subscriptions
         shell: bash
