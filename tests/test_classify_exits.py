@@ -34,6 +34,51 @@ class ExitProbeBudgetTests(unittest.TestCase):
         self.assertEqual(len({x["name"] for x in selected}), 80)
 
 
+    def test_us_advertised_candidates_are_prioritized_within_each_source_quota(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = (
+            [{"name": f"US · VMESS · primary · {i}"} for i in range(100)]
+            + [{"name": f"JP · VMESS · primary · {i}"} for i in range(300)]
+            + [{"name": f"VPNGate-US-{i}"} for i in range(25)]
+            + [{"name": f"VPNGate-JP-{i}"} for i in range(25)]
+            + [{"name": f"VPNBook-us{i}"} for i in range(5)]
+            + [{"name": f"VPNBook-de{i}"} for i in range(5)]
+        )
+        selected = select_exit_candidates(candidates, 80)
+
+        self.assertEqual(len(selected), 80)
+        self.assertEqual(sum(x["name"].startswith("US ·") for x in selected), 40)
+        self.assertEqual(sum(x["name"].startswith("VPNGate-") for x in selected), 30)
+        self.assertEqual(sum(x["name"].startswith("VPNBook-") for x in selected), 10)
+        self.assertGreaterEqual(
+            sum(
+                x["name"].startswith("US ·")
+                or x["name"].startswith("VPNGate-US-")
+                or x["name"].startswith("VPNBook-us")
+                for x in selected
+            ),
+            70,
+        )
+
+    def test_us_hint_sampling_rotates_without_treating_labels_as_evidence(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = (
+            [{"name": f"US · primary · {i}"} for i in range(100)]
+            + [{"name": f"JP · primary · {i}"} for i in range(300)]
+            + [{"name": f"VPNGate-US-{i}"} for i in range(25)]
+            + [{"name": f"VPNGate-JP-{i}"} for i in range(25)]
+        )
+        first = select_exit_candidates(candidates, 80, rotation=0)
+        second = select_exit_candidates(candidates, 80, rotation=1)
+
+        self.assertEqual(len(first), len(second))
+        self.assertNotEqual(
+            {x["name"] for x in first if x["name"].startswith("US ·")},
+            {x["name"] for x in second if x["name"].startswith("US ·")},
+        )
+
 class ExitEchoRetryTests(unittest.TestCase):
     def test_transient_echo_failure_retries_both_independent_services(self):
         with patch(

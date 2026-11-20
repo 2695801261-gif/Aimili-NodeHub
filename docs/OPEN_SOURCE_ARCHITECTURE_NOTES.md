@@ -9,6 +9,7 @@
 - [VLESS Collector](https://github.com/mehrtat/vless-collector)：按来源读取配置、去重、启动 xray 对单节点执行真实 HTTP 探测、按延迟排序后发布。可参考“小批验证成功才发布”的简单闭环。
 - [Vair Collector](https://github.com/lm705/vair-collector)：Fetch → Stage 1 Ping → Stage 2 Speed → Publish，按配置身份去重，并对 Xray 与 sing-box 协议分配不同测试引擎。可借鉴分阶段筛选、身份去重与运行快照。
 - [V2ray-Tester](https://github.com/lblwb/V2ray-Tester)：将静态配置硬拒绝、TCP 预检、核心实时连接和主动网络探测分层。可借鉴“廉价预检先行、昂贵核心测试后置”的顺序。
+- [AimiliVPN](https://github.com/baoweise-bot/aimili-vpngate)：面向 Linux VPS 的 VPNGate 管理器；当前代码采用最多 300 条候选、5 个并发 OpenVPN 测试 worker，先做 ICMP/TCP 延迟探测，再以 OpenVPN 初始化确认连通；IP 元数据使用批量 100 条查询和 7 天缓存。NodeHub 借鉴其分阶段筛选、并发测试和批量情报思路，但保留 GitHub Actions 无 VPS 部署方式，并以真实出口 IP、独立回显及多源风险证据作为最终发布门槛。
 
 ## 对 Aimili-NodeHub 的边界
 
@@ -23,7 +24,8 @@
 
 - 出口回显在临时连接错误时进行一次有界重试；两个服务最终不一致仍隔离。
 - GitHub Actions 将分类步骤标记为独立成功门槛。失败时只提交 `classification/` 诊断证据，保留仓库中已发布的节点快照和订阅。
-- 真实出口风险规则不因 40 个样本仍为零合格节点而放宽。
+- 真实出口风险规则不因样本中住宅节点不足而放宽；出口采样在保持 FreeNodes/VPNGate/VPNBook 来源配额的同时，优先抽取名称标注为 US 的候选，以更快检验美国出口池。名称国家仅是抽样提示，不参与国家或住宅属性判定。
+- 自动更新：VPNGate 候选历史每 20 分钟刷新一次；完整采集、出口核验、三池发布任务每 6 小时运行一次。只有分类、Mihomo 配置校验和发布门禁全部通过才自动提交新订阅；失败时只提交诊断，保留上一版订阅。
 
 ## 后续验收条件
 
