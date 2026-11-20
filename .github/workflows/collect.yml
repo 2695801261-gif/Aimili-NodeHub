@@ -150,8 +150,13 @@ jobs:
               groups = profile.get("proxy-groups")
               if not isinstance(groups, list) or not groups:
                   raise SystemExit(f"Publication blocked: {pool} has no proxy group")
-              group_names = {item.get("name") for item in groups if isinstance(item, dict)}
-              if not all(item.get("name") in group_names for item in proxies):
+              group_proxy_names = {
+                  name
+                  for group in groups if isinstance(group, dict)
+                  for name in (group.get("proxies") or [])
+                  if isinstance(name, str)
+              }
+              if not set(names).issubset(group_proxy_names):
                   raise SystemExit(f"Publication blocked: {pool} proxy group references are incomplete")
               actual_sizes[pool] = len(proxies)
 
