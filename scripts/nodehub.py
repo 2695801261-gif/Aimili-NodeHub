@@ -1,7 +1,7 @@
 """Single end-to-end NodeHub module: discover, classify, validate, publish.
 
 FreeNodes supplies the multi-adapter subscription discovery, while VPN Gate
-is collected independently as a native Mihomo OpenVPN source. This module
+and VPNBook are collected independently as native Mihomo OpenVPN sources. This module
 owns the orchestration boundary and only returns success after all three
 non-empty subscriptions pass the publication gate.
 """
@@ -25,7 +25,7 @@ OPTIONAL_DISCOVERY_OUTPUTS = (
 
 
 def discover_nodes() -> None:
-    """Run FreeNodes and VPN Gate independently so one source cannot block the other."""
+    """Run FreeNodes, VPN Gate and VPNBook independently so one source cannot block another."""
     freenodes_status = "ok"
     freenodes_error = None
     try:
