@@ -30,6 +30,7 @@ OUTPUTS = {
     "low-risk-datacenter": ROOT / "subscriptions" / "low-risk-datacenter.yaml",
 }
 EVIDENCE_PATH = ROOT / "classification" / "evidence.json"
+DIAGNOSTICS_PATH = ROOT / "classification" / "diagnostics.json"
 MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "25"))
 CONTROLLER = "http://127.0.0.1:9090"
 SOCKS = "socks5h://127.0.0.1:7891"
@@ -160,8 +161,15 @@ def layer3_lookup(exit_ip: str) -> dict[str, Any]:
         layer3_asn = int(network.get("asn"))
     except (TypeError, ValueError):
         raise LookupFailure("Layer3 returned no valid network ASN")
+    try:
+        layer3_network = ipaddress.ip_network(network.get("prefix"), strict=False)
+    except (TypeError, ValueError) as error:
+        raise LookupFailure("Layer3 returned no valid network prefix") from error
+    if address not in layer3_network:
+        raise LookupFailure("Layer3 network prefix does not contain the observed exit IP")
     return {
         "layer3_ip": data.get("ip"),
+        "layer3_prefix_match": True,
         "layer3_type": data.get("type"),
         "layer3_risk_level": risk.get("level"),
         "layer3_risk_score": risk.get("score"),
@@ -430,7 +438,15 @@ def run() -> None:
             "Unverified, conflicting, or failed lookups are quarantined.",
         ],
     }
+    from scripts.diagnostics import build_diagnostics
     from scripts.publication import publish_atomically
+
+    diagnostics = build_diagnostics(
+        evidence_rows,
+        pool_sizes=report["pool_sizes"],
+        candidate_limit=MAX_CANDIDATES,
+    )
+    report["diagnostics"] = diagnostics
 
     # Validate every pool and every Mihomo profile before touching the last
     # known-good subscriptions. A failed run must never replace them with empties.
@@ -440,8 +456,12 @@ def run() -> None:
         EVIDENCE_PATH,
         report,
         validate_profile=validate_profile_content,
+        additional_files={
+            DIAGNOSTICS_PATH: json.dumps(diagnostics, ensure_ascii=False, indent=2) + "\n"
+        },
     )
     print("Classification summary:", json.dumps(report["pool_sizes"], sort_keys=True))
+    print("Diagnostic rejection reasons:", json.dumps(diagnostics["reason_counts"], sort_keys=True))
 
 
 if __name__ == "__main__":

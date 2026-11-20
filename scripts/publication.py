@@ -19,6 +19,7 @@ def publish_atomically(
     evidence: dict[str, Any],
     *,
     validate_profile: Callable[[str, str], None] | None = None,
+    additional_files: Mapping[Path, str] | None = None,
 ) -> dict[str, int]:
     """Validate all outputs first, then replace them as one rollback-safe batch."""
     sizes = validate_publication(dict(profiles), evidence)
@@ -34,6 +35,10 @@ def publish_atomically(
     targets[evidence_path] = (
         json.dumps(evidence, ensure_ascii=False, indent=2) + "\n"
     ).encode("utf-8")
+    for path, content in (additional_files or {}).items():
+        if path in targets:
+            raise ValueError(f"duplicate publication target: {path}")
+        targets[path] = content.encode("utf-8")
 
     try:
         for target, content in targets.items():

@@ -128,5 +128,24 @@ class AtomicPublicationTests(unittest.TestCase):
                              [f"previous-{index}" for index in range(len(targets))])
 
 
+    def test_additional_diagnostic_file_is_published_in_same_batch(self):
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from scripts.publication import publish_atomically
+
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = {pool: root / f"{pool}.yaml" for pool in POOLS}
+            evidence_path = root / "evidence.json"
+            diagnostics_path = root / "diagnostics.json"
+            profiles, evidence = valid_inputs()
+            publish_atomically(
+                paths, profiles, evidence_path, evidence,
+                additional_files={diagnostics_path: '{"checked": 3}\\n'},
+            )
+            self.assertEqual(diagnostics_path.read_text(encoding="utf-8"),
+                             '{"checked": 3}\\n')
+
+
 if __name__ == "__main__":
     unittest.main()
