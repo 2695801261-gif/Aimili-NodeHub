@@ -178,7 +178,7 @@ def parse_cloudflare_front_uri(uri: str) -> dict[str, Any]:
     ):
         raise ValueError("Cloudflare front VLESS UUID is invalid")
     server = parsed.hostname
-    host_header = value("host", server)
+    host_header = value("host", value("sni", server))
     servername = value("sni", host_header)
     path = value("path", "/") or "/"
     if not path.startswith("/"):
