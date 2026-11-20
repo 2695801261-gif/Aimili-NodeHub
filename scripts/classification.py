@@ -53,10 +53,12 @@ def classify(evidence: dict[str, Any]) -> Verdict:
             return Verdict(None, "ip_risk_count_missing")
         if ip_reports != 0:
             return Verdict(None, "ip_has_abuse_reports")
-    if ip_kinds & DISQUALIFYING_KINDS:
+    if ip_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
         return Verdict(None, "ip_has_disqualifying_network_signal")
 
     if "isp" in asn_kinds:
+        if "hosting" in ip_kinds:
+            return Verdict(None, "conflicting_isp_hosting_ip_signal")
         if asn_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
             return Verdict(None, "conflicting_isp_asn_signals")
         if "hosting" in asn_kinds:
@@ -67,6 +69,8 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         )
 
     if "hosting" in asn_kinds:
+        if "isp" in ip_kinds:
+            return Verdict(None, "conflicting_isp_hosting_ip_signal")
         if asn_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
             return Verdict(None, "conflicting_hosting_asn_signals")
         if "isp" in asn_kinds:
