@@ -65,6 +65,8 @@ def refresh_snapshot(
 def main() -> None:
     report = refresh_snapshot()
     print("VPN Gate candidate snapshot:", json.dumps(report, ensure_ascii=False, sort_keys=True), flush=True)
+    if report["status"] == "unavailable":
+        raise SystemExit("VPNGate API unavailable and no previous candidate history exists; cache was not advanced")
 
 
 if __name__ == "__main__":
