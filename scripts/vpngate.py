@@ -34,6 +34,7 @@ HISTORY_TTL_SECONDS = 14 * 24 * 60 * 60
 # Keep a wider rotating candidate reservoir; every selected profile is still
 # revalidated by Mihomo and then by the full live exit/risk classifier.
 HISTORY_MAX_STALE_PER_COUNTRY = 40
+HISTORY_MAX_STALE_US = 200
 HISTORY_MAX_NODES = 2000
 HISTORY_PROBE_LIMIT = 100
 TCP_PRESCREEN_WORKERS = 64
@@ -437,6 +438,7 @@ def merge_candidate_history(
     now: float | None = None,
     ttl_seconds: int = HISTORY_TTL_SECONDS,
     max_stale_per_country: int = HISTORY_MAX_STALE_PER_COUNTRY,
+    max_stale_us_per_country: int = HISTORY_MAX_STALE_US,
     max_total: int = HISTORY_MAX_NODES,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Keep a short rolling history; old profiles remain candidates, never proof of liveness."""
@@ -504,7 +506,7 @@ def merge_candidate_history(
         grouped.setdefault(_candidate_country(record["node"]), []).append((identity, record))
 
     retained: list[tuple[tuple[str, int, str], dict[str, Any]]] = []
-    for items in grouped.values():
+    for country, items in grouped.items():
         current_items = [item for item in items if item[0] in current_ids]
         stale_items = [item for item in items if item[0] not in current_ids]
         stale_items.sort(
@@ -512,7 +514,10 @@ def merge_candidate_history(
             reverse=True,
         )
         retained.extend(current_items)
-        retained.extend(stale_items[:max_stale_per_country])
+        stale_limit = (
+            max_stale_us_per_country if country == "US" else max_stale_per_country
+        )
+        retained.extend(stale_items[:stale_limit])
 
     retained.sort(
         key=lambda item: (
@@ -535,7 +540,7 @@ def select_history_candidates(
     limit: int = HISTORY_PROBE_LIMIT,
     rotation: int = 0,
 ) -> list[dict[str, Any]]:
-    """Select a country-balanced rotating sample, giving US-labelled sources first look."""
+    """Reserve half the sample for US candidates, then balance other countries."""
     if limit < 1:
         raise ValueError("VPN Gate history probe limit must be positive")
     groups: dict[str, list[dict[str, Any]]] = {}
@@ -543,9 +548,8 @@ def select_history_candidates(
         node = record.get("node") if isinstance(record, dict) else None
         if isinstance(node, dict) and _candidate_identity(node) is not None:
             groups.setdefault(_candidate_country(node), []).append(record)
-    countries = sorted(groups, key=lambda country: (country != "US", country))
     rotation = max(0, int(rotation))
-    for country in countries:
+    for country in groups:
         group = sorted(
             groups[country],
             key=lambda record: (
@@ -557,22 +561,35 @@ def select_history_candidates(
         offset = rotation % len(group)
         groups[country] = group[offset:] + group[:offset]
 
-    selected: list[dict[str, Any]] = []
+    us_group = groups.get("US", [])
+    us_budget = min(len(us_group), (limit + 1) // 2)
+    selected = [record["node"] for record in us_group[:us_budget]]
+    remaining = limit - len(selected)
+
+    countries = sorted(country for country in groups if country != "US")
     cursor = {country: 0 for country in countries}
-    while len(selected) < limit:
+    while remaining > 0 and countries:
         progressed = False
         for country in countries:
             position = cursor[country]
             if position < len(groups[country]):
                 selected.append(groups[country][position]["node"])
                 cursor[country] += 1
+                remaining -= 1
                 progressed = True
-                if len(selected) >= limit:
+                if remaining == 0:
                     break
         if not progressed:
             break
-    return selected
 
+    # If the other countries cannot fill their share, use additional US history
+    # rather than returning a short sample while valid US candidates remain.
+    us_cursor = us_budget
+    while remaining > 0 and us_cursor < len(us_group):
+        selected.append(us_group[us_cursor]["node"])
+        us_cursor += 1
+        remaining -= 1
+    return selected
 
 def tcp_prescreen_history(
     records: list[dict[str, Any]],
