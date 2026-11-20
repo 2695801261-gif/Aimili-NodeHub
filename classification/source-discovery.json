@@ -2,14 +2,23 @@
   "source": "vpngate_official_csv",
   "endpoint": "https://www.vpngate.net/api/iphone/",
   "rows_seen": 97,
-  "candidates_parsed": 79,
-  "rejected": 18,
+  "candidates_parsed": 85,
+  "rejected": 12,
   "rejection_reasons": {
-    "vpngate_operated_public_vpn_hostname": 18
+    "vpngate_operated_public_vpn_hostname": 12
   },
   "limit": 100,
   "selection_strategy": "rotating_country_round_robin_then_score",
-  "mihomo_validated": 79,
+  "current_mihomo_validated": 85,
+  "current_mihomo_rejected": 0,
+  "history_candidates_available": 85,
+  "history_candidates_selected": 50,
+  "history_off_window_retained": 0,
+  "history_expired": 0,
+  "history_invalid": 0,
+  "history_ttl_days": 14,
+  "probe_rotation": 141,
+  "mihomo_validated": 50,
   "mihomo_rejected": 0,
   "status": "ok",
   "vpnbook": {
