@@ -124,6 +124,43 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
     raise LookupFailure("all IP metadata providers failed: " + " | ".join(failures))
 
 
+def lookup_ipapi_is(exit_ip: str) -> dict[str, Any]:
+    """Optional HTTPS enrichment; requires the user's server-side free API key."""
+    key = os.getenv("IPAPI_IS_API_KEY", "").strip()
+    if not key:
+        return {"ipapi_is_status": "not_configured"}
+    time.sleep(0.15)
+    response = request_json(
+        "https://api.ipapi.is",
+        method="POST",
+        payload={"ips": [exit_ip], "key": key},
+        timeout=10,
+    )
+    item = response.get(exit_ip)
+    if not isinstance(item, dict) or item.get("ip") != exit_ip:
+        raise LookupFailure("ipapi.is returned missing or mismatched exit-IP evidence")
+    company = item.get("company") if isinstance(item.get("company"), dict) else {}
+    asn = item.get("asn") if isinstance(item.get("asn"), dict) else {}
+    location = item.get("location") if isinstance(item.get("location"), dict) else {}
+    flags = {
+        field: item.get(field)
+        for field in (
+            "is_datacenter", "is_proxy", "is_tor", "is_abuser",
+            "is_mobile", "is_satellite", "is_anycast", "is_crawler",
+        )
+    }
+    return {
+        "ipapi_is_status": "ok",
+        "ipapi_is_flags": flags,
+        "ipapi_is_vpn": bool(item.get("is_vpn")) if item.get("is_vpn") is not None else None,
+        "ipapi_is_company_type": company.get("type"),
+        "ipapi_is_asn_type": asn.get("type"),
+        "ipapi_is_asn": asn.get("asn"),
+        "ipapi_is_country": location.get("country_code"),
+        "ipapi_is_operator": company.get("name"),
+    }
+
+
 def parse_public_ip(raw: str) -> str:
     address = ipaddress.ip_address(raw.strip())
     if not address.is_global:
@@ -528,6 +565,13 @@ def run() -> None:
                     else:
                         row["asn_kind"] = []
                         row["asn_reports"] = 0
+                    if (
+                        name.startswith("VPNGate-")
+                        and row.get("layer3_type") == "vpn"
+                        and row.get("layer3_network_type") == "access"
+                    ):
+                        row.update(lookup_ipapi_is(exit_ip))
+
                     verdict = classify(row)
                     row["pool"] = verdict.pool
                     row["reason"] = verdict.reason

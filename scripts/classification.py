@@ -117,6 +117,24 @@ def _vpngate_access_isp_confirmation(evidence: dict[str, Any]) -> bool:
         and evidence.get("net_prefix_match") is True
         and evidence.get("net_source") in {"oxl-api", "layer3-open-network"}
     )
+    ipapi_status = evidence.get("ipapi_is_status")
+    ipapi_confirmed = ipapi_status in {None, "not_configured"}
+    if ipapi_status == "ok":
+        flags = evidence.get("ipapi_is_flags")
+        required_false = (
+            "is_datacenter", "is_proxy", "is_tor", "is_abuser",
+            "is_mobile", "is_satellite", "is_anycast", "is_crawler",
+        )
+        ipapi_confirmed = (
+            isinstance(flags, dict)
+            and all(flags.get(flag) is False for flag in required_false)
+            and evidence.get("ipapi_is_company_type") == "isp"
+            and evidence.get("ipapi_is_asn_type") == "isp"
+            and evidence.get("ipapi_is_asn") == evidence.get("asn")
+            and evidence.get("ipapi_is_country") == country
+        )
+    elif ipapi_status not in {None, "not_configured"}:
+        ipapi_confirmed = False
     return (
         _is_vpngate_relay_transport_signal(evidence)
         and evidence.get("metadata_source") == "ipwho.is"
@@ -124,6 +142,7 @@ def _vpngate_access_isp_confirmation(evidence: dict[str, Any]) -> bool:
         and evidence.get("layer3_network_type") == "access"
         and network_confirmed
         and (asn_confirmed or asn_not_reported_but_layer3_matches)
+        and ipapi_confirmed
     )
 
 
