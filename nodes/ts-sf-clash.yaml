@@ -1,7 +1,7 @@
 proxies:
-- name: ZZ · VMESS · ts-sf-clash · 16A9FE20
+- name: US · VMESS · ts-sf-clash · 310BDA8D
   type: vmess
-  server: 158.51.121.246
+  server: 167.88.63.99
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -19,26 +19,6 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · B0EDDDDC
-  type: vmess
-  server: 38.91.107.188
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
-- name: US · VMESS · ts-sf-clash · 310BDA8D
-  type: vmess
-  server: 167.88.63.99
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
 - name: US · VMESS · ts-sf-clash · AA0CE97F
   type: vmess
   server: 38.22.17.64
@@ -49,9 +29,29 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
+- name: US · VMESS · ts-sf-clash · B0EDDDDC
+  type: vmess
+  server: 38.91.107.188
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
 - name: US · VMESS · ts-sf-clash · 2AAF655F
   type: vmess
   server: 38.91.107.84
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
+- name: ZZ · VMESS · ts-sf-clash · 16A9FE20
+  type: vmess
+  server: 158.51.121.246
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0

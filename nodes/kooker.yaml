@@ -6,25 +6,10 @@ proxies:
   tls: true
   skip-cert-verify: true
   udp: true
-- name: DK · HTTP · kooker · E25547F2
+- name: FR · HTTP · kooker · 71CFF601
   type: http
-  server: 158.173.154.5
-  port: 9002
-  tls: true
-  skip-cert-verify: true
-  udp: true
-- name: NL · HTTP · kooker · 6415793A
-  type: http
-  server: 84.17.47.148
-  port: 9002
-  tls: true
-  skip-cert-verify: true
-  udp: true
-  password: None
-- name: DK · HTTP · kooker · 70464A06
-  type: http
-  server: 158.173.154.1
-  port: 9002
+  server: 51.159.225.197
+  port: 19362
   tls: true
   skip-cert-verify: true
   udp: true
@@ -44,18 +29,17 @@ proxies:
   tls: true
   skip-cert-verify: true
   udp: true
-- name: NL · HTTP · kooker · 36B37104
+- name: DK · HTTP · kooker · 70464A06
   type: http
-  server: 84.17.47.123
+  server: 158.173.154.1
   port: 9002
   tls: true
   skip-cert-verify: true
   udp: true
-  password: None
-- name: FR · HTTP · kooker · 71CFF601
+- name: DK · HTTP · kooker · E25547F2
   type: http
-  server: 51.159.225.197
-  port: 19362
+  server: 158.173.154.5
+  port: 9002
   tls: true
   skip-cert-verify: true
   udp: true
@@ -66,13 +50,22 @@ proxies:
   tls: true
   skip-cert-verify: true
   udp: true
-- name: LV · HTTP · kooker · E72DF487
+- name: NL · HTTP · kooker · 36B37104
   type: http
-  server: 185.219.159.15
-  port: 443
+  server: 84.17.47.123
+  port: 9002
   tls: true
   skip-cert-verify: true
   udp: true
+  password: None
+- name: NL · HTTP · kooker · 6415793A
+  type: http
+  server: 84.17.47.148
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+  password: None
 - name: LV · HTTP · kooker · 1B01E568
   type: http
   server: 185.219.159.16
@@ -81,3 +74,10 @@ proxies:
   skip-cert-verify: true
   udp: true
   password: None
+- name: LV · HTTP · kooker · E72DF487
+  type: http
+  server: 185.219.159.15
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
