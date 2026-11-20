@@ -9,18 +9,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · F7388B48
+- name: US · VMESS · ts-sf-v2ray · B3F3DA05
   type: vmess
-  server: 38.110.1.246
-  port: 18000
-  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: community.fastly.steamstatic.com
-- name: US · VMESS · ts-sf-v2ray · 29B05856
-  type: vmess
-  server: 167.88.63.99
+  server: 167.88.63.39
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -38,9 +29,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · B3F3DA05
+- name: US · VMESS · ts-sf-v2ray · 29B05856
   type: vmess
-  server: 167.88.63.39
+  server: 167.88.63.99
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -68,6 +59,15 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
+- name: US · VMESS · ts-sf-v2ray · F7388B48
+  type: vmess
+  server: 38.110.1.246
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+  servername: community.fastly.steamstatic.com
 - name: ZZ · VMESS · ts-sf-v2ray · 5D47FF42
   type: vmess
   server: 62.93.166.184
@@ -78,6 +78,20 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
+- name: ZZ · VMESS · ts-sf-v2ray · E336A41D
+  type: vmess
+  server: cf.0sm.com
+  port: 443
+  uuid: 0cf6d970-3f1d-4aae-a989-92a8f76ae3db
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: vmess.lbw666.dpdns.org
+  ws-opts:
+    path: /ws?ed=2048
+    headers:
+      Host: vmess.lbw666.dpdns.org
 - name: HK · VMESS · ts-sf-v2ray · 034E0906
   type: vmess
   server: 47.244.120.197
@@ -88,17 +102,13 @@ proxies:
   network: ws
   ws-opts:
     path: /arki?ed=2048
-- name: US · VMESS · ts-sf-v2ray · AAEE0371
+- name: ZZ · VMESS · ts-sf-v2ray · 4A88158C
   type: vmess
-  server: news.zoom.us
-  port: 8443
-  uuid: bd67fcd2-ec34-40a6-aac6-67731f2d7011
+  server: 168.138.43.75
+  port: 80
+  uuid: 11c3627f-31e8-4695-dfbd-34076e2f1f5d
   alterId: 0
   cipher: auto
   network: ws
-  tls: true
-  servername: matrix.phonicsindia.mobi
   ws-opts:
-    path: /
-    headers:
-      Host: matrix.phonicsindia.mobi
+    path: /cctv13.m3u8

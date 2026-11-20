@@ -2,68 +2,67 @@
   "schema_version": 1,
   "candidate_limit": 160,
   "checked": 160,
-  "accepted": 16,
-  "quarantined": 144,
+  "accepted": 20,
+  "quarantined": 140,
   "pool_sizes": {
-    "low-risk-datacenter": 9,
-    "other-residential": 3,
-    "us-residential": 4
+    "low-risk-datacenter": 12,
+    "other-residential": 2,
+    "us-residential": 6
   },
   "reason_counts": {
     "asn_has_disqualifying_signal": 8,
-    "hosting_risk_exceeds_baseline": 10,
-    "isp_asn_not_confirmed": 2,
-    "layer3_anonymizer_signal": 38,
-    "layer3_country_mismatch": 1,
-    "layer3_low_risk_hosting_and_asn_confirmed": 9,
-    "layer3_residential_access_and_isp_asn_confirmed": 4,
-    "network_has_abuse_reports": 12,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 18,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 1,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 16,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 28.": 21,
-    "quarantined:LookupFailure:intelligence source unavailable: HTTP 521": 1,
-    "quarantined:ValueError:insufficient independent exit-IP consensus": 11,
-    "vpngate_isp_access_layer3_confirmed": 3,
+    "hosting_risk_exceeds_baseline": 15,
+    "isp_asn_not_confirmed": 5,
+    "layer3_anonymizer_signal": 35,
+    "layer3_low_risk_hosting_and_asn_confirmed": 12,
+    "layer3_residential_access_and_isp_asn_confirmed": 6,
+    "network_has_abuse_reports": 11,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 19,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 2,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 21,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 28.": 13,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 35.": 1,
+    "quarantined:ValueError:insufficient independent exit-IP consensus": 5,
+    "residential_network_type_not_access": 1,
+    "vpngate_isp_access_layer3_confirmed": 2,
     "vpngate_isp_access_relay_candidate_unverified": 2,
-    "vpngate_us_consumer_isp_candidate_unverified": 3
+    "vpngate_us_consumer_isp_candidate_unverified": 2
   },
   "provider_status_counts": {
     "metadata_source": {
-      "ipwho.is": 93,
-      "not_checked": 67
+      "ipwho.is": 99,
+      "not_checked": 61
     },
     "metadata_status": {
-      "not_checked": 67,
-      "ok": 93
+      "not_checked": 61,
+      "ok": 99
     },
     "ip_risk_status": {
-      "not_checked": 67,
-      "not_reported": 93
+      "not_checked": 61,
+      "not_reported": 99
     },
     "net_status": {
-      "not_checked": 68,
-      "not_reported": 80,
-      "ok": 12
+      "not_checked": 61,
+      "not_reported": 88,
+      "ok": 11
     },
     "oxl_asn_status": {
-      "not_checked": 68,
-      "not_reported": 38,
-      "ok": 54
+      "not_checked": 61,
+      "not_reported": 48,
+      "ok": 51
     },
     "layer3_status": {
-      "not_checked": 67,
-      "ok": 92,
-      "unavailable": 1
+      "not_checked": 61,
+      "ok": 99
     },
     "ipapi_is_status": {
-      "not_checked": 152,
-      "not_configured": 8
+      "not_checked": 154,
+      "not_configured": 6
     }
   },
   "exit_echo": {
-    "agreement": 93,
-    "disagreement": 11,
+    "agreement": 99,
+    "disagreement": 5,
     "not_checked": 56
   }
 }
