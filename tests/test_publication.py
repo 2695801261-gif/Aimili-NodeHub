@@ -40,6 +40,12 @@ class PublicationGateTests(unittest.TestCase):
             {"us-residential": 1, "other-residential": 0, "low-risk-datacenter": 1},
         )
 
+    def test_rejects_invalid_preserved_pool_count(self):
+        profiles, evidence = valid_inputs()
+        evidence["preserved_pools"] = {"us-residential": 2}
+        with self.assertRaisesRegex(ValueError, "invalid preserved-pool count"):
+            validate_publication(profiles, evidence)
+
     def test_rejects_cross_pool_duplicate(self):
         profiles, evidence = valid_inputs()
         profiles["other-residential"] = profile("us-residential-node")

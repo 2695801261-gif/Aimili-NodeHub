@@ -34,8 +34,21 @@ def validate_publication(
         if not isinstance(profile, dict):
             raise ValueError(f"{pool}: profile must be a mapping")
         proxies = profile.get("proxies")
-        if not isinstance(proxies, list) or not proxies:
-            raise ValueError(f"{pool}: no verified proxies; refusing empty publication")
+        if not isinstance(proxies, list):
+            raise ValueError(f"{pool}: proxies must be a list")
+        preserved_pools = evidence.get("preserved_pools", {})
+        if not isinstance(preserved_pools, dict):
+            raise ValueError("evidence preserved_pools must be a mapping")
+        preserved_count = preserved_pools.get(pool, 0)
+        if (
+            isinstance(preserved_count, bool)
+            or not isinstance(preserved_count, int)
+            or preserved_count < 0
+            or preserved_count > len(proxies)
+        ):
+            raise ValueError(f"{pool}: invalid preserved-pool count")
+        if not proxies and (pool not in preserved_pools or preserved_count != 0):
+            raise ValueError(f"{pool}: empty pool is not marked as preserved-empty")
 
         names: list[str] = []
         for item in proxies:
