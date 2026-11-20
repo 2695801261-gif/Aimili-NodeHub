@@ -124,6 +124,68 @@ def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
     raise LookupFailure("all IP metadata providers failed: " + " | ".join(failures))
 
 
+def parse_cloudflare_front_uri(uri: str) -> dict[str, Any]:
+    """Parse a TLS WebSocket VLESS URI for VPNGate probe-only dialer chaining."""
+    parsed = urllib.parse.urlsplit(uri.strip())
+    if parsed.scheme.casefold() != "vless" or not parsed.hostname or not parsed.username:
+        raise ValueError("Cloudflare front must be a vless:// URI with UUID and server")
+    try:
+        port = parsed.port
+    except ValueError as error:
+        raise ValueError("Cloudflare front URI has an invalid port") from error
+    if port is None or not 1 <= port <= 65535:
+        raise ValueError("Cloudflare front URI must include a valid port")
+    try:
+        address = ipaddress.ip_address(parsed.hostname)
+        if not address.is_global:
+            raise ValueError("Cloudflare front server IP must be globally routable")
+    except ValueError as error:
+        if "globally routable" in str(error):
+            raise
+        if not re.fullmatch(
+            r"(?=.{1,253}$)(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}",
+            parsed.hostname,
+        ):
+            raise ValueError("Cloudflare front server hostname is invalid") from error
+    query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
+
+    def value(key: str, default: str = "") -> str:
+        values = query.get(key)
+        return values[-1].strip() if values else default
+
+    if value("security").casefold() != "tls" or value("type").casefold() != "ws":
+        raise ValueError("Cloudflare front must use TLS WebSocket transport")
+    if value("encryption", "none").casefold() != "none":
+        raise ValueError("Cloudflare front must use VLESS encryption=none")
+    user_id = urllib.parse.unquote(parsed.username)
+    if not re.fullmatch(
+        r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        user_id,
+    ):
+        raise ValueError("Cloudflare front VLESS UUID is invalid")
+    server = parsed.hostname
+    host_header = value("host", server)
+    servername = value("sni", host_header)
+    path = value("path", "/") or "/"
+    if not path.startswith("/"):
+        path = "/" + path
+    if not host_header or not servername:
+        raise ValueError("Cloudflare front Host and SNI must not be empty")
+    return {
+        "name": "NODEHUB-CF-FRONT",
+        "type": "vless",
+        "server": server,
+        "port": port,
+        "uuid": user_id,
+        "udp": True,
+        "tls": True,
+        "servername": servername,
+        "client-fingerprint": "chrome",
+        "network": "ws",
+        "ws-opts": {"path": path, "headers": {"Host": host_header}},
+    }
+
+
 def lookup_ipapi_is(exit_ip: str) -> dict[str, Any]:
     """Optional HTTPS enrichment; requires the user's server-side free API key."""
     key = os.getenv("IPAPI_IS_API_KEY", "").strip()
@@ -416,6 +478,22 @@ def run() -> None:
     if len(proxy_names) != len(set(proxy_names)):
         raise SystemExit("Duplicate proxy names; refusing ambiguous exit selection")
 
+    # Optional Cloudflare VLESS front is used only as the CI probe underlay.
+    # Never serialize its private UUID into the public subscription artifacts.
+    cf_front_uri = os.getenv("NODEHUB_CF_FRONT_URI", "").strip()
+    cf_front = parse_cloudflare_front_uri(cf_front_uri) if cf_front_uri else None
+    probe_candidates = [dict(item) for item in candidates]
+    vpngate_probe_count = 0
+    if cf_front:
+        for item in probe_candidates:
+            if str(item.get("name") or "").startswith("VPNGate-"):
+                item["dialer-proxy"] = cf_front["name"]
+                vpngate_probe_count += 1
+        print(
+            f"VPNGate probe underlay: {cf_front['name']} enabled for {vpngate_probe_count} selected candidates; URI omitted from artifacts",
+            flush=True,
+        )
+
     grouped: dict[str, list[dict[str, Any]]] = {key: [] for key in OUTPUTS}
     evidence_rows: list[dict[str, Any]] = []
     counters: Counter[str] = Counter()
@@ -434,7 +512,7 @@ def run() -> None:
             "ipv6": True,
             "external-controller": "127.0.0.1:9090",
             "secret": SECRET,
-            "proxies": candidates,
+            "proxies": probe_candidates + ([cf_front] if cf_front and vpngate_probe_count else []),
             "proxy-groups": [{
                 "name": "EXIT",
                 "type": "select",
@@ -474,6 +552,7 @@ def run() -> None:
                     "oxl_asn_status": "not_checked",
                     "ip_risk_status": "not_checked",
                     "net_status": "not_checked",
+                    "probe_underlay": "NODEHUB-CF-FRONT" if cf_front and name.startswith("VPNGate-") else "DIRECT",
                 }
                 try:
                     request_json(
