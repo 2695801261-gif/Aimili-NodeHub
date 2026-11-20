@@ -22,7 +22,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 VPNGATE_API = "https://www.vpngate.net/api/iphone/"
 OUTPUT = ROOT / ".cache" / "vpngate" / "candidates.yaml"
-HISTORY_FILE = ROOT / "nodes" / "vpngate-candidate-history.json"
+HISTORY_FILE = ROOT / ".cache" / "vpngate" / "candidate-history.json"
 REPORT = ROOT / "classification" / "source-discovery.json"
 MIHOMO = ROOT / ".cache" / "mihomo" / "mihomo"
 MAX_NODES = int(os.getenv("NODEHUB_MAX_VPNGATE_NODES", "100"))
