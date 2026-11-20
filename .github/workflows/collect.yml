@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths-ignore:
       - "nodes/**"
+      - "subscriptions/**"
+      - "classification/**"
       - "README.md"
       - "docs/**"
       - "upstream.lock.json"
