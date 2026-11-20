@@ -17,7 +17,7 @@ This document records the source selection for the three output pools. Classific
 - Lists: https://github.com/O-X-L/risk-db-lists
 - API documentation: https://risk.oxl.app/api/docs
 - Data license: BSD-3-Clause for the published databases.
-- Role: live ASN kind lists (ISP, hosting, VPN, proxy, Tor, scanner, crawler and education) plus per-IP/per-ASN abuse-report lookups. The classifier requires a positive ISP or hosting ASN classification and rejects conflicting kinds.
+- Role: live ASN kind lists (ISP, hosting, VPN, proxy, Tor, scanner, crawler and education), plus per-IP, per-network and per-ASN lookups. Network reputation and kind are checked against the observed exit IP; conflicting kinds and nonzero report counts are quarantined.
 - The project's own documentation warns that reports can be false positives and that the data is an early-stage risk signal. A match is a reason to quarantine/review, not proof of malicious intent.
 - API limits documented by the project: unauthenticated 500 requests / 10 minutes and 5,000 / day. The classifier must cache lookups per run and stop safely on 429/5xx.
 
@@ -51,9 +51,10 @@ All of the following are required:
 
 1. Actual exit IP is independently observed and ASN/country are resolved by IPWhois; O-X-L independently classifies the ASN.
 2. Hosting/datacenter is positively supported by ASN or IP/network classification.
-3. The per-ASN risk lookup must succeed and report zero abuse reports; a missing ASN risk record is not sufficient for this pool.
-4. No VPN, proxy, Tor, relay, mobile, enterprise-gateway, scanner, crawler, or high-risk abuse signal is present.
-5. No conflicting or missing evidence at a required gate. Any uncertainty goes to quarantine.
+3. The per-network lookup must return hosting classification, reputation of ok/info and zero reports.
+4. The per-ASN risk lookup must succeed and report zero abuse reports; a missing ASN risk record is not sufficient for this pool.
+5. No VPN, proxy, Tor, relay, mobile, enterprise-gateway, scanner, crawler, or high-risk abuse signal is present.
+6. No conflicting or missing evidence at a required gate. Any uncertainty goes to quarantine.
 
 “Low-risk” is relative to the selected public intelligence sources and their freshness. It is not a safety guarantee.
 
