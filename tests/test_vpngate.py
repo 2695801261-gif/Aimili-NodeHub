@@ -43,7 +43,7 @@ def csv_row(config, *, hostname="public-vpn.example.net", ip="8.8.8.20",
 
 class VPNGateParserTests(unittest.TestCase):
     def test_parses_openvpn_profile_into_mihomo_openvpn_proxy(self):
-        proxy = parse_ovpn_config(profile(), "VPNGate-JP-test")
+        proxy = parse_ovpn_config(profile().replace("\n", "\r\n"), "VPNGate-JP-test")
         self.assertEqual(proxy["type"], "openvpn")
         self.assertEqual(proxy["server"], "8.8.8.20")
         self.assertEqual(proxy["port"], 443)

@@ -91,7 +91,7 @@ def _inline_blocks(text: str) -> tuple[str, dict[str, str]]:
     blocks: dict[str, str] = {}
     pattern = re.compile(
         r"(?ims)^[ \t]*<(ca|cert|key|tls-auth|tls-crypt|tls-crypt-v2)>[ \t]*\r?\n"
-        r"(.*?)^[ \t]*</\1>[ \t]*$"
+        r"(.*?)^[ \t]*</\1>[ \t]*\r?$"
     )
 
     def replace(match: re.Match[str]) -> str:
