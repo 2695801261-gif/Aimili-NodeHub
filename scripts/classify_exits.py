@@ -194,6 +194,7 @@ def run() -> None:
     counters: Counter[str] = Counter()
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
     ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any]]] = {}
+    net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
 
     asn_kind_lists: dict[str, set[int]] = {}
     for kind in ("isp", "hosting", "vpn", "scanner", "crawler", "education"):
@@ -293,6 +294,15 @@ def run() -> None:
                         "ipwhois_success": True,
                     })
                     row["ip_risk_status"] = ip_status
+                    if exit_ip not in net_cache:
+                        time.sleep(1.25)
+                        net_cache[exit_ip] = oxl_lookup("net", exit_ip)
+                    net_status, net_data = net_cache[exit_ip]
+                    row["net_status"] = net_status
+                    if net_data:
+                        row["net_kind"] = net_data.get("kind", [])
+                        row["net_reports"] = report_sum(net_data)
+                        row["net_reputation"] = net_data.get("reputation")
                     if ip_data:
                         row["ip_kind"] = ip_data.get("kind", [])
                         row["ip_reports"] = report_sum(ip_data)
@@ -302,9 +312,6 @@ def run() -> None:
                     if asn not in asn_cache:
                         time.sleep(1.25)
                         asn_cache[asn] = oxl_lookup("asn", str(asn))
-                        if asn_cache[asn][0] == "not_reported":
-                            time.sleep(1.25)
-                            asn_cache[asn] = oxl_lookup("asn", str(asn))
                     asn_status, asn_data = asn_cache[asn]
                     row["oxl_asn_status"] = asn_status
                     if asn_data:
