@@ -232,7 +232,7 @@ def collect_vpnbook() -> dict[str, Any]:
         for server in servers:
             if not server.get("ip"):
                 server["ip"] = resolve_server_ip(server["hostname"])
-        downloaded: list[tuple[dict[str, str], str]] =
+        downloaded: list[tuple[dict[str, str], str]] = []
         failures: dict[str, int] = {}
         with ThreadPoolExecutor(max_workers=5) as executor:
             pending = {
