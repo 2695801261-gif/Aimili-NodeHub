@@ -302,6 +302,9 @@ def run() -> None:
                     if asn not in asn_cache:
                         time.sleep(1.25)
                         asn_cache[asn] = oxl_lookup("asn", str(asn))
+                        if asn_cache[asn][0] == "not_reported":
+                            time.sleep(1.25)
+                            asn_cache[asn] = oxl_lookup("asn", str(asn))
                     asn_status, asn_data = asn_cache[asn]
                     row["oxl_asn_status"] = asn_status
                     if asn_data:
