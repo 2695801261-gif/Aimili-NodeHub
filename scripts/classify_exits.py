@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import os
+import re
 import subprocess
 import tempfile
 import time
@@ -65,6 +66,43 @@ def request_json(url: str, *, method: str = "GET", payload: dict[str, Any] | Non
     if not isinstance(result, dict):
         raise LookupFailure("unexpected JSON response shape")
     return result
+
+
+def lookup_ip_metadata(exit_ip: str) -> tuple[dict[str, Any], str]:
+    failures: list[str] = []
+    try:
+        time.sleep(1.0)
+        data = request_json(f"https://ipwho.is/{exit_ip}")
+        connection = data.get("connection") or {}
+        raw_asn = connection.get("asn")
+        asn = int(str(raw_asn).upper().removeprefix("AS"))
+        country = data.get("country_code")
+        isp = connection.get("isp") or connection.get("org")
+        if data.get("success") is True and data.get("ip") == exit_ip:
+            if isinstance(country, str) and len(country) == 2 and country.upper() not in {"ZZ", "XX", "T1", "A1", "EU", "AP"} and isinstance(isp, str) and isp.strip():
+                return {"country_code": country.upper(), "asn": asn, "isp": isp.strip()}, "ipwho.is"
+        failures.append("ipwho.is returned incomplete or mismatched metadata")
+    except (LookupFailure, urllib.error.HTTPError, TypeError, ValueError) as error:
+        failures.append(f"ipwho.is: {type(error).__name__}: {error}")
+
+    try:
+        time.sleep(1.0)
+        data = request_json(f"https://ipinfo.io/{exit_ip}/json")
+        org = data.get("org")
+        match = re.match(r"^AS(\\d+)\\s+(.+)$", org.strip()) if isinstance(org, str) else None
+        country = data.get("country")
+        if data.get("ip") != exit_ip or not match:
+            raise LookupFailure("IPinfo returned incomplete or mismatched metadata")
+        if not isinstance(country, str) or len(country) != 2 or country.upper() in {"ZZ", "XX", "T1", "A1", "EU", "AP"}:
+            raise LookupFailure("IPinfo returned no usable country code")
+        return {
+            "country_code": country.upper(),
+            "asn": int(match.group(1)),
+            "isp": match.group(2).strip(),
+        }, "ipinfo.io"
+    except (LookupFailure, urllib.error.HTTPError, TypeError, ValueError) as error:
+        failures.append(f"ipinfo.io: {type(error).__name__}: {error}")
+    raise LookupFailure("all IP metadata providers failed: " + " | ".join(failures))
 
 
 def parse_public_ip(raw: str) -> str:
@@ -169,7 +207,7 @@ def run() -> None:
     evidence_rows: list[dict[str, Any]] = []
     counters: Counter[str] = Counter()
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
-    ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any]]] = {}
+    ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any], str]] = {}
     net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
 
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
@@ -216,7 +254,7 @@ def run() -> None:
                     "node_name": name,
                     "checked_at": datetime.now(UTC).isoformat(),
                     "exit_echo_agreement": False,
-                    "ipwhois_success": False,
+                    "ip_metadata_success": False,
                     "oxl_asn_status": "not_checked",
                     "ip_risk_status": "not_checked",
                 }
@@ -236,34 +274,19 @@ def run() -> None:
                         raise ValueError("independent exit-IP echo services disagree")
 
                     if exit_ip in ip_cache:
-                        ip_status, ip_data, ip_info = ip_cache[exit_ip]
+                        ip_status, ip_data, metadata, metadata_source = ip_cache[exit_ip]
                     else:
-                        time.sleep(1.0)
-                        ip_info = request_json(f"https://ipwho.is/{exit_ip}")
-                        if ip_info.get("success") is not True or ip_info.get("ip") != exit_ip:
-                            raise LookupFailure("IPWhois did not verify the observed exit IP")
+                        metadata, metadata_source = lookup_ip_metadata(exit_ip)
                         time.sleep(1.25)
                         ip_status, ip_data = oxl_lookup("ip", exit_ip)
                         if ip_status == "not_reported":
                             time.sleep(1.25)
                             ip_status, ip_data = oxl_lookup("ip", exit_ip)
-                        ip_cache[exit_ip] = (ip_status, ip_data, ip_info)
+                        ip_cache[exit_ip] = (ip_status, ip_data, metadata, metadata_source)
 
-                    connection = ip_info.get("connection") or {}
-                    asn_raw = connection.get("asn")
-                    try:
-                        asn = int(str(asn_raw).upper().removeprefix("AS"))
-                    except (TypeError, ValueError):
-                        raise LookupFailure("IPWhois response has no usable ASN")
-                    country = ip_info.get("country_code")
-                    if not isinstance(country, str) or len(country) != 2 or country.upper() in {"ZZ", "XX", "T1", "A1", "EU", "AP"}:
-                        raise LookupFailure("IPWhois response has no usable country code")
-                    row.update({
-                        "country_code": country.upper(),
-                        "asn": asn,
-                        "isp": connection.get("isp") or connection.get("org"),
-                        "ipwhois_success": True,
-                    })
+                    row.update(metadata)
+                    row["metadata_source"] = metadata_source
+                    row["ip_metadata_success"] = True
                     row["ip_risk_status"] = ip_status
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
@@ -274,6 +297,12 @@ def run() -> None:
                         row["net_kind"] = net_data.get("kind", [])
                         row["net_reports"] = report_sum(net_data)
                         row["net_reputation"] = net_data.get("reputation")
+                        row["net_asn_match"] = net_data.get("asn") == row["asn"]
+                        try:
+                            network = ipaddress.ip_network(net_data.get("network"), strict=False)
+                            row["net_prefix_match"] = ipaddress.ip_address(exit_ip) in network
+                        except (TypeError, ValueError):
+                            row["net_prefix_match"] = False
                     if ip_data:
                         row["ip_kind"] = ip_data.get("kind", [])
                         row["ip_reports"] = report_sum(ip_data)
@@ -314,7 +343,7 @@ def run() -> None:
                 process.kill()
                 process.wait(timeout=5)
 
-    if not any(row.get("ipwhois_success") for row in evidence_rows):
+    if not any(row.get("ip_metadata_success") for row in evidence_rows):
         failures = Counter(row.get("reason", "unknown") for row in evidence_rows)
         print("Exit verification failure summary:", failures.most_common(10), flush=True)
         raise SystemExit("No exit IPs could be independently verified; keeping previous classified subscriptions")
