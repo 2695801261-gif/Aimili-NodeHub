@@ -16,6 +16,7 @@
 - [apachecn/edgetunnel21](https://github.com/apachecn/edgetunnel21)：Cloudflare Worker 隧道/代理前置，可作为链路组件参考；它本身不是 VPNGate 节点源，也不能单独证明出口是家宽。
 - [hezhanleiok/gate](https://github.com/hezhanleiok/gate)：Cloudflare Worker 远端检查 VPNGate TCP/SSTP 候选并返回出口 IP、ASN、机房标记，输出面向 EdgeTunnel 的专用节点格式。它适合参考远端验证与定时更新，但不能直接当成 Mihomo YAML 源；其单次官方 API 快照规模也远小于演示中声称的数千美国节点。
 - [VPNGate rolling pool mirror](https://github.com/GeorgeXie2333/vpngate-list-mirror)：把官方 API 的多次快照合并为 7 天滚动池，以 Cloudflare Workers 进行周期性 TCP 可达性检查，并用内容寻址配置文件和 SHA-256 清单校验。2026-11-20 的公开池快照约 4,948 条，US 标记约 160 条；同一快照中近期 TCP 检查通过的 US 节点只有 24 条。NodeHub 只接收近期 TCP 检查通过的候选，下载配置后再校验配置哈希；最终仍必须通过本项目自己的 Mihomo 出口和风险门禁。这个来源能补足全球候选规模，但本身并不能提供 2,000 个美国节点。
+- [VPNGate Scraper API](https://github.com/fdciabdul/Vpngate-Scraper-API)、[VpngateAPI](https://github.com/sinspired/VpngateAPI)、[OpenVPNGate4Mihomo](https://github.com/RememberOurPromise/OpenVPNGate4Mihomo) 和 [vpngate-clean-mihomo](https://github.com/ZJH233-tech/vpngate-clean-mihomo)：分别提供定时抓取后的 `.ovpn` 文件、CSV/YAML 快照、Worker 浏览/转换界面或 IP 风险评分订阅；检查其实现后确认底层仍是同一个 VPNGate 官方 API，而非独立运营商节点源。可作为故障时的候选镜像或转换参考，但不能把这些仓库中的重复服务器当成新增独立节点，也不能直接采信其住宅标签。
 
 ## 对 Aimili-NodeHub 的边界
 
