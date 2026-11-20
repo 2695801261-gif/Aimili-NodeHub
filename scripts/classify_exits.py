@@ -128,10 +128,29 @@ def curl_exit_ip(url: str) -> str:
     return parse_public_ip(result.stdout)
 
 
-def echo_pair() -> tuple[str, bool]:
-    first = curl_exit_ip("https://api.ipify.org")
-    second = curl_exit_ip("https://checkip.amazonaws.com")
-    return first, first == second
+def echo_pair(*, attempts: int = 2) -> tuple[str, bool]:
+    """Require two independent echo services to agree; retry transient failures."""
+    if attempts < 1:
+        raise ValueError("echo attempts must be positive")
+    last_error: Exception | None = None
+    last_ip: str | None = None
+    for attempt in range(attempts):
+        try:
+            first = curl_exit_ip("https://api.ipify.org")
+            second = curl_exit_ip("https://checkip.amazonaws.com")
+            last_ip = first
+            if first == second:
+                return first, True
+            last_error = ValueError("independent exit-IP echo services disagree")
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired, ValueError) as error:
+            last_error = error
+        if attempt + 1 < attempts:
+            time.sleep(1.0 * (attempt + 1))
+    if last_ip is not None:
+        return last_ip, False
+    if last_error is not None:
+        raise last_error
+    raise LookupFailure("exit-IP echo failed without a diagnostic")
 
 
 def oxl_lookup(kind: str, value: str) -> tuple[str, dict[str, Any] | None]:
