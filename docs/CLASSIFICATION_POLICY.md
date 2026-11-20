@@ -2,17 +2,17 @@
 
 目标输出为三类 Mihomo 订阅：
 
-1. `us-residential`：代理实际出口地址被独立情报源标记为 residential，所在网络为 access，且 精确 IP/网络风险门槛通过。
-2. `other-residential`：与美国住宅候选相同，但出口国家不是美国。
+1. `us-residential`：实际出口国家为美国，且通过普通 residential/access 规则，或通过下述严格限定的 VPNGate 固定 ISP access 例外。
+2. `other-residential`：同一组住宅证据规则，但实际出口国家不是美国。
 3. `low-risk-datacenter`：历史兼容池名；出口地址和网络均被独立情报源标记为 hosting，Layer3 风险仅为普通 hosting 基线（medium/50，原因仅为 hosting），且精确 IP/网络风险门槛通过。
 
 ## 必须遵守
 
 - 必须通过代理本身连接两个独立 HTTPS 出口检测端点，并要求两者返回相同的全球可路由 IP；不能用节点配置中的 server 地址代替出口 IP。
-- IPWhois 主源（IPinfo 备用）解析出口 IP 的国家、ASN 和运营商；Layer3 Intel 必须返回相同 IP、国家、ASN 和包含该 IP 的实际公告前缀。
+- IPWhois 主源（IPinfo 备用）解析出口 IP 的国家、ASN 和运营商；Layer3 Intel 必须返回相同 IP、国家、ASN 和包含该 IP 的实际公告前缀。IPWHO 顶层 `type` 是地址族（如 `ipv4`），不是 ISP 类型；不能把它当成住宅证明。若配置 `IPAPI_IS_API_KEY`，VPNGate 特殊候选还必须通过 IPAPI.is HTTPS 独立核验。
 - 住宅候选要求 Layer3 地址风险等级为 low、分数低于 25，地址类型 residential、网络类型 access、风险原因为空。普通 hosting 在 Layer3 的风险模型中基线为 medium/50、原因为 [hosting]；机房候选只接受这个精确基线，任何额外风险原因（如 nearby_vpn、recent_reassignment、proxy）或更高分数均隔离。该池名为 low-risk-datacenter 是历史兼容名，不代表 Layer3 数值等级为 low。
-- Layer3 的 anonymizer、proxy、VPN、Tor、relay、共享地址、crawler、drop-list 等信号不会直接进入任何订阅池。**唯一的来源诊断例外**：VPNGate 节点若同时满足 Layer3 `type=vpn`、`network_type=access`、风险恰为 high/75/`[vpn]`，且只有 anonymizer/vpn 两个标志为 true、O-X-L ASN 明确为 ISP，则单独标记为 `vpngate_isp_access_relay_candidate_unverified`。这只是待二次核验候选，不是住宅证明，不会进入三份订阅；其他来源、额外 proxy/Tor/relay/hosting 信号、ASN 冲突或风险字段变化仍按原规则隔离。未知、business、mobile、education、government、isp（无法区分家庭/企业的泛 ISP 地址）等类型不进入住宅池。
-- O-X-L ASN 查询若有记录，必须明确支持 ISP 或 hosting 类型且无冲突种类；ASN 报告总数作为网络级上下文记录，不直接等同于当前出口 IP 的举报数；若明确返回 not-reported，不视为安全，只有 Layer3 对同一出口 IP、ASN、国家、前缀、对应类别的风险规则和目标网络类型全部独立确认时才允许继续。查询超时、限流或服务错误仍隔离。O-X-L IP 查询要求零举报；其 404 语义存在不确定性，重试后仍为 404 时只记录为 not-reported，不声称已证明无风险。
+- Layer3 的 anonymizer、proxy、VPN、Tor、relay、共享地址、crawler、drop-list 等信号默认不会进入任何订阅池。**唯一的来源专属例外是 VPNGate 的固定 ISP access 出口**：必须是准确的 VPNGate `type=vpn`、`network_type=access`、风险 high/75/`[vpn]` 签名，anonymizer/vpn 两个标志为 true 且 proxy/Tor/relay/hosting 均为 false；实际出口 IP、国家、ASN、前缀必须由 Layer3 精确匹配；IPWHO 运营商必须命中固定线路 ISP 名单；Layer3/O-X-L 网络分类必须为 ISP 且 ASN/前缀一致；O-X-L ASN 若有记录必须确认 ISP、不得有 hosting 冲突，若无记录则必须由同一 Layer3 IP/ASN/前缀和 ISP access 网络证据补足；任何可用的精确 IP 或网络举报记录若报告数非零即拒绝。若配置 `IPAPI_IS_API_KEY`，还必须由 IPAPI.is 返回 `company.type=isp`、`asn.type=isp`、相同 ASN/国家，并明确确认 datacenter/proxy/Tor/abuser/mobile/satellite/anycast/crawler 标记全部为 false；其 `is_vpn` 标记在这个 VPNGate 传输例外中记录但不单独拒绝。移动/无线运营商不进入固定住宅池。这个例外识别的是固定 ISP 接入网络，不证明具体物理家庭线路，也不应用于其他来源。未知、business、mobile、education、government、泛 ISP 或证据冲突类型仍隔离。
+- O-X-L ASN 查询若有记录，必须明确支持 ISP 或 hosting 类型且无冲突种类；ASN 报告总数作为网络级上下文记录，不直接等同于当前出口 IP 的举报数；若明确返回 not-reported，不视为安全，只有 Layer3 对同一出口 IP、ASN、国家、前缀、对应类别的风险规则和目标网络类型全部独立确认时才允许继续。查询超时、限流或服务错误仍隔离。O-X-L IP 查询若有记录要求零举报；其 404 语义存在不确定性，重试后仍为 404 时只记录为 not-reported，不声称已证明零风险。住宅规则（包括 VPNGate 特例）可在该字段为 not-reported 时继续，但必须保留这个未知状态，并依靠其他精确 IP/ASN/网络证据通过门槛。
 - O-X-L 网络记录如果存在，必须通过零举报、`ok/info` 信誉、ASN、CIDR 和网络类型核验。若 O-X-L 网络 API 返回 404，只允许在 Layer3 已提供匹配的网络类型、前缀和类别对应的风险证据，且 O-X-L IP 检查通过时继续。若 O-X-L ASN 明确 not-reported，也只能由 Layer3 独立确认精确 IP、ASN、国家、前缀、类别对应风险条件和目标网络类型后继续。
 - VPN、proxy、Tor、scanner、crawler、education、maybe_hacked、mobile、CGNAT、relay、anycast 及 ISP/hosting 冲突信号全部隔离。
 - 保存检测时间、出口 IP、国家、ASN、运营商、Layer3 风险分数/原因、网络前缀、O-X-L 状态及判断理由，便于复核。
@@ -27,4 +27,4 @@ Layer3 Open API 不包含付费版的实时 residential-proxy 标记，因此 re
 
 ## 当前实现范围
 
-FreeNodes 固定版本负责完整启用配置来源的发现（GitHub 订阅、网页、受限密码页和 YouTube 资源适配器）、去重、Mihomo 能力检测和通用节点池生成；工作流不得把 sources 过滤成仅 github_file。VPN Gate 官方 CSV 的 OpenVPN_ConfigData_Base64 经独立适配器转换为 Mihomo 原生 openvpn outbound，并通过 Mihomo 配置检查后接受真实出口核验。若其最终出口被 Layer3 标记为 VPN，但同时是 ISP access 网络，且 O-X-L ASN 也确认 ISP，则只进入独立的未验证候选诊断状态；不会绕过高风险门槛或进入住宅订阅。来源覆盖和格式边界见 [DISCOVERY_SOURCES.md](DISCOVERY_SOURCES.md)。本项目将 FreeNodes 与 VPN Gate 候选合并为最多 500 个节点，并按来源比例从完整排序池分配最多 80 个真实出口探测名额，逐个验证出口 IP；两个独立 HTTPS 回显端点的临时连接失败会进行一次有界重试，但两端不一致仍隔离；使用 IPWhois/IPinfo、Layer3 Intel 和 O-X-L IP/ASN/可用网络记录进行交叉分类。字段、许可、限额和分类门槛见 [CLASSIFICATION_SOURCES.md](CLASSIFICATION_SOURCES.md)。
+FreeNodes 固定版本负责完整启用配置来源的发现（GitHub 订阅、网页、受限密码页和 YouTube 资源适配器）、去重、Mihomo 能力检测和通用节点池生成；工作流不得把 sources 过滤成仅 github_file。VPN Gate 官方 CSV 的 OpenVPN_ConfigData_Base64 经独立适配器转换为 Mihomo 原生 openvpn outbound，并通过 Mihomo 配置检查后接受真实出口核验。VPNGate 的 Layer3 VPN-on-access 固定 ISP 例外按本文件的专属门槛验证；可选 IPAPI.is 通过 GitHub Actions secret `IPAPI_IS_API_KEY` 启用，密钥只通过 HTTPS POST JSON body 发送，不写入仓库。VPNGate 候选历史保留 14 天并轮换采样，每次正式采集后保存缓存。来源覆盖和格式边界见 [DISCOVERY_SOURCES.md](DISCOVERY_SOURCES.md)。本项目将 FreeNodes 与 VPN Gate 候选合并为最多 500 个节点，并按来源比例从完整排序池分配最多 80 个真实出口探测名额，逐个验证出口 IP；两个独立 HTTPS 回显端点的临时连接失败会进行一次有界重试，但两端不一致仍隔离；使用 IPWhois/IPinfo、Layer3 Intel、O-X-L 和可选 IPAPI.is 进行交叉分类。字段、许可、限额和分类门槛见 [CLASSIFICATION_SOURCES.md](CLASSIFICATION_SOURCES.md)。
