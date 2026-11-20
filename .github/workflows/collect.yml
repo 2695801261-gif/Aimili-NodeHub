@@ -66,6 +66,9 @@ jobs:
           uv sync --locked --extra youtube
           uv run playwright install --with-deps chromium
 
+      - name: Run classification unit tests
+        run: uv run --locked pytest -q tests/test_classification.py
+
       - name: Discover, validate and generate profiles
         env:
           GH_TOKEN: ${{ github.token }}
@@ -91,7 +94,12 @@ jobs:
             echo "No subscription changes."
           else
             git commit -m "auto: update verified node catalog"
-            git fetch origin main
-            git rebase origin/main
-            git push
+            for attempt in 1 2 3; do
+              git fetch origin main
+              git rebase origin/main
+              if git push; then
+                break
+              fi
+              if [ "$attempt" -eq 3 ]; then exit 1; fi
+            done
           fi
