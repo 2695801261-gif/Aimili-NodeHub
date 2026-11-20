@@ -7,6 +7,8 @@
 - [XEHN](https://github.com/hezhanleiok/xehn)：WARP 端点扫描与客户端。其公开说明强调复用 warpscout 扫描引擎、两阶段端点探测与隧道验证、mihomo 实际流量路由，以及扫描结果 TTL 缓存。它不是通用免费节点聚合器，因此主要参考验证链路和缓存/核心解耦，而不是照搬其 WARP 账户与桌面客户端逻辑。
 - [ProxyCollector](https://github.com/Mahdi0024/ProxyCollector)：多来源代理收集，使用 sing-box 进行真实代理连通性测试，并导出不同客户端订阅。可参考协议覆盖、引擎验证和多格式输出。
 - [VLESS Collector](https://github.com/mehrtat/vless-collector)：按来源读取配置、去重、启动 xray 对单节点执行真实 HTTP 探测、按延迟排序后发布。可参考“小批验证成功才发布”的简单闭环。
+- [Vair Collector](https://github.com/lm705/vair-collector)：Fetch → Stage 1 Ping → Stage 2 Speed → Publish，按配置身份去重，并对 Xray 与 sing-box 协议分配不同测试引擎。可借鉴分阶段筛选、身份去重与运行快照。
+- [V2ray-Tester](https://github.com/lblwb/V2ray-Tester)：将静态配置硬拒绝、TCP 预检、核心实时连接和主动网络探测分层。可借鉴“廉价预检先行、昂贵核心测试后置”的顺序。
 
 ## 对 Aimili-NodeHub 的边界
 
