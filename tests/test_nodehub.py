@@ -63,6 +63,18 @@ class NodeHubPipelineTests(unittest.TestCase):
         self.assertEqual(sum(item["name"].startswith("VPNGate-") for item in selected), 13)
         self.assertEqual(sum(item["name"].startswith("free-") for item in selected), 12)
 
+    def test_exit_probe_budget_covers_vpngate_and_vpnbook_sources(self):
+        from scripts.classify_exits import select_exit_candidates
+
+        candidates = ([{"name": f"free-{i}"} for i in range(400)]
+                      + [{"name": f"VPNGate-JP-{i}"} for i in range(50)]
+                      + [{"name": f"VPNBook-US-{i}"} for i in range(50)])
+        selected = select_exit_candidates(candidates, 25)
+        self.assertEqual(len(selected), 25)
+        self.assertEqual(sum(x["name"].startswith("VPNGate-") for x in selected), 7)
+        self.assertEqual(sum(x["name"].startswith("VPNBook-") for x in selected), 6)
+        self.assertEqual(sum(x["name"].startswith("free-") for x in selected), 12)
+
     def test_vpngate_source_sampling_rotates_between_scheduled_runs(self):
         from scripts.classify_exits import select_exit_candidates
 

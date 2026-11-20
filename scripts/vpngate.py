@@ -117,7 +117,7 @@ def _int_directive(directives: dict[str, list[list[str]]], key: str) -> int | No
     return value
 
 
-def parse_ovpn_config(config_text: str, name: str) -> dict[str, Any]:
+def parse_ovpn_config(config_text: str, name: str, credentials: tuple[str, str] = ("vpn", "vpn")) -> dict[str, Any]:
     if not config_text.strip() or len(config_text.encode("utf-8")) > MAX_CONFIG_BYTES:
         raise VPNGateError("OpenVPN profile is empty or too large")
     without_blocks, blocks = _inline_blocks(config_text)
@@ -191,7 +191,7 @@ def parse_ovpn_config(config_text: str, name: str) -> dict[str, Any]:
         "ca": blocks["ca"],
     }
     if auth_user_pass:
-        proxy.update({"username": "vpn", "password": "vpn"})
+        proxy.update({"username": credentials[0], "password": credentials[1]})
     for tag in ("cert", "key", "tls-auth", "tls-crypt", "tls-crypt-v2"):
         if blocks.get(tag):
             proxy[tag] = blocks[tag]

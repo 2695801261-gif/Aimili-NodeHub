@@ -56,7 +56,7 @@ def discover_nodes() -> None:
     ]
     from scripts.vpngate import collect_vpngate
 
-    source_report = collect_vpngate()
+    source_report = collect_vpngate()\n    from scripts.vpnbook import collect_vpnbook\n\n    source_report["vpnbook"] = collect_vpnbook()
     source_report["freenodes"] = {
         "status": freenodes_status,
         "error": freenodes_error,

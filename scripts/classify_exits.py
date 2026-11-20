@@ -31,7 +31,7 @@ OUTPUTS = {
 }
 EVIDENCE_PATH = ROOT / "classification" / "evidence.json"
 DIAGNOSTICS_PATH = ROOT / "classification" / "diagnostics.json"
-VPNGATE_PROFILE = ROOT / ".cache" / "vpngate" / "candidates.yaml"
+VPNGATE_PROFILE = ROOT / ".cache" / "vpngate" / "candidates.yaml"\nVPNBOOK_PROFILE = ROOT / ".cache" / "vpnbook" / "candidates.yaml"
 SOURCE_REPORT = ROOT / "classification" / "source-discovery.json"
 MAX_CANDIDATES = int(os.getenv("NODEHUB_MAX_EXIT_PROBES", "25"))
 MAX_TOTAL_CANDIDATES = 500
@@ -240,103 +240,72 @@ def validate_profile_content(content: str, pool: str) -> None:
 
 
 
-def combine_candidate_sources(
-    primary: list[dict[str, Any]],
-    supplemental: list[dict[str, Any]],
-    *,
-    total_limit: int = MAX_TOTAL_CANDIDATES,
-    supplemental_limit: int = MAX_VPNGATE_CANDIDATES,
-) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    """Keep a bounded, interleaved pool so secondary sources receive probe coverage."""
+def combine_candidate_sources(primary, supplemental, *, total_limit=MAX_TOTAL_CANDIDATES, supplemental_limit=MAX_VPNGATE_CANDIDATES):
+    """Interleave FreeNodes and bounded supplemental OpenVPN candidates."""
     if total_limit < 1 or supplemental_limit < 0:
         raise ValueError("candidate limits are invalid")
     supplemental = supplemental[:min(supplemental_limit, total_limit)]
-    primary = primary[:max(0, total_limit - len(supplemental))]
-    merged: list[dict[str, Any]] = []
-    seen_names: set[str] = set()
+    primary = primary[:max(0, total_limit-len(supplemental))]
+    merged, seen = [], set()
     if supplemental:
         for index, extra in enumerate(supplemental):
-            start = index * len(primary) // len(supplemental)
-            end = (index + 1) * len(primary) // len(supplemental)
-            for item in primary[start:end]:
+            left, right = index*len(primary)//len(supplemental), (index+1)*len(primary)//len(supplemental)
+            for item in primary[left:right] + [extra]:
                 name = item.get("name")
-                if isinstance(name, str) and name not in seen_names:
-                    seen_names.add(name)
-                    merged.append(item)
-            name = extra.get("name")
-            if isinstance(name, str) and name not in seen_names:
-                seen_names.add(name)
-                merged.append(extra)
-        # If duplicate names were removed, append any remaining primary items.
+                if isinstance(name,str) and name not in seen:
+                    seen.add(name); merged.append(item)
         for item in primary:
-            name = item.get("name")
-            if isinstance(name, str) and name not in seen_names:
-                seen_names.add(name)
-                merged.append(item)
+            name=item.get("name")
+            if isinstance(name,str) and name not in seen:
+                seen.add(name); merged.append(item)
     else:
         for item in primary:
-            name = item.get("name")
-            if isinstance(name, str) and name not in seen_names:
-                seen_names.add(name)
-                merged.append(item)
-    merged = merged[:total_limit]
-    counts = {
-        "freenodes_included": sum(1 for item in merged if not str(item.get("name", "")).startswith("VPNGate-")),
-        "vpngate_included": sum(1 for item in merged if str(item.get("name", "")).startswith("VPNGate-")),
-        "total": len(merged),
+            name=item.get("name")
+            if isinstance(name,str) and name not in seen:
+                seen.add(name); merged.append(item)
+    merged=merged[:total_limit]
+    return merged, {
+        "freenodes_included":sum(not str(x.get("name","")).startswith(("VPNGate-","VPNBook-")) for x in merged),
+        "vpngate_included":sum(str(x.get("name","")).startswith("VPNGate-") for x in merged),
+        "vpnbook_included":sum(str(x.get("name","")).startswith("VPNBook-") for x in merged),
+        "total":len(merged),
     }
-    return merged, counts
 
-
-def select_exit_candidates(
-    candidates: list[dict[str, Any]], limit: int, *, rotation: int = 0
-) -> list[dict[str, Any]]:
-    """Spread probes across the full ranked pool and preserve source representation.
-
-    VPN Gate is intentionally capped to a minority of the combined pool. A
-    source-stratified quota prevents evenly spaced global indices from
-    accidentally selecting only FreeNodes entries due to the interleave
-    periodicity.
-    """
+def select_exit_candidates(candidates, limit, *, rotation=0):
+    """Rotate bounded probes across FreeNodes, VPN Gate and VPNBook."""
     if limit < 1:
         raise ValueError("candidate limit must be positive")
-    rotation = max(0, rotation)
-    if len(candidates) <= limit:
+    rotation=max(0,rotation)
+    if len(candidates)<=limit:
         return list(candidates)
-
-    vpn_indices = [
-        index for index, item in enumerate(candidates)
-        if str(item.get("name", "")).startswith("VPNGate-")
-    ]
-    primary_indices = [
-        index for index, item in enumerate(candidates)
-        if not str(item.get("name", "")).startswith("VPNGate-")
-    ]
-    if not vpn_indices:
-        selected = [
-            (((2 * index + 1) * len(candidates)) // (2 * limit) + rotation) % len(candidates)
-            for index in range(limit)
-        ]
-        return [candidates[index] for index in selected]
-
-    # VPN Gate is a first-class discovery source, not a token sample.
-    # Give it half of the bounded probe budget when available; if it has
-    # fewer candidates, use all of them and return the remaining probes to
-    # FreeNodes. This improves source coverage without exceeding the global
-    # real-exit probe cap.
-    vpn_budget = min(len(vpn_indices), (limit + 1) // 2)
-    primary_budget = min(len(primary_indices), limit - vpn_budget)
-    vpn_budget = min(len(vpn_indices), limit - primary_budget)
-
-    chosen: set[int] = set()
-    for group, budget in ((primary_indices, primary_budget), (vpn_indices, vpn_budget)):
-        if budget <= 0:
-            continue
-        chosen.update(
-            group[((((2 * index + 1) * len(group)) // (2 * budget)) + rotation) % len(group)]
-            for index in range(budget)
-        )
-    return [item for index, item in enumerate(candidates) if index in chosen]
+    groups={
+        "primary":[i for i,x in enumerate(candidates) if not str(x.get("name","")).startswith(("VPNGate-","VPNBook-"))],
+        "VPNGate":[i for i,x in enumerate(candidates) if str(x.get("name","")).startswith("VPNGate-")],
+        "VPNBook":[i for i,x in enumerate(candidates) if str(x.get("name","")).startswith("VPNBook-")],
+    }
+    secondary=[k for k in ("VPNGate","VPNBook") if groups[k]]
+    if not secondary:
+        group=groups["primary"]
+        return [candidates[group[(((2*i+1)*len(group))//(2*limit)+rotation)%len(group)]] for i in range(limit)]
+    sec_budget=min(sum(len(groups[k]) for k in secondary),(limit+1)//2)
+    primary_budget=min(len(groups["primary"]),limit-sec_budget)
+    sec_budget=min(sum(len(groups[k]) for k in secondary),limit-primary_budget)
+    base,rem=divmod(sec_budget,len(secondary))
+    budgets={k:min(len(groups[k]),base+(i<rem)) for i,k in enumerate(secondary)}
+    unused=sec_budget-sum(budgets.values())
+    while unused:
+        changed=False
+        for key in secondary:
+            if budgets[key]<len(groups[key]):
+                budgets[key]+=1;unused-=1;changed=True
+                if not unused:break
+        if not changed:break
+    chosen=set()
+    for key,budget in [("primary",primary_budget)]+[(k,budgets[k]) for k in secondary]:
+        group=groups[key]
+        if budget and group:
+            chosen.update(group[((((2*i+1)*len(group))//(2*budget))+rotation)%len(group)] for i in range(budget))
+    return [x for i,x in enumerate(candidates) if i in chosen]
 
 def run() -> None:
     if not SOURCE_PROFILE.is_file() or not MIHOMO.is_file():
@@ -348,17 +317,15 @@ def run() -> None:
     candidates = [item for item in candidates if isinstance(item, dict) and isinstance(item.get("name"), str)]
     primary_candidates = candidates
     supplemental_candidates: list[dict[str, Any]] = []
-    if VPNGATE_PROFILE.is_file():
-        try:
-            supplemental_doc = yaml.safe_load(VPNGATE_PROFILE.read_text(encoding="utf-8"))
-            raw_supplemental = supplemental_doc.get("proxies") if isinstance(supplemental_doc, dict) else None
-            if isinstance(raw_supplemental, list):
-                supplemental_candidates = [
-                    item for item in raw_supplemental
-                    if isinstance(item, dict) and isinstance(item.get("name"), str)
-                ]
-        except (OSError, yaml.YAMLError) as error:
-            print(f"VPN Gate candidate artifact unavailable: {type(error).__name__}: {error}", flush=True)
+    for source_name, source_path in (("VPN Gate", VPNGATE_PROFILE), ("VPNBook", VPNBOOK_PROFILE)):
+        if source_path.is_file():
+            try:
+                supplemental_doc = yaml.safe_load(source_path.read_text(encoding="utf-8"))
+                raw_supplemental = supplemental_doc.get("proxies") if isinstance(supplemental_doc, dict) else None
+                if isinstance(raw_supplemental, list):
+                    supplemental_candidates.extend(x for x in raw_supplemental if isinstance(x,dict) and isinstance(x.get("name"),str))
+            except (OSError, yaml.YAMLError) as error:
+                print(f"{source_name} candidate artifact unavailable: {type(error).__name__}: {error}", flush=True)
     candidates, source_candidate_counts = combine_candidate_sources(
         primary_candidates, supplemental_candidates
     )
