@@ -151,6 +151,51 @@ class ClassificationTests(unittest.TestCase):
         self.assertIsNone(verdict.pool)
         self.assertEqual(verdict.reason, "vpngate_isp_access_relay_candidate_unverified")
 
+
+    def test_vpngate_us_fixed_isp_brand_gets_specific_unverified_candidate_reason(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-203-0-113-10-volunteer"
+        evidence["isp"] = "Comcast Cable Communications, LLC"
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "vpngate_us_consumer_isp_candidate_unverified")
+
+    def test_vpngate_non_us_fixed_isp_brand_gets_specific_unverified_candidate_reason(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-KR-203-0-113-11-volunteer"
+        evidence["country_code"] = "KR"
+        evidence["layer3_country"] = "KR"
+        evidence["isp"] = "Korea Telecom"
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "vpngate_other_consumer_isp_candidate_unverified")
+
+    def test_mobile_isp_brand_is_not_treated_as_fixed_home_broadband_candidate(self):
+        evidence = base()
+        evidence["node_name"] = "VPNGate-US-203-0-113-12-volunteer"
+        evidence["isp"] = "SoftBank Mobile Corp."
+        evidence["layer3_type"] = "vpn"
+        evidence["layer3_risk_level"] = "high"
+        evidence["layer3_risk_score"] = 75
+        evidence["layer3_risk_reasons"] = ["vpn"]
+        evidence["layer3_flags"]["anonymizer"] = True
+        evidence["layer3_flags"]["vpn"] = True
+        verdict = classify(evidence)
+        self.assertIsNone(verdict.pool)
+        self.assertEqual(verdict.reason, "vpngate_isp_access_relay_candidate_unverified")
+
     def test_same_vpn_signal_from_non_vpngate_source_remains_generic_quarantine(self):
         evidence = base()
         evidence["node_name"] = "OtherSource-US-example"
