@@ -36,7 +36,7 @@ def classify(evidence: dict[str, Any]) -> Verdict:
     asn_reports = evidence.get("asn_reports")
     ip_reports = evidence.get("ip_reports")
 
-    if not isinstance(country, str) or len(country) != 2:
+    if not isinstance(country, str) or len(country) != 2 or country.upper() in {"ZZ", "XX", "T1", "A1", "EU", "AP"}:
         return Verdict(None, "missing_or_invalid_country")
     if isinstance(asn, bool) or not isinstance(asn, int) or asn <= 0:
         return Verdict(None, "missing_or_invalid_asn")
