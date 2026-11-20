@@ -1,0 +1,164 @@
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+ipv6: true
+profile:
+  store-selected: true
+geodata-mode: true
+geodata-loader: memconservative
+geo-auto-update: true
+geo-update-interval: 24
+proxy-groups:
+- name: 🚀 Auto
+  type: url-test
+  use:
+  - clashmeta
+  - clashnode
+  - clashstair
+  - datiya
+  - freeclashnode
+  - kooker
+  - nodev2ray
+  - radikal
+  - shaoyouvip
+  - ts-sf-clash
+  - ts-sf-v2ray
+  - wzmwayne
+  - yudou
+  url: https://www.gstatic.com/generate_204
+  interval: 600
+  tolerance: 150
+  lazy: true
+  timeout: 5000
+  expected-status: 204
+- name: 🌍 Proxy
+  type: select
+  proxies:
+  - 🚀 Auto
+  - DIRECT
+  use:
+  - clashmeta
+  - clashnode
+  - clashstair
+  - datiya
+  - freeclashnode
+  - kooker
+  - nodev2ray
+  - radikal
+  - shaoyouvip
+  - ts-sf-clash
+  - ts-sf-v2ray
+  - wzmwayne
+  - yudou
+- name: 🇨🇳 Mainland China
+  type: select
+  proxies:
+  - DIRECT
+  - 🌍 Proxy
+- name: 🚫 AdBlock
+  type: select
+  proxies:
+  - REJECT
+  - DIRECT
+  - 🌍 Proxy
+- name: 🤖 AI
+  type: select
+  proxies:
+  - 🌍 Proxy
+  - DIRECT
+- name: 🎬 Media
+  type: select
+  proxies:
+  - 🌍 Proxy
+  - DIRECT
+- name: 💬 Messaging
+  type: select
+  proxies:
+  - 🌍 Proxy
+  - DIRECT
+rules:
+- GEOSITE,private,DIRECT
+- GEOIP,private,DIRECT,no-resolve
+- GEOSITE,category-ai-!cn,🤖 AI
+- GEOSITE,youtube,🎬 Media
+- GEOSITE,netflix,🎬 Media
+- GEOSITE,telegram,💬 Messaging
+- GEOSITE,category-ads-all,🚫 AdBlock
+- DOMAIN,cm.bilibili.com,🚫 AdBlock
+- DOMAIN,data.bilibili.com,🚫 AdBlock
+- DOMAIN,live-trace.bilibili.com,🚫 AdBlock
+- DOMAIN-SUFFIX,tanx.com,🚫 AdBlock
+- DOMAIN-SUFFIX,simba.taobao.com,🚫 AdBlock
+- DOMAIN-SUFFIX,mmstat.com,🚫 AdBlock
+- DOMAIN-SUFFIX,cnzz.com,🚫 AdBlock
+- DOMAIN-SUFFIX,miaozhen.com,🚫 AdBlock
+- GEOSITE,cn,🇨🇳 Mainland China
+- GEOIP,CN,🇨🇳 Mainland China,no-resolve
+- MATCH,🌍 Proxy
+proxy-providers:
+  clashmeta:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/clashmeta.yaml
+    path: ./proxy_providers/clashmeta.yaml
+    interval: 3600
+  clashnode:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/clashnode.yaml
+    path: ./proxy_providers/clashnode.yaml
+    interval: 3600
+  clashstair:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/clashstair.yaml
+    path: ./proxy_providers/clashstair.yaml
+    interval: 3600
+  datiya:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/datiya.yaml
+    path: ./proxy_providers/datiya.yaml
+    interval: 3600
+  freeclashnode:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/freeclashnode.yaml
+    path: ./proxy_providers/freeclashnode.yaml
+    interval: 3600
+  kooker:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/kooker.yaml
+    path: ./proxy_providers/kooker.yaml
+    interval: 3600
+  nodev2ray:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/nodev2ray.yaml
+    path: ./proxy_providers/nodev2ray.yaml
+    interval: 3600
+  radikal:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/radikal.yaml
+    path: ./proxy_providers/radikal.yaml
+    interval: 3600
+  shaoyouvip:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/shaoyouvip.yaml
+    path: ./proxy_providers/shaoyouvip.yaml
+    interval: 3600
+  ts-sf-clash:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/ts-sf-clash.yaml
+    path: ./proxy_providers/ts-sf-clash.yaml
+    interval: 3600
+  ts-sf-v2ray:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/ts-sf-v2ray.yaml
+    path: ./proxy_providers/ts-sf-v2ray.yaml
+    interval: 3600
+  wzmwayne:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/wzmwayne.yaml
+    path: ./proxy_providers/wzmwayne.yaml
+    interval: 3600
+  yudou:
+    type: http
+    url: https://cdn.jsdelivr.net/gh/2695801261-gif/Aimili-NodeHub/nodes/yudou.yaml
+    path: ./proxy_providers/yudou.yaml
+    interval: 3600

@@ -1,0 +1,152 @@
+proxies:
+- name: ZZ · SS · clashstair · A7B77D56
+  type: ss
+  server: 202.50.253.18
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: ZZ · VLESS · clashstair · 25F9BE65
+  type: vless
+  server: 961ec0g.nl13.h1clayd.click
+  port: 443
+  reality-opts:
+    public-key: xn7KVKS5MOnsFrYrEeRS04JssBCOxh12rxegaDFyGkA
+    short-id: 6d289ff0f47c0aac
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  tls: true
+  servername: 961ec0g.nl13.h1clayd.click
+  client-fingerprint: chrome
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 7d5abcd7d8a1
+- name: ZZ · SS · clashstair · AC0AF0AE
+  type: ss
+  server: 202.50.253.27
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: ZZ · VLESS · clashstair · B96891B2
+  type: vless
+  server: 196.196.148.63
+  port: 443
+  reality-opts:
+    public-key: PD8Jdlg3xB9QY--jwQjp8PFPzCS8-Oryw6-HWBcHMFU
+    short-id: d3bd772514c87d28
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  tls: true
+  servername: 717252g.nl8.h1clayd.click
+  client-fingerprint: firefox
+  network: grpc
+  grpc-opts:
+    grpc-service-name: 204adda7e3da
+- name: ZZ · SS · clashstair · C9D115A5
+  type: ss
+  server: 202.50.253.81
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: ZZ · VLESS · clashstair · BC61F74F
+  type: vless
+  server: free.fugui.lol
+  port: 19482
+  reality-opts:
+    public-key: IjWYbHNrZb3UCQxsTJyekEOA3tHq42L6Jw3O8MmLYVQ
+    short-id: fa514b83
+  uuid: ead3595f-4020-4e76-a3ec-c248e1a2f2f7
+  udp: true
+  tls: true
+  servername: swdist.apple.com
+  client-fingerprint: ios
+  flow: xtls-rprx-vision
+- name: ZZ · SS · clashstair · C0FA6583
+  type: ss
+  server: 202.50.253.99
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: ZZ · VLESS · clashstair · 745EB9E6
+  type: vless
+  server: f0d7aft.nl13.h1clayd.click
+  port: 443
+  reality-opts:
+    public-key: kkCGiCQCKnkozJR1KKCRNtmdBECmThCgI9VSv7iDcWI
+    short-id: 8956c57cb4c4f8d2
+  uuid: cda0862a-0f87-4be9-8ed8-1d0c9e382839
+  udp: true
+  tls: true
+  servername: f0d7aft.nl13.h1clayd.click
+  client-fingerprint: chrome
+- name: ZZ · SS · clashstair · 0A86A281
+  type: ss
+  server: 202.50.253.54
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: CD · VLESS · clashstair · BB8A1397
+  type: vless
+  server: 196.199.122.2
+  port: 443
+  reality-opts:
+    public-key: ZSmetD4e9QG5CiXhniHg5HJB68L4kwbgAkJmMHtVwEE
+    short-id: 42426c882c5fcd41
+  uuid: 4201786b-d99b-4147-a5f0-20d47acddb81
+  udp: true
+  tls: true
+  servername: 7aa271t.es1.h1clayd.click
+  client-fingerprint: chrome
+  flow: xtls-rprx-vision
+- name: ZZ · SS · clashstair · 5CFA73D2
+  type: ss
+  server: 202.50.253.72
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: ZZ · VLESS · clashstair · 074C2F7A
+  type: vless
+  server: free.fugui.lol
+  port: 62015
+  reality-opts:
+    public-key: IjWYbHNrZb3UCQxsTJyekEOA3tHq42L6Jw3O8MmLYVQ
+    short-id: fa514b83
+  uuid: ead3595f-4020-4e76-a3ec-c248e1a2f2f7
+  udp: true
+  tls: true
+  servername: swdist.apple.com
+  client-fingerprint: ios
+  flow: xtls-rprx-vision
+- name: ZZ · SS · clashstair · D6F9F1E5
+  type: ss
+  server: 202.50.253.90
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: BF · SS · clashstair · 4313CE27
+  type: ss
+  server: 202.50.253.45
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: ZZ · SS · clashstair · 8A2BF87B
+  type: ss
+  server: 202.50.253.36
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
+- name: BE · SS · clashstair · 91037D35
+  type: ss
+  server: 202.50.253.63
+  port: 19999
+  cipher: aes-256-gcm
+  udp: true
+  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
