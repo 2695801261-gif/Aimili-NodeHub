@@ -84,7 +84,7 @@ class VPNBookSourceTests(unittest.TestCase):
 
     def test_rejects_profile_remote_that_disagrees_with_official_server_record(self):
         proxies, report = parse_configs(
-            [(self.server, profile("203.0.113.9 443 tcp"))],
+            [(self.server, profile("8.8.8.8 443 tcp"))],
             ("vpnbook", "CurrentPass123"),
         )
         self.assertEqual(proxies, [])
