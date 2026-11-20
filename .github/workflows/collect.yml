@@ -95,33 +95,15 @@ jobs:
           PY
 
       - name: Run classification and publication-gate unit tests
-        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py
+        run: uv run --locked pytest -q tests/test_classification.py tests/test_publication.py tests/test_diagnostics.py tests/test_classify_exits.py tests/test_nodehub.py
 
-      - name: Discover, validate and generate profiles
+      - name: Build, classify and publish the NodeHub module
+        timeout-minutes: 55
         env:
           GH_TOKEN: ${{ github.token }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: uv run --locked python main.py
-
-      - name: Classify verified proxy exits
-        timeout-minutes: 30
-        env:
           NODEHUB_MAX_EXIT_PROBES: "25"
-        run: uv run --locked python -m scripts.classify_exits
-
-      - name: Check generated profiles
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -s nodes/merged.yaml
-          test -s nodes/v2ray.txt
-          test -s nodes/publication-receipt.json
-          test -s classification/evidence.json
-          test -s classification/diagnostics.json
-          test -s subscriptions/us-residential.yaml
-          test -s subscriptions/other-residential.yaml
-          test -s subscriptions/low-risk-datacenter.yaml
-          uv run --locked python -m scripts.check_publication
+        run: uv run --locked python -m scripts.nodehub
 
       - name: Publish failure diagnostics to job summary
         if: always()
