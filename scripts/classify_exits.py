@@ -177,62 +177,36 @@ def layer3_lookup(exit_ip: str) -> dict[str, Any]:
     }
 
 
-NETWORK_KIND_LISTS = ("crawler", "dynamic", "education", "hosting", "isp", "scanner", "vpn")
-
-
-def load_network_kind_index() -> dict[tuple[int, int, int], set[str]]:
-    """Load O-X-L's published network CIDR kind lists once per run."""
-    index: dict[tuple[int, int, int], set[str]] = {}
-    for kind in NETWORK_KIND_LISTS:
-        url = f"https://raw.githubusercontent.com/O-X-L/risk-db-lists/main/net/kind_{kind}.txt"
-        request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-        try:
-            with urllib.request.urlopen(request, timeout=45) as response:
-                raw = response.read()
-        except (urllib.error.URLError, TimeoutError) as error:
-            raise SystemExit(
-                f"Cannot load O-X-L network kind list ({kind}); preserving previous subscriptions"
-            ) from error
-        if not raw:
-            if kind == "dynamic":
-                continue
-            raise SystemExit(
-                f"O-X-L network kind list ({kind}) is unexpectedly empty; preserving previous subscriptions"
-            )
-        loaded = 0
-        for line in raw.decode("utf-8", errors="strict").splitlines():
-            value = line.strip()
-            if not value or value.startswith("#"):
-                continue
-            try:
-                network = ipaddress.ip_network(value, strict=False)
-            except ValueError as error:
-                raise SystemExit(
-                    f"Invalid CIDR in O-X-L {kind} list: {value!r}"
-                ) from error
-            key = (network.version, network.prefixlen, int(network.network_address))
-            index.setdefault(key, set()).add(kind)
-            loaded += 1
-        if kind != "dynamic" and loaded == 0:
-            raise SystemExit(
-                f"O-X-L network kind list ({kind}) had no valid CIDRs; preserving previous subscriptions"
-            )
-        print(f"Loaded O-X-L {kind} network ranges: {loaded}", flush=True)
-    return index
-
-
-def network_kinds_for_ip(
-    exit_ip: str, index: dict[tuple[int, int, int], set[str]]
-) -> set[str]:
+def lookup_layer3(exit_ip: str) -> dict[str, Any]:
     address = ipaddress.ip_address(exit_ip)
-    bits = address.max_prefixlen
-    value = int(address)
-    kinds: set[str] = set()
-    for prefix in range(bits + 1):
-        mask = ((1 << prefix) - 1) << (bits - prefix) if prefix else 0
-        network_address = value & mask
-        kinds.update(index.get((address.version, prefix, network_address), set()))
-    return kinds
+    if address.version != 4:
+        raise LookupFailure("Layer3 Open API currently supports IPv4 only")
+    data = request_json(f"https://api.layer3intel.com/open/{exit_ip}", timeout=10)
+    if data.get("ip") != exit_ip:
+        raise LookupFailure("Layer3 returned a mismatched exit IP")
+    risk = data.get("risk") or {}
+    flags = data.get("flags") or {}
+    location = data.get("location") or {}
+    network = data.get("network") or {}
+    try:
+        prefix = ipaddress.ip_network(network.get("prefix"), strict=False)
+        prefix_match = address in prefix
+    except (TypeError, ValueError):
+        prefix_match = False
+    return {
+        "layer3_status": "ok",
+        "layer3_type": data.get("type"),
+        "layer3_country": location.get("country"),
+        "layer3_asn": network.get("asn"),
+        "layer3_network_type": network.get("type"),
+        "layer3_prefix": network.get("prefix"),
+        "layer3_prefix_match": prefix_match,
+        "layer3_risk_score": risk.get("score"),
+        "layer3_risk_level": risk.get("level"),
+        "layer3_risk_reasons": risk.get("reasons"),
+        "layer3_flags": flags,
+        "layer3_sharing": data.get("sharing"),
+    }
 
 
 def report_sum(data: dict[str, Any] | None) -> float | None:
@@ -306,7 +280,7 @@ def run() -> None:
     asn_cache: dict[int, tuple[str, dict[str, Any] | None]] = {}
     ip_cache: dict[str, tuple[str, dict[str, Any] | None, dict[str, Any], str]] = {}
     net_cache: dict[str, tuple[str, dict[str, Any] | None]] = {}
-    network_kind_index = load_network_kind_index()
+    layer3_cache: dict[str, dict[str, Any]] = {}
 
     with tempfile.TemporaryDirectory(prefix="nodehub-exit-check-") as temporary:
         work = Path(temporary)
@@ -388,6 +362,10 @@ def run() -> None:
                     time.sleep(0.5)
                     row.update(layer3_lookup(exit_ip))
                     row["ip_risk_status"] = ip_status
+                    if exit_ip not in layer3_cache:
+                        time.sleep(0.5)
+                        layer3_cache[exit_ip] = lookup_layer3(exit_ip)
+                    row.update(layer3_cache[exit_ip])
                     if exit_ip not in net_cache:
                         time.sleep(1.25)
                         net_cache[exit_ip] = oxl_lookup("net", exit_ip)
@@ -405,16 +383,20 @@ def run() -> None:
                         except (TypeError, ValueError):
                             row["net_prefix_match"] = False
                     elif net_status == "not_reported":
-                        # The O-X-L lookup API only returns network objects for reported
-                        # networks. Use its separately published CIDR kind lists to
-                        # establish network class; absence of an API record is recorded
-                        # as "not_reported", never as an "ok" reputation verdict.
-                        static_kinds = network_kinds_for_ip(exit_ip, network_kind_index)
-                        row["net_source"] = "oxl-kind-cidr-list"
-                        row["net_kind"] = sorted(static_kinds)
+                        # A missing O-X-L network report is not called "clean".
+                        # Layer3 supplies independent address/network/risk evidence.
+                        layer3_type = row.get("layer3_network_type")
+                        if layer3_type == "access":
+                            row["net_kind"] = ["isp"]
+                        elif layer3_type == "hosting":
+                            row["net_kind"] = ["hosting"]
+                        else:
+                            row["net_kind"] = []
+                        row["net_source"] = "layer3-open-network"
                         row["net_reports"] = 0
                         row["net_reputation"] = "not_reported"
-                        row["net_prefix_match"] = bool(static_kinds)
+                        row["net_asn_match"] = row.get("layer3_asn") == row["asn"]
+                        row["net_prefix_match"] = row.get("layer3_prefix_match") is True
                     if ip_data:
                         row["ip_kind"] = ip_data.get("kind", [])
                         row["ip_reports"] = report_sum(ip_data)
@@ -431,11 +413,6 @@ def run() -> None:
                     else:
                         row["asn_kind"] = []
                         row["asn_reports"] = 0
-                    if net_status == "not_reported":
-                        row["net_asn_match"] = bool(
-                            set(row.get("net_kind", [])) & set(row.get("asn_kind", []))
-                        )
-
                     verdict = classify(row)
                     row["pool"] = verdict.pool
                     row["reason"] = verdict.reason
