@@ -40,26 +40,26 @@ def parse_vpnbook_page(page: str) -> tuple[tuple[str,str], list[str]]:
     # The official page also mentions the password update date elsewhere, so
     # prefer the dedicated VPN Credentials section before looking at the FAQ.
     plain = unescape(re.sub(r"<[^>]+>", " ", page))
-    plain = re.sub(r"\\s+", " ", plain)
+    plain = re.sub(r"\s+", " ", plain)
     section = plain
-    if re.search(r"VPN\\s+Credentials", plain, re.I):
-        section = re.split(r"VPN\\s+Credentials", plain, maxsplit=1, flags=re.I)[1]
-        section = re.split(r"Last\\s+updated", section, maxsplit=1, flags=re.I)[0]
+    if re.search(r"VPN\s+Credentials", plain, re.I):
+        section = re.split(r"VPN\s+Credentials", plain, maxsplit=1, flags=re.I)[1]
+        section = re.split(r"Last\s+updated", section, maxsplit=1, flags=re.I)[0]
     password = re.search(
-        r"\\bPassword\\b\\s*:?[\\s]+([A-Za-z0-9!@#$%^&*()_+\\-]{4,64})",
+        r"\bPassword\b\s*:?[\s]+([A-Za-z0-9!@#$%^&*()_+\-]{4,64})",
         section,
         re.I,
     )
     if not password:
         # Legacy page variants label the value directly in the FAQ.
         password = re.search(
-            r"Username\\s*:\\s*vpnbook[.\\s]+Password\\s*:\\s*([A-Za-z0-9!@#$%^&*()_+\\-]{4,64})",
+            r"Username\s*:\s*vpnbook[.\s]+Password\s*:\s*([A-Za-z0-9!@#$%^&*()_+\-]{4,64})",
             plain,
             re.I,
         )
     if not password:
         raise VPNBookError("current shared password not found on official page")
-    links = re.findall(r"""href=["']([^"']+\\.zip(?:\\?[^"']*)?)["']""", page, re.I)
+    links = re.findall(r"""href=["']([^"']+\.zip(?:\?[^"']*)?)["']""", page, re.I)
     urls = []
     for link in links:
         absolute = urllib.parse.urljoin(BASE_URL, link)
