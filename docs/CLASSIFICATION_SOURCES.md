@@ -1,69 +1,65 @@
 # Classification data sources and evidence
 
-This document describes the sources used by the current classifier. Classification is performed on the **proxy's observed exit IP**, never on the node endpoint or its remark.
+All lookups apply to the **proxy's observed exit IP**, never the configured server endpoint or node remark.
 
 ## Sources
 
-### IPWhois (ipwho.is)
+### Exit-IP identity
+- IPWhois: https://ipwho.is/{exit-ip}; primary country, ASN and ISP/organization metadata.
+- IPinfo legacy public endpoint: https://ipinfo.io/{exit-ip}/json; fallback only when IPWhois is unavailable or incomplete.
+- Both are queried only after two independent HTTPS echo services agree on the exit IP.
 
-- Documentation: https://ipwhois.io/documentation
-- Endpoint: `https://ipwho.is/{exit-ip}`
-- Role: resolve the observed public exit IP to country, ASN, ISP and organization.
-- It does not provide authoritative VPN/proxy/Tor or abuse-risk verdicts.
+### Layer3 Intel Open API
+- Documentation: https://docs.layer3intel.com/docs/intel-api/open-api
+- Address endpoint: `https://api.layer3intel.com/open/{exit-ip}`
+- No API key or credits are required for the Open API. The documentation describes IPv4 address lookups.
+- Role: independent address type, risk score/reasons, anonymizer flags, country, ASN, announced prefix and network type.
+- The classifier requires exact IP, country, ASN and prefix agreement with the observed exit and the separate IP metadata result.
+- Residential admission requires `type=residential`, `network.type=access`, a low risk score below 25, no risk reasons, no anonymizer/proxy/VPN/Tor/relay/hosting flags and no shared-address/crawler/drop-list signal.
+- Datacenter admission requires `type=hosting`, `network.type=hosting`, a low risk score below 25, no anonymizer/proxy/VPN/Tor/relay flags, and no risk reason other than the ordinary `hosting` classification.
+- The Open API does not include the paid-only live residential-proxy flag. A residential result is an address-type candidate, not proof that the exit is not being resold as a residential proxy.
 
-### IPinfo fallback\n\n- Documentation: https://ipinfo.io/developers\n- Endpoint: `https://ipinfo.io/{exit-ip}/json` (legacy public endpoint; no token required).\n- Role: fallback country, ASN and organization lookup if IPWhois is unavailable or returns incomplete metadata.\n- IPinfo documents a 1,000-request/day public no-account limit shared by callers using the same source IP; the workflow uses it only as a fallback and stops on rate limiting.\n\n### O-X-L Risk Database
-
+### O-X-L Risk Database
 - Main project: https://github.com/O-X-L/risk-db
 - IP lookup: `https://risk.oxl.app/api/ip/{exit-ip}`
 - Network lookup: `https://risk.oxl.app/api/net/{exit-ip}`
 - ASN lookup: `https://risk.oxl.app/api/asn/{asn}`
 - API documentation: https://risk.oxl.app/api/docs/
 - Published database license: BSD-3-Clause. The project's separate scripts are GPLv3; this repository does not copy those scripts.
-- Role: per-IP and per-network kind/reputation/report checks plus per-ASN kind/report checks. The current implementation deliberately uses the documented per-IP/per-network/per-ASN lookup endpoints rather than relying on the ASN kind-list endpoint.
-- The project's own documentation warns that reports may contain false positives and should be treated as risk signals, not proof of malicious intent.
-- The project documents unauthenticated API limits of 500 requests per 10 minutes and 5,000 per day. The classifier caps exit probes at 100, caches IP/network/ASN lookups within each run, spaces requests, and aborts on rate limiting or server errors.
+- Role: IP- and ASN-level kind/report checks, plus network reputation and network-kind checks when a network record exists.
+- O-X-L documents network 404 as “Network not reported”. This is not treated as a positive clean reputation; independent Layer3 risk and prefix evidence must still pass. If an O-X-L network record exists, it must have zero reports, reputation `ok/info`, a matching ASN/CIDR and compatible network kind.
+- O-X-L documents IP 404 as “not reported or temporary lookup failure”. The classifier retries once and retains `not_reported` as an uncertainty signal, not proof of zero abuse.
+- O-X-L ASN lookup must exist and report exactly zero reports. Its ASN kind must positively support the target class.
+- O-X-L warns that reports can contain false positives; these are risk signals, not proof of malicious intent.
+- Unauthenticated API limits documented by O-X-L: 500 requests per 10 minutes and 5,000 per day. The workflow caps the first-pass exit probes at 25 and caches repeated IP/network/ASN lookups within each run.
 
-## Admission policy implemented by the current classifier
+## Admission policy
+Every candidate must pass all of these gates:
 
-Every candidate must first pass these gates:
+1. Mihomo selects the exact requested node.
+2. Two independent HTTPS exit-echo services return the same globally routable IP.
+3. IPWhois or the IPinfo fallback resolves that exact IP to a valid country, ASN and non-empty operator name.
+4. Layer3 returns the exact IP, matching country/ASN and an announced prefix containing the exit IP, plus a low-risk result under the class-specific rules above.
+5. O-X-L ASN lookup exists, reports zero, and positively confirms `isp` or `hosting` as appropriate.
+6. O-X-L IP lookup reports zero, or returns 404 after retry with that uncertainty preserved in evidence. Any returned IP kind that conflicts with the class causes quarantine.
+7. If O-X-L has a network record, it must pass zero-report, reputation, ASN, prefix and network-kind checks. If it returns 404, the candidate can proceed only on independent Layer3 network/risk evidence and the O-X-L ASN/IP gates.
+8. VPN, proxy, Tor, scanner, crawler, education, maybe-hacked, mobile, CGNAT, relay, anycast, drop-listed, shared-address, conflicting or unknown types are quarantined.
 
-1. Mihomo selects the exact requested proxy node.
-2. Two independent HTTPS IP-echo services agree on the same globally routable exit IP.
-3. IPWhois, or the IPinfo fallback if needed, resolves that exact exit IP and returns a valid country, ASN and non-empty operator name.
-4. O-X-L network lookup must return a valid kind list, reputation `ok` or `info`, and exactly zero reports. Its ASN must match the geolocation ASN, and its CIDR must contain the observed exit IP. Missing network records and other lookup failures are quarantined.
-5. O-X-L ASN lookup must return a valid kind list and exactly zero reports. Missing ASN records are quarantined.
-6. O-X-L IP lookup must return zero reports, or the endpoint must return `not_reported` after a retry. Its documentation describes IP 404 as “not reported or temporary lookup failure”; this ambiguity is retained in evidence and is not proof of zero abuse.
-7. VPN, proxy, Tor, scanner, crawler, education, maybe-hacked, mobile, CGNAT, relay, anycast and conflicting network-kind signals cause quarantine.
+### Residential pools
+- Layer3 must positively label the observed exit address `residential` and its network `access`.
+- Layer3 risk must be `low` with score below 25 and an empty risk-reasons list.
+- O-X-L ASN must positively include `isp`, have zero reports, and have no conflicting kind.
+- The country comes from IPWhois/IPinfo and must agree with Layer3. US goes to the US pool; all other valid countries go to the international pool.
+- These are high-confidence residential-address candidates, not proof of a particular household line. Layer3's live residential-proxy detection is paid-only, so the free Open API cannot guarantee an address is not being used by a residential proxy service.
 
-### US residential candidate
+### Low-risk datacenter pool
+- Layer3 must label both address and network `hosting`.
+- Layer3 risk must be `low` with score below 25; anonymizer/proxy/VPN/Tor/relay flags must be false, and no risk reason other than `hosting` is accepted.
+- O-X-L ASN must positively include `hosting` and report zero.
+- Any O-X-L network record must also confirm hosting, have zero reports and reputation `ok/info`. If no O-X-L network record exists, Layer3's independent low-risk and prefix evidence is required.
+- “Low-risk” means only that the selected public sources did not return the configured exclusion signals at check time. It is not a safety guarantee.
 
-- The ASN lookup must positively include `isp`.
-- The network lookup must positively include `isp` and must not include `hosting`.
-- The observed exit country must be `US`.
-- No disqualifying or conflicting signal may be present.
+## Quarantine and publication
+Unknown or unsupported address/network types, IPv6 addresses not covered by the Layer3 Open address endpoint, missing exit IP, echo disagreement, metadata disagreement, API errors, rate limits, missing ASN evidence, risk signals or conflicting sources are not published.
 
-### Other-country residential candidate
-
-Same requirements as US residential, except the observed exit country must be a valid country other than `US`.
-
-These are ISP-network residential *candidates*, not proof that the address belongs to a household broadband line. A residential proxy can exit through a real ISP ASN.
-
-### Low-risk datacenter candidate
-
-- The ASN lookup must positively include `hosting`.
-- The network lookup must positively include `hosting` and must not include `isp`.
-- The network reputation must be `ok` or `info`, with zero reports.
-- The ASN and IP risk gates must also pass.
-- No VPN, proxy, Tor, scanner, crawler, education or conflicting signal may be present.
-
-“Low-risk” means only that the selected public sources did not return the configured exclusion signals at check time. It is not a safety guarantee.
-
-## Quarantine
-
-Unknown/unlisted network types, mobile or other unsupported types, VPN, proxy, Tor, scanner, crawler, education, CGNAT, relay, anycast, conflicting evidence, missing exit IP, failed echo agreement, invalid lookup responses, API errors, rate limits and unsupported address families are not published.
-
-## Privacy and operational limits
-
-- Only proxy exit IPs and their ASNs are sent to public intelligence services. The evidence file retains node names and observed exit IPs for troubleshooting; no user account credentials or personal browsing history are sent.
-- Raw evidence records the observed exit IP, country, ASN, operator, risk status, pool verdict and reason.
-- The workflow writes new classified subscriptions only after classification completes and validates each generated profile with Mihomo. A failed classification run does not publish partially generated pools.
+The workflow writes all three profiles and the evidence report only after classification completes and Mihomo validates every generated profile. A failed run leaves the last committed subscriptions untouched. Public nodes and evidence are readable by anyone; do not use the subscriptions for sensitive traffic.
