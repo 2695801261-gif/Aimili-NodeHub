@@ -8,7 +8,7 @@
 - 不需要 VPS、Cloudflare Worker、KV、域名或自建服务器。
 - 使用固定提交版本的 [FreeNodes](https://github.com/nostalume/FreeNodes) 发现订阅源、去重、运行 Mihomo 实际连通性验证并生成通用节点池。
 - 再由本项目启动 Mihomo，逐个选择节点，通过两个独立 HTTPS 出口查询核实代理实际出口 IP。
-- 对出口 IP 查询国家/ASN/ISP 信息，并用 O-X-L Risk Database 检查 ASN、IP 风险信号。
+- 对出口 IP 查询国家/ASN/ISP 信息（IPWhois 主源，IPinfo 无密钥接口作回退），并用 O-X-L Risk Database 检查 IP、网络和 ASN 风险；同时核对 OXL 网络 ASN 与 CIDR 是否匹配真实出口 IP。
 - 证据不足、来源冲突、API 限流或检测失败时隔离节点；情报服务故障不会覆盖上一次已生成的分类订阅。
 
 ## 三类目标订阅
@@ -27,7 +27,8 @@
 
 ## 情报来源与限制
 
-- [IPWhois / ipwho.is](https://ipwhois.io/documentation)：免费出口 IP 国家、ASN、ISP 查询，免费接口每日有请求额度；不提供免费 VPN/Tor 风险判断。
+- [IPWhois / ipwho.is](https://ipwhois.io/documentation)：主出口 IP 国家、ASN、ISP 查询。
+- [IPinfo](https://ipinfo.io/developers)：IPWhois 不可用时使用无密钥备用接口；公开接口有共享日请求额度。
 - [O-X-L Risk Database](https://github.com/O-X-L/risk-db)：公开 ASN/IP 风险分类及举报信号；项目文档说明数据可能有误报，因此只作筛除和隔离依据。
 - 具体字段、许可、限额和分类门槛见 [分类证据规则](docs/CLASSIFICATION_SOURCES.md) 与 [分类策略](docs/CLASSIFICATION_POLICY.md)。
 
