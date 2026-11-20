@@ -316,13 +316,18 @@ def select_reachable_rows(
 
     tcp_rows = [row for row in eligible if row.get("probe_reason") == "tcp"]
     udp_rows = [row for row in eligible if row.get("probe_reason") == "udp"]
-    us_rows = sorted((row for row in eligible if row["country_code"] == "US"), key=_row_sort_key)
+    def candidate_sort_key(row: dict[str, Any]):
+        # Prefer independently TCP-reachable nodes, then rank unprescreened UDP
+        # candidates. Both transports still require the later live Mihomo check.
+        return (row.get("probe_reason") != "tcp", *_row_sort_key(row))
+
+    us_rows = sorted((row for row in eligible if row["country_code"] == "US"), key=candidate_sort_key)
     other_by_country: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in eligible:
         if row["country_code"] != "US":
             other_by_country[row["country_code"]].append(row)
     for country_rows in other_by_country.values():
-        country_rows.sort(key=_row_sort_key)
+        country_rows.sort(key=candidate_sort_key)
 
     us_limit = min(max_us_candidates, max_candidates)
     selected = us_rows[:us_limit]
