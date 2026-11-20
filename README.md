@@ -11,6 +11,12 @@
 - 对出口 IP 查询国家/ASN/ISP 信息（IPWhois 主源，IPinfo 无密钥接口作回退），并用 Layer3 Intel Open API 核对地址类型、网络类型、风险分数和公告前缀；再用 O-X-L Risk Database 检查 IP/ASN 风险及可用的网络记录。
 - 证据不足、来源冲突、API 限流或检测失败时隔离节点；情报服务故障不会覆盖上一次已生成的分类订阅。
 
+## 节点发现来源
+
+采集工作流使用固定版本 FreeNodes 中完整的受支持来源配置，包括 GitHub 订阅文件、网页订阅发现、受限密码页和 YouTube 资源适配器；不会再把来源过滤成只有 GitHub 文件。具体来源覆盖和兼容性说明见 [发现来源说明](docs/DISCOVERY_SOURCES.md)。
+
+**VPN Gate 特别说明：** VPN Gate 官方公开节点主要提供 SoftEther、L2TP/IPsec、OpenVPN 和 MS-SSTP 配置，其中 OpenVPN 需要导入 `.ovpn` 文件。它不是 Mihomo/FlClash 可直接导入的 Clash 代理订阅格式，因此目前不会把 VPN Gate 的服务器 IP/端口伪装成 Mihomo 节点。只有实现独立 OpenVPN 运行验证并找到可移植、受客户端支持的输出格式后，才会考虑接入三池；否则会造成不可用订阅和错误分类。
+
 ## 三类目标订阅
 
 分类成功后输出到以下订阅地址（FlClash / Mihomo 可直接添加远程配置）：
