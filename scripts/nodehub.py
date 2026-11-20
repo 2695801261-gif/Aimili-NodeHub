@@ -3,7 +3,8 @@
 FreeNodes supplies the multi-adapter subscription discovery, while VPN Gate
 and VPNBook are collected independently as native Mihomo OpenVPN sources. This module
 owns the orchestration boundary and only returns success after all three
-non-empty subscriptions pass the publication gate.
+subscription profiles pass validation. Empty first-run pools are explicit;
+existing last-known-good pools are preserved when a run finds no replacements.
 """
 from __future__ import annotations
 
