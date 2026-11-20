@@ -76,6 +76,8 @@ def classify(evidence: dict[str, Any]) -> Verdict:
         )
 
     if "hosting" in asn_kinds:
+        if evidence.get("oxl_asn_status") != "ok":
+            return Verdict(None, "hosting_asn_risk_lookup_missing")
         if "isp" in ip_kinds:
             return Verdict(None, "conflicting_isp_hosting_ip_signal")
         if asn_kinds & (DISQUALIFYING_KINDS - {"hosting"}):
