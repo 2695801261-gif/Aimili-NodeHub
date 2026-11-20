@@ -13,11 +13,13 @@
 
 ## 三类目标订阅
 
-分类成功后输出到：
+分类成功后输出到以下订阅地址（FlClash / Mihomo 可直接添加远程配置）：
 
-- `subscriptions/us-residential.yaml`
-- `subscriptions/other-residential.yaml`
-- `subscriptions/low-risk-datacenter.yaml`
+- 美国 ISP 住宅候选：[订阅 YAML](https://raw.githubusercontent.com/2695801261-gif/Aimili-NodeHub/main/subscriptions/us-residential.yaml)
+- 其他国家 ISP 住宅候选：[订阅 YAML](https://raw.githubusercontent.com/2695801261-gif/Aimili-NodeHub/main/subscriptions/other-residential.yaml)
+- 低风险机房候选：[订阅 YAML](https://raw.githubusercontent.com/2695801261-gif/Aimili-NodeHub/main/subscriptions/low-risk-datacenter.yaml)
+
+仓库内对应文件：`subscriptions/us-residential.yaml`、`subscriptions/other-residential.yaml`、`subscriptions/low-risk-datacenter.yaml`
 
 每次最多进行 100 个出口 IP 的分类检测，以控制免费 API 配额和运行时间。上游通用节点池最多保留 500 个通过 Mihomo 能力验证的节点。
 
