@@ -20,7 +20,7 @@ Mihomo supports the OpenVPN outbound; therefore VPN Gate is not excluded merely 
 
 ## End-to-end admission remains mandatory
 
-All compatible-source candidates are deduplicated and syntax-checked by FreeNodes, measured through Mihomo, then capped to 500 published candidates. The classification module samples at most 25 across the complete Mihomo-ranked pool and tests the real exit IP through two independent echo services. IPWhois/IPinfo, Layer3 Intel, and O-X-L evidence gates remain unchanged. A node's source label, advertised country, server address, or upstream ping score is never used as proof of exit country, residential status, or low risk.
+All compatible-source candidates are deduplicated and syntax-checked by FreeNodes, measured through Mihomo, then capped to 500 published candidates. The classification module samples at most 40 across the complete Mihomo-ranked pool and tests the real exit IP through two independent echo services. IPWhois/IPinfo, Layer3 Intel, and O-X-L evidence gates remain unchanged. A node's source label, advertised country, server address, or upstream ping score is never used as proof of exit country, residential status, or low risk.
 
 Source discovery success is not the same as a publishable classified node. If a source yields no compatible nodes or a candidate fails the exit/risk checks, it is recorded as unavailable/rejected and is not inserted into any of the three subscription pools.
 
