@@ -1,21 +1,13 @@
 proxies:
-- name: DE · HTTP · shaoyouvip · A50724F2
+- name: FR · HTTP · shaoyouvip · 602EEC94
   type: http
-  server: 172.64.68.89
+  server: 172.64.69.89
   port: 443
   skip-cert-verify: true
   tls: true
   udp: true
-  x-toolall-mihomo: true
   username: "null"
   password: "null"
-- name: BF · SS · shaoyouvip · C9D115A5
-  type: ss
-  server: 202.50.253.81
-  port: 19999
-  cipher: aes-256-gcm
-  udp: true
-  password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
 - name: JP · VLESS · shaoyouvip · 4A7F247D
   type: vless
   server: 23.27.11.86
@@ -30,3 +22,21 @@ proxies:
   xudp: true
   packet-encoding: xudp
   servername: jp.burmy.xyz
+- name: DE · HTTP · shaoyouvip · 50A95E4B
+  type: http
+  server: 172.64.68.89
+  port: 443
+  skip-cert-verify: true
+  sni: 172.64.68.89
+  tls: true
+  udp: true
+- name: US · HTTP · shaoyouvip · 333EB77C
+  type: http
+  server: 172.64.68.89
+  port: 443
+  skip-cert-verify: true
+  sub_tag: P002-260618
+  tls: true
+  udp: true
+  x-toolall-mihomo: true
+  password: None

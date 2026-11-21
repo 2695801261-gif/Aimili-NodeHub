@@ -1,17 +1,7 @@
 proxies:
-- name: ZZ · VMESS · ts-sf-clash · 1E23A8DB
+- name: US · VMESS · ts-sf-clash · 2AAF655F
   type: vmess
-  server: 134.195.196.154
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
-- name: US · VMESS · ts-sf-clash · 310BDA8D
-  type: vmess
-  server: 167.88.63.99
+  server: 38.91.107.84
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -29,9 +19,19 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · B0EDDDDC
+- name: ZZ · VMESS · ts-sf-clash · 38A7B5DA
   type: vmess
-  server: 38.91.107.188
+  server: de.zhou-yufan.com
+  port: 443
+  uuid: f38e591d-d13a-4c30-9763-6be3ad65f3ec
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
+- name: US · VMESS · ts-sf-clash · 9294F03B
+  type: vmess
+  server: 167.88.62.56
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -39,9 +39,9 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · 8BFFBE98
+- name: US · VMESS · ts-sf-clash · D115E6AA
   type: vmess
-  server: 38.64.138.187
+  server: 167.88.62.134
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -49,9 +49,9 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · 774057BB
+- name: US · VMESS · ts-sf-clash · 8A0A1183
   type: vmess
-  server: 38.128.66.249
+  server: 162.251.60.97
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -59,9 +59,19 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · A9CFAA7C
+- name: US · VMESS · ts-sf-clash · 78876598
   type: vmess
-  server: 172.111.36.137
+  server: 167.88.63.47
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
+- name: US · VMESS · ts-sf-clash · 0A26CAE6
+  type: vmess
+  server: 67.220.74.250
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -83,13 +93,17 @@ proxies:
     path: /path/1698843555400
     headers:
       host: www.83761815.xyz
-- name: US · VMESS · ts-sf-clash · A310048B
+- name: US · VMESS · ts-sf-clash · 65DF96BE
   type: vmess
-  server: 67.220.74.197
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  server: 188.114.99.137
+  port: 443
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
   alterId: 0
   cipher: auto
   tls: true
   skip-cert-verify: true
-  network: tcp
+  network: ws
+  ws-opts:
+    path: /hls/cctv5phd.m3u8
+    headers:
+      host: guanwang.awsno.com
