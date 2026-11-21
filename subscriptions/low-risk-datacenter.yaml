@@ -4,51 +4,7 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: US · VMESS · shaoyouvip · 3A631A24
-  type: vmess
-  server: 192.74.236.148
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  network: ws
-  skip-cert-verify: true
-  tls: true
-  udp: true
-  ws-opts:
-    headers:
-      Host: www.91334565.xyz
-    path: /path/1733477783705
-  servername: www.91334565.xyz
-- name: US · VMESS · ts-sf-clash · EEBD493C
-  type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: ws
-  ws-opts:
-    path: /path/1698843555400
-    headers:
-      host: www.83761815.xyz
-- name: US · SOCKS5 · shaoyouvip · 5786D71B
-  type: socks5
-  server: 104.168.249.36
-  port: 1080
-  udp: true
-  username: test123
-  password: test123
-- name: US · HTTP · kooker · 3BF68D26
-  type: http
-  server: 23.133.176.14
-  port: 443
-  skip-cert-verify: true
-  tls: true
-  udp: true
-- name: US · VMESS · radikal · 2929C1DA
+- name: US · VMESS · radikal · 07673546
   type: vmess
   server: 129.146.77.248
   port: 39495
@@ -58,22 +14,27 @@ proxies:
   network: ws
   ws-opts:
     path: /cctv13.m3u8
-- name: US · SS · wzmwayne · 0CCF6AEB
-  type: ss
-  server: 15.204.247.244
-  port: 443
-  cipher: aes-256-gcm
-  sub_tag: A004-260618
-  udp: true
-  password: pKEW8JPByTVTLtM
-- name: US · SS · wzmwayne · 0ECD490F
-  type: ss
-  server: 15.204.247.244
-  port: 4444
-  cipher: aes-256-gcm
-  sub_tag: B007-260618
-  udp: true
-  password: pKEW8JPByTVTLtM
+    headers:
+      Host: 129.146.77.248
+- name: US · VMESS · wzmwayne · 20299206
+  type: vmess
+  server: 192.74.236.148
+  port: 30004
+  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
+  alterId: 64
+  cipher: auto
+  country: 🇺🇸US
+  h2-opts: {}
+  http-opts: {}
+  network: ws
+  servername: www.91334565.xyz
+  skip-cert-verify: true
+  tls: true
+  ws-opts:
+    headers:
+      HOST: www.91334565.xyz
+    path: /path/1733477783705
+  x-toolall-mihomo: true
 - name: US · SS · wzmwayne · 4DE62A56
   type: ss
   server: 15.204.247.206
@@ -83,36 +44,43 @@ proxies:
   tls: false
   skip-cert-verify: false
   password: pKEW8JPByTVTLtM
-- name: US · VMESS · radikal · 3B346E12
-  type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  network: ws
-  tls: true
-  ws-opts:
-    path: /path/1698843555400
-    headers:
-      Host: www.83761815.xyz
-- name: US · VMESS · radikal · 26CD7097
-  type: vmess
-  server: 129.146.143.80
-  port: 48111
-  uuid: d4603cc2-e0ee-4651-83f5-1db5b7168177
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: 129.146.143.80
-- name: US · HTTP · wzmwayne · 7FFFB860
-  type: http
-  server: fan.365747.xyz
+- name: US · SS · wzmwayne · 0CCF6AEB
+  type: ss
+  server: 15.204.247.244
   port: 443
-  sni: fan.365747.xyz
+  cipher: aes-256-gcm
+  sub_tag: A004-260618
+  udp: true
+  password: pKEW8JPByTVTLtM
+- name: US · TROJAN · wzmwayne · 01FCC51E
+  type: trojan
+  server: 66.163.112.121
+  port: 443
+  client-fingerprint: chrome
+  skip-cert-verify: false
+  sni: www.unlockyourfuturefindyourperfectcareer.com
+  sub_tag: M003-260806
+  udp: true
+  network: tcp
+  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
+- name: US · TROJAN · wzmwayne · 2ABC1522
+  type: trojan
+  server: 66.163.112.242
+  port: 443
+  client-fingerprint: chrome
+  network: tcp
+  skip-cert-verify: true
+  sub_tag: A004-260618
+  udp: true
+  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
+- name: US · HTTP · wzmwayne · A4D3572A
+  type: http
+  server: 38.28.193.188
+  port: 443
+  skip-cert-verify: true
+  sub_tag: R002-260618
   tls: true
-  username: 'null'
-  password: 'null'
+  udp: true
 - name: US · SS · wzmwayne · 0389A6D6
   type: ss
   server: 15.204.247.124
@@ -122,23 +90,15 @@ proxies:
   tls: false
   skip-cert-verify: false
   password: faBAoD54k87UJG7
-- name: US · SS · wzmwayne · F2AF3EE2
+- name: US · SS · wzmwayne · 6E459AA9
   type: ss
-  server: 15.204.246.132
-  port: 7307
-  cipher: aes-256-gcm
+  server: 104.238.140.45
+  port: 11051
+  cipher: chacha20-ietf-poly1305
   udp: true
   tls: false
   skip-cert-verify: false
-  password: FoOiGlkAA9yPEGP
-- name: US · HTTP · wzmwayne · A4D3572A
-  type: http
-  server: 38.28.193.188
-  port: 443
-  skip-cert-verify: true
-  sub_tag: R002-260618
-  tls: true
-  udp: true
+  password: JUXsy78dSs6ROkasikmoaL
 - name: US · SS · wzmwayne · D29AA2DC
   type: ss
   server: 156.146.38.170
@@ -148,25 +108,85 @@ proxies:
   tls: false
   skip-cert-verify: false
   password: shadowsocks
+- name: US · HTTP · wzmwayne · F631BD5F
+  type: http
+  server: fan.365747.xyz
+  port: 443
+  skip-cert-verify: true
+  sni: fan.365747.xyz
+  tls: true
+  username: 'null'
+  password: 'null'
+- name: US · VLESS · wzmwayne · B405FD70
+  type: vless
+  server: 69.48.201.136
+  port: 30016
+  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
+  network: ws
+  sub_tag: A004-260618
+  udp: true
+  ws-opts:
+    headers:
+      Host: zoom.us
+      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
+        like Gecko) Chrome/66.0.3359.139 Safari/537.36
+    path: /usserver
+  xudp: true
+  packet-encoding: xudp
+  servername: zoom.us
+- name: US · VLESS · wzmwayne · 932828E5
+  type: vless
+  server: 69.48.201.136
+  port: 30016
+  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
+  network: ws
+  sub_tag: A004-260618
+  udp: true
+  ws-opts:
+    headers:
+      Host: uspanel.unixzone.us
+      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
+        like Gecko) Chrome/70.0.3538.67 Safari/537.36
+    path: /usserver
+  xudp: true
+  packet-encoding: xudp
+  servername: uspanel.unixzone.us
+- name: US · SS · wzmwayne · FDA7154E
+  type: ss
+  server: 15.204.246.111
+  port: 5498
+  cipher: aes-256-gcm
+  udp: true
+  tls: false
+  skip-cert-verify: false
+  password: lGqs95QkFHo2NV
+- name: US · SS · wzmwayne · 7DBBD240
+  type: ss
+  server: 15.204.247.206
+  port: 4444
+  cipher: aes-256-gcm
+  sub_tag: A004-260618
+  udp: true
+  password: pKEW8JPByTVTLtM
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - US · VMESS · shaoyouvip · 3A631A24
-  - US · VMESS · ts-sf-clash · EEBD493C
-  - US · SOCKS5 · shaoyouvip · 5786D71B
-  - US · HTTP · kooker · 3BF68D26
-  - US · VMESS · radikal · 2929C1DA
-  - US · SS · wzmwayne · 0CCF6AEB
-  - US · SS · wzmwayne · 0ECD490F
+  - US · VMESS · radikal · 07673546
+  - US · VMESS · wzmwayne · 20299206
   - US · SS · wzmwayne · 4DE62A56
-  - US · VMESS · radikal · 3B346E12
-  - US · VMESS · radikal · 26CD7097
-  - US · HTTP · wzmwayne · 7FFFB860
-  - US · SS · wzmwayne · 0389A6D6
-  - US · SS · wzmwayne · F2AF3EE2
+  - US · SS · wzmwayne · 0CCF6AEB
+  - US · TROJAN · wzmwayne · 01FCC51E
+  - US · TROJAN · wzmwayne · 2ABC1522
   - US · HTTP · wzmwayne · A4D3572A
+  - US · SS · wzmwayne · 0389A6D6
+  - US · SS · wzmwayne · 6E459AA9
   - US · SS · wzmwayne · D29AA2DC
+  - US · HTTP · wzmwayne · F631BD5F
+  - US · VLESS · wzmwayne · B405FD70
+  - US · VLESS · wzmwayne · 932828E5
+  - US · SS · wzmwayne · FDA7154E
+  - US · SS · wzmwayne · 7DBBD240
 rules:
 - MATCH,NODEHUB
 profile:
