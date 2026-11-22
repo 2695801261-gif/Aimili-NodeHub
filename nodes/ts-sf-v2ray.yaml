@@ -1,7 +1,16 @@
 proxies:
-- name: US · VMESS · ts-sf-v2ray · C1C984D1
+- name: US · VMESS · ts-sf-v2ray · AC66574B
   type: vmess
-  server: 167.88.62.56
+  server: 67.220.85.46
+  port: 18000
+  uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
+  alterId: 0
+  cipher: auto
+  network: tcp
+  servername: community.fastly.steamstatic.com
+- name: US · VMESS · ts-sf-v2ray · BD943BD6
+  type: vmess
+  server: 38.128.66.212
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -9,9 +18,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · AA9A1C0A
+- name: US · VMESS · ts-sf-v2ray · DD96938F
   type: vmess
-  server: 167.88.62.134
+  server: 38.22.17.89
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -19,9 +28,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · DC12F0AF
+- name: US · VMESS · ts-sf-v2ray · FEF2EA5D
   type: vmess
-  server: 162.251.60.97
+  server: 172.111.36.126
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -29,9 +38,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 303A0DC6
+- name: US · VMESS · ts-sf-v2ray · 276897D6
   type: vmess
-  server: 167.88.63.47
+  server: 167.88.63.39
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -39,9 +48,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 669FB6FD
+- name: US · VMESS · ts-sf-v2ray · C050845A
   type: vmess
-  server: 38.91.107.84
+  server: 38.22.17.64
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -49,9 +58,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 5F9EB467
+- name: US · VMESS · ts-sf-v2ray · C94EC6F3
   type: vmess
-  server: 67.220.74.250
+  server: 216.106.182.225
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -59,41 +68,43 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · EAD4F649
+- name: US · VMESS · ts-sf-v2ray · 8F362790
   type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  network: ws
-  tls: true
-  ws-opts:
-    path: /path/1698843555400
-    headers:
-      Host: www.83761815.xyz
-- name: US · VMESS · ts-sf-v2ray · 7FC0A7E6
-  type: vmess
-  server: 188.114.99.137
-  port: 443
-  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
+  server: 38.91.106.182
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
   cipher: auto
-  network: ws
+  network: tcp
   tls: true
-  servername: guanwang.awsno.com
-  ws-opts:
-    path: /hls/cctv5phd.m3u8
-    headers:
-      Host: guanwang.awsno.com
-- name: ZZ · VMESS · ts-sf-v2ray · 20AF1F93
+  servername: xmfhlpy.com
+- name: ZZ · VMESS · ts-sf-v2ray · A2FB56C1
   type: vmess
-  server: 152.67.8.205
+  server: leviko-at5072.shopingggg.ir
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  network: tcp
+  tls: true
+  servername: xmfhlpy.com
+- name: ZZ · VMESS · ts-sf-v2ray · 74585AB4
+  type: vmess
+  server: 62.93.166.184
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  network: tcp
+  tls: true
+  servername: xmfhlpy.com
+- name: ZZ · VMESS · ts-sf-v2ray · D2D78E2F
+  type: vmess
+  server: 168.138.43.75
   port: 80
-  uuid: 9db4c708-aef8-4359-821b-38e47990be0d
+  uuid: 11c3627f-31e8-4695-dfbd-34076e2f1f5d
   alterId: 0
   cipher: auto
   network: ws
-  servername: 152.67.8.205
   ws-opts:
-    path: /
+    path: /cctv13.m3u8

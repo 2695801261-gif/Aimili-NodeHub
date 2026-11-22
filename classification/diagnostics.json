@@ -2,33 +2,31 @@
   "schema_version": 1,
   "candidate_limit": 160,
   "checked": 160,
-  "accepted": 19,
-  "quarantined": 141,
+  "accepted": 13,
+  "quarantined": 147,
   "pool_sizes": {
-    "low-risk-datacenter": 14,
-    "other-residential": 2,
-    "us-residential": 3
+    "low-risk-datacenter": 3,
+    "other-residential": 1,
+    "us-residential": 9
   },
   "reason_counts": {
-    "asn_has_disqualifying_signal": 4,
-    "hosting_risk_exceeds_baseline": 9,
-    "isp_asn_not_confirmed": 3,
-    "layer3_address_type_not_publishable": 1,
-    "layer3_anonymizer_signal": 39,
-    "layer3_low_risk_hosting_and_asn_confirmed": 14,
-    "layer3_residential_access_and_isp_asn_confirmed": 3,
-    "network_has_abuse_reports": 13,
+    "asn_has_disqualifying_signal": 7,
+    "hosting_risk_exceeds_baseline": 12,
+    "isp_asn_not_confirmed": 9,
+    "layer3_anonymizer_signal": 41,
+    "layer3_low_risk_hosting_and_asn_confirmed": 3,
+    "layer3_residential_access_and_isp_asn_confirmed": 7,
+    "layer3_shared_address": 1,
+    "network_has_abuse_reports": 8,
     "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 17,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 1,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 23,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 14,
     "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 35.": 1,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 28.": 13,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 28.": 12,
     "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 35.": 1,
-    "quarantined:ValueError:insufficient independent exit-IP consensus": 7,
-    "residential_network_type_not_access": 1,
-    "vpngate_isp_access_layer3_confirmed": 2,
+    "quarantined:ValueError:insufficient independent exit-IP consensus": 18,
+    "vpngate_isp_access_layer3_confirmed": 3,
     "vpngate_isp_access_relay_candidate_unverified": 3,
-    "vpngate_us_consumer_isp_candidate_unverified": 5
+    "vpngate_us_consumer_isp_candidate_unverified": 3
   },
   "provider_status_counts": {
     "metadata_source": {
@@ -45,26 +43,26 @@
     },
     "net_status": {
       "not_checked": 63,
-      "not_reported": 84,
-      "ok": 13
+      "not_reported": 89,
+      "ok": 8
     },
     "oxl_asn_status": {
       "not_checked": 63,
-      "not_reported": 45,
-      "ok": 52
+      "not_reported": 47,
+      "ok": 50
     },
     "layer3_status": {
       "not_checked": 63,
       "ok": 97
     },
     "ipapi_is_status": {
-      "not_checked": 149,
-      "not_configured": 11
+      "not_checked": 151,
+      "not_configured": 9
     }
   },
   "exit_echo": {
     "agreement": 97,
-    "disagreement": 7,
-    "not_checked": 56
+    "disagreement": 18,
+    "not_checked": 45
   }
 }

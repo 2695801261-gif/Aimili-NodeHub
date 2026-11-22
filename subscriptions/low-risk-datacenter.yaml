@@ -4,106 +4,23 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: US · VMESS · ts-sf-v2ray · EAD4F649
-  type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  network: ws
-  tls: true
-  ws-opts:
-    path: /path/1698843555400
-    headers:
-      Host: www.83761815.xyz
-- name: US · TROJAN · wzmwayne · 67C4E2FA
-  type: trojan
-  server: 69.164.240.85
-  port: 50875
-  client-fingerprint: chrome
-  skip-cert-verify: true
-  sub_tag: M003-260806
-  udp: true
-  network: tcp
-  password: nwilryafgkyvuxauc8pz
-- name: US · TROJAN · wzmwayne · 0F851A6A
-  type: trojan
-  server: 69.164.240.85
-  port: 50875
-  client-fingerprint: chrome
-  skip-cert-verify: true
-  sni: 69.164.240.85
-  sub_tag: M003-260806
-  udp: true
-  network: tcp
-  password: nwilryafgkyvuxauc8pz
-- name: US · HTTP · wzmwayne · 02FC4C8E
-  type: http
-  server: 38.247.141.135
-  port: 443
-  tls: true
+- name: US · SOCKS5 · wzmwayne · 0205D799
+  type: socks5
+  server: 104.168.249.36
+  port: 1080
   skip-cert-verify: true
   udp: true
-- name: US · SS · wzmwayne · 1FEECB3B
-  type: ss
-  server: 98.98.79.198
-  port: 8080
-  cipher: rc4-md5
-  sub_tag: A004-260618
+  username: test123
+  password: test123
+- name: US · SOCKS5 · wzmwayne · 7C92DB8A
+  type: socks5
+  server: 209.50.255.91
+  port: 1080
+  skip-cert-verify: true
+  sub_tag: K001-260618
   udp: true
-  password: 14fFPrbezE3HDZzsMOr6
-- name: US · TROJAN · wzmwayne · A25E8448
-  type: trojan
-  server: 216.152.156.81
-  port: 443
-  udp: true
-  tls: true
-  servername: www.healthcarejobshubenhancemedicalprofessionalskillstoday.com
-  sni: www.healthcarejobshubenhancemedicalprofessionalskillstoday.com
-  skip-cert-verify: false
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
-- name: US · SS · wzmwayne · 4DE62A56
-  type: ss
-  server: 15.204.247.206
-  port: 4444
-  cipher: aes-256-gcm
-  udp: true
-  tls: false
-  skip-cert-verify: false
-  password: pKEW8JPByTVTLtM
-- name: US · SS · wzmwayne · 0ECD490F
-  type: ss
-  server: 15.204.247.244
-  port: 4444
-  cipher: aes-256-gcm
-  sub_tag: B007-260618
-  udp: true
-  password: pKEW8JPByTVTLtM
-- name: US · VLESS · wzmwayne · DC4384DC
-  type: vless
-  server: ww13.levikogjgfdd.ir
-  port: 23576
-  reality-opts:
-    public-key: 1y5h2FGWKXTJ9xLPCqPo6Mw7RxoZzh6fGkEQKNxpZ3s
-    short-id: '01'
-  uuid: 48ff2b70-e180-582f-8866-d9a2edeed5f5
-  flow: xtls-rprx-vision
-  udp: true
-  tls: true
-  servername: fuck.rkn
-  sni: fuck.rkn
-  skip-cert-verify: false
-  client-fingerprint: chrome
-- name: US · SS · wzmwayne · 57757047
-  type: ss
-  server: 40.160.86.43
-  port: 8388
-  cipher: aes-256-gcm
-  udp: true
-  tls: false
-  skip-cert-verify: false
-  password: itzvpn@321
+  username: ''
+  password: ''
 - name: US · SS · wzmwayne · 60A9D50D
   type: ss
   server: 15.204.246.132
@@ -112,68 +29,13 @@ proxies:
   sub_tag: A004-260618
   udp: true
   password: FoOiGlkAA9yPEGP
-- name: US · HTTP · wzmwayne · 38312174
-  type: http
-  server: 23.133.176.14
-  port: 443
-  skip-cert-verify: true
-  sub_tag: P002-260618
-  tls: true
-  udp: true
-  x-toolall-mihomo: true
-  password: None
-- name: US · TROJAN · wzmwayne · ADD7F39D
-  type: trojan
-  server: ipfast.kingmna.com
-  port: 443
-  network: ws
-  skip-cert-verify: true
-  sni: cdn.akamai.steamstatic.com
-  tls: true
-  ws-opts:
-    headers:
-      host: copy_az_channel_NUFiLTER_17i.global.ssl.fastly.net.
-    path: /TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER-TELEGRAM-@NUFiLTER
-  password: 6-FrR5YsfjfyNp6AIFZgcQ
-- name: US · VMESS · wzmwayne · F9046957
-  type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  alpn:
-  - ''
-  network: ws
-  skip-cert-verify: false
-  sub_tag: F003-260618
-  tls: true
-  udp: true
-  ws-opts:
-    headers:
-      Host: www.83761815.xyz
-    path: /path/1698843555400
-  xudp: true
-  packet-encoding: xudp
-  servername: www.83761815.xyz
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - US · VMESS · ts-sf-v2ray · EAD4F649
-  - US · TROJAN · wzmwayne · 67C4E2FA
-  - US · TROJAN · wzmwayne · 0F851A6A
-  - US · HTTP · wzmwayne · 02FC4C8E
-  - US · SS · wzmwayne · 1FEECB3B
-  - US · TROJAN · wzmwayne · A25E8448
-  - US · SS · wzmwayne · 4DE62A56
-  - US · SS · wzmwayne · 0ECD490F
-  - US · VLESS · wzmwayne · DC4384DC
-  - US · SS · wzmwayne · 57757047
+  - US · SOCKS5 · wzmwayne · 0205D799
+  - US · SOCKS5 · wzmwayne · 7C92DB8A
   - US · SS · wzmwayne · 60A9D50D
-  - US · HTTP · wzmwayne · 38312174
-  - US · TROJAN · wzmwayne · ADD7F39D
-  - US · VMESS · wzmwayne · F9046957
 rules:
 - MATCH,NODEHUB
 profile:
