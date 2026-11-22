@@ -4,38 +4,119 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: US · SOCKS5 · wzmwayne · 0205D799
-  type: socks5
-  server: 104.168.249.36
-  port: 1080
+- name: US · HYSTERIA · shaoyouvip · B021E60E
+  type: hysteria
+  server: 38.6.222.131
+  port: 11008
+  alpn:
+  - h3
+  down: '55'
+  servername: bing.com
   skip-cert-verify: true
+  sni: bing.com
+  up: '11'
   udp: true
-  username: test123
-  password: test123
-- name: US · SOCKS5 · wzmwayne · 7C92DB8A
-  type: socks5
-  server: 209.50.255.91
-  port: 1080
+  password: dongtaiwang.com
+  auth-str: dongtaiwang.com
+- name: US · VMESS · radikal · 07673546
+  type: vmess
+  server: 129.146.77.248
+  port: 39495
+  uuid: f836c736-87fc-4fde-aabc-00857ecdff3e
+  alterId: 0
+  cipher: auto
+  network: ws
+  ws-opts:
+    path: /cctv13.m3u8
+    headers:
+      Host: 129.146.77.248
+- name: US · HTTP · shaoyouvip · 3BF68D26
+  type: http
+  server: 23.133.176.14
+  port: 443
   skip-cert-verify: true
-  sub_tag: K001-260618
+  tls: true
   udp: true
-  username: ''
-  password: ''
-- name: US · SS · wzmwayne · 60A9D50D
-  type: ss
-  server: 15.204.246.132
-  port: 7307
-  cipher: aes-256-gcm
+- name: US · TROJAN · wzmwayne · 275D69E2
+  type: trojan
+  server: 69.164.240.85
+  port: 50875
+  client-fingerprint: chrome
+  network: tcp
+  skip-cert-verify: true
+  sni: 69.164.240.85
+  sub_tag: C002-260622
+  udp: true
+  password: nwilryafgkyvuxauc8pz
+- name: US · TROJAN · wzmwayne · 5CC12D7C
+  type: trojan
+  server: 66.23.203.21
+  port: 59689
+  client-fingerprint: chrome
+  network: tcp
+  skip-cert-verify: true
   sub_tag: A004-260618
   udp: true
-  password: FoOiGlkAA9yPEGP
+  password: ae7eb4dwyaz25pxwgq59
+- name: US · SOCKS5 · wzmwayne · F851240C
+  type: socks5
+  server: 45.61.188.134
+  port: 44499
+  sub_tag: R002-260618
+  udp: true
+- name: US · VMESS · wzmwayne · F9046957
+  type: vmess
+  server: 38.11.69.48
+  port: 30004
+  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
+  alterId: 64
+  cipher: auto
+  alpn:
+  - ''
+  network: ws
+  skip-cert-verify: false
+  sub_tag: F003-260618
+  tls: true
+  udp: true
+  ws-opts:
+    headers:
+      Host: www.83761815.xyz
+    path: /path/1698843555400
+  xudp: true
+  packet-encoding: xudp
+  servername: www.83761815.xyz
+- name: US · HTTP · wzmwayne · 12180A1E
+  type: http
+  server: 137.175.22.45
+  port: 443
+  skip-cert-verify: true
+  sub_tag: R002-260618
+  tls: true
+  udp: true
+  x-toolall-mihomo: true
+- name: US · HTTP · wzmwayne · 05696820
+  type: http
+  server: fan.365747.xyz
+  port: 443
+  skip-cert-verify: true
+  sni: fan.365747.xyz
+  sub_tag: R002-260618
+  tls: true
+  udp: true
+  x-toolall-mihomo: true
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - US · SOCKS5 · wzmwayne · 0205D799
-  - US · SOCKS5 · wzmwayne · 7C92DB8A
-  - US · SS · wzmwayne · 60A9D50D
+  - US · HYSTERIA · shaoyouvip · B021E60E
+  - US · VMESS · radikal · 07673546
+  - US · HTTP · shaoyouvip · 3BF68D26
+  - US · TROJAN · wzmwayne · 275D69E2
+  - US · TROJAN · wzmwayne · 5CC12D7C
+  - US · SOCKS5 · wzmwayne · F851240C
+  - US · VMESS · wzmwayne · F9046957
+  - US · HTTP · wzmwayne · 12180A1E
+  - US · HTTP · wzmwayne · 05696820
 rules:
 - MATCH,NODEHUB
 profile:

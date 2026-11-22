@@ -4,10 +4,10 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: VPNGate-US-94-183-254-244-vpn892036006-udp
+- name: VPNGate-BO-166-114-158-250-vpn687001082-udp
   type: openvpn
-  server: 94.183.254.244
-  port: 42893
+  server: 166.114.158.250
+  port: 1538
   proto: udp
   udp: true
   ca: "-----BEGIN CERTIFICATE-----\r\nMIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\r\
@@ -57,7 +57,7 @@ proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - VPNGate-US-94-183-254-244-vpn892036006-udp
+  - VPNGate-BO-166-114-158-250-vpn687001082-udp
 rules:
 - MATCH,NODEHUB
 profile:
