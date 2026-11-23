@@ -1,6 +1,0 @@
-proxies:
-- name: KR · SOCKS5 · kooker · C81534F0
-  type: socks5
-  server: 183.106.215.208
-  port: 1080
-  udp: true

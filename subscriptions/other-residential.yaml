@@ -4,12 +4,12 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: VPNGate-BO-166-114-158-250-vpn687001082-udp
+- name: VPNGate-AU-220-233-92-218-vpn228702251-tcp
   type: openvpn
-  server: 166.114.158.250
-  port: 1538
-  proto: udp
-  udp: true
+  server: 220.233.92.218
+  port: 1587
+  proto: tcp
+  udp: false
   ca: "-----BEGIN CERTIFICATE-----\r\nMIIFazCCA1OgAwIBAgIRAIIQz7DSQONZRGPgu2OCiwAwDQYJKoZIhvcNAQELBQAw\r\
     \nTzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh\r\ncmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4\r\
     \nWhcNMzUwNjA0MTEwNDM4WjBPMQswCQYDVQQGEwJVUzEpMCcGA1UEChMgSW50ZXJu\r\nZXQgU2VjdXJpdHkgUmVzZWFyY2ggR3JvdXAxFTATBgNVBAMTDElTUkcgUm9vdCBY\r\
@@ -57,7 +57,7 @@ proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - VPNGate-BO-166-114-158-250-vpn687001082-udp
+  - VPNGate-AU-220-233-92-218-vpn228702251-tcp
 rules:
 - MATCH,NODEHUB
 profile:
