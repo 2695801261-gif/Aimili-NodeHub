@@ -1,14 +1,4 @@
 proxies:
-- name: US · VMESS · ts-sf-clash · 921C4E1B
-  type: vmess
-  server: 162.251.62.35
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: tcp
 - name: US · VMESS · ts-sf-clash · 4D2327B8
   type: vmess
   server: 67.220.74.188
@@ -19,9 +9,9 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: US · VMESS · ts-sf-clash · D39B0E7E
+- name: US · VMESS · ts-sf-clash · 921C4E1B
   type: vmess
-  server: 162.251.62.44
+  server: 162.251.62.35
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -39,6 +29,16 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
+- name: US · VMESS · ts-sf-clash · D39B0E7E
+  type: vmess
+  server: 162.251.62.44
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: tcp
 - name: ZZ · VMESS · ts-sf-clash · 4FF899B0
   type: vmess
   server: 186.190.215.4
@@ -49,31 +49,3 @@ proxies:
   tls: true
   skip-cert-verify: true
   network: tcp
-- name: ZZ · VMESS · ts-sf-clash · 0BB58EA4
-  type: vmess
-  server: 104.16.0.1
-  port: 2083
-  uuid: ac251237-576f-40c8-a543-554960c958b1
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: ws
-  ws-opts:
-    path: /or3
-    headers:
-      host: or3.sfacg.uk
-- name: ZZ · VMESS · ts-sf-clash · 24D13C3C
-  type: vmess
-  server: 104.21.50.177
-  port: 2083
-  uuid: ac251237-576f-40c8-a543-554960c958b1
-  alterId: 0
-  cipher: auto
-  tls: true
-  skip-cert-verify: true
-  network: ws
-  ws-opts:
-    path: /or3
-    headers:
-      host: or3.sfacg.uk

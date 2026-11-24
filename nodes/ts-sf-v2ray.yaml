@@ -7,16 +7,6 @@ proxies:
   alterId: 0
   cipher: auto
   network: tcp
-- name: US · VMESS · ts-sf-v2ray · F0EEDF26
-  type: vmess
-  server: 162.251.62.44
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  network: tcp
-  tls: true
-  servername: xmfhlpy.com
 - name: US · VMESS · ts-sf-v2ray · 30815D63
   type: vmess
   server: 67.220.74.188
@@ -27,9 +17,9 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · E1205006
+- name: US · VMESS · ts-sf-v2ray · 0C0E4CF8
   type: vmess
-  server: 38.91.107.188
+  server: 162.251.62.35
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -37,9 +27,19 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · VMESS · ts-sf-v2ray · 0C0E4CF8
+- name: US · VMESS · ts-sf-v2ray · F0EEDF26
   type: vmess
-  server: 162.251.62.35
+  server: 162.251.62.44
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
+  alterId: 0
+  cipher: auto
+  network: tcp
+  tls: true
+  servername: xmfhlpy.com
+- name: US · VMESS · ts-sf-v2ray · E1205006
+  type: vmess
+  server: 38.91.107.188
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -67,31 +67,3 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: ZZ · VMESS · ts-sf-v2ray · D501F06E
-  type: vmess
-  server: 104.21.50.177
-  port: 2083
-  uuid: ac251237-576f-40c8-a543-554960c958b1
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: or3.sfacg.uk
-  ws-opts:
-    path: /or3
-    headers:
-      Host: or3.sfacg.uk
-- name: ZZ · VMESS · ts-sf-v2ray · DA5F52AA
-  type: vmess
-  server: or3.sfacg.uk
-  port: 2083
-  uuid: ac251237-576f-40c8-a543-554960c958b1
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: cdn.sfacg.uk
-  ws-opts:
-    path: /or3
-    headers:
-      Host: or3.sfacg.uk
