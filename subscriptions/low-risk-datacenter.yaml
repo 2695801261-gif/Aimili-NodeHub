@@ -4,9 +4,9 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: US · VMESS · radikal · 38D7F93A
+- name: US · VMESS · radikal · 1D62496C
   type: vmess
-  server: 167.88.63.99
+  server: 172.111.36.253
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -14,30 +14,20 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · TROJAN · wzmwayne · 0F851A6A
+- name: US · TROJAN · wzmwayne · 275D69E2
   type: trojan
   server: 69.164.240.85
   port: 50875
   client-fingerprint: chrome
+  network: tcp
   skip-cert-verify: true
   sni: 69.164.240.85
-  sub_tag: M003-260806
+  sub_tag: C002-260622
   udp: true
-  network: tcp
   password: nwilryafgkyvuxauc8pz
-- name: US · TROJAN · wzmwayne · 1FAE4646
-  type: trojan
-  server: 66.23.203.21
-  port: 59689
-  client-fingerprint: chrome
-  skip-cert-verify: true
-  sub_tag: A001-260618
-  udp: true
-  network: tcp
-  password: ae7eb4dwyaz25pxwgq59
-- name: US · VMESS · wzmwayne · 491A7305
+- name: US · VMESS · wzmwayne · 53AF5B3C
   type: vmess
-  server: 167.88.63.99
+  server: 167.88.63.39
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -50,66 +40,14 @@ proxies:
   xudp: true
   packet-encoding: xudp
   servername: xmfhlpy.com
-- name: US · VMESS · wzmwayne · 40EABEDA
-  type: vmess
-  server: 107.150.19.24
-  port: 54321
-  uuid: 2659ef8a-3456-48f8-95fe-08b82d3f4984
-  alterId: 0
-  cipher: auto
-  alpn:
-  - ''
-  http-opts:
-    headers:
-      Host:
-      - down-cdn.dingtalk.com
-    path:
-    - /x
-  network: http
-  skip-cert-verify: false
-  sub_tag: M003-260806
-  tls: false
-  udp: true
-  xudp: true
-  packet-encoding: xudp
-- name: US · VMESS · wzmwayne · 457EA0D8
-  type: vmess
-  server: 172.111.36.123
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  client-fingerprint: chrome
-  network: tcp
-  sub_tag: B007-260618
-  tls: true
-  udp: true
-  xudp: true
-  packet-encoding: xudp
-  servername: xmfhlpy.com
-- name: US · SOCKS5 · wzmwayne · CE846295
-  type: socks5
-  server: 69.55.49.177
-  port: 38182
-- name: US · HTTP · wzmwayne · 423DD28E
-  type: http
-  server: fan.365747.xyz
+- name: US · SS · wzmwayne · 0CCF6AEB
+  type: ss
+  server: 15.204.247.244
   port: 443
-  skip-cert-verify: true
-  sni: fan.365747.xyz
-  sub_tag: R002-260618
-  tls: true
+  cipher: aes-256-gcm
+  sub_tag: A004-260618
   udp: true
-  username: 'null'
-  password: 'null'
-- name: US · HTTP · wzmwayne · 3A0D63AA
-  type: http
-  server: 137.175.22.16
-  port: 443
-  skip-cert-verify: true
-  sub_tag: R002-260618
-  tls: true
-  udp: true
+  password: pKEW8JPByTVTLtM
 - name: US · SOCKS5 · wzmwayne · C0B3B312
   type: socks5
   server: 69.55.49.177
@@ -117,6 +55,32 @@ proxies:
   sub_tag: P002-260618
   udp: true
   password: None
+- name: US · TROJAN · wzmwayne · 67C4E2FA
+  type: trojan
+  server: 69.164.240.85
+  port: 50875
+  client-fingerprint: chrome
+  skip-cert-verify: true
+  sub_tag: M003-260806
+  udp: true
+  network: tcp
+  password: nwilryafgkyvuxauc8pz
+- name: US · HTTP · wzmwayne · 39215CA3
+  type: http
+  server: 137.175.22.72
+  port: 443
+  skip-cert-verify: true
+  sub_tag: R002-260618
+  tls: true
+  udp: true
+- name: US · SS · wzmwayne · 836B9E2C
+  type: ss
+  server: 107.151.182.253
+  port: 8080
+  cipher: rc4-md5
+  sub_tag: A004-260618
+  udp: true
+  password: 14fFPrbezE3HDZzsMOr6
 - name: US · SS · wzmwayne · 958DCF82
   type: ss
   server: 15.204.246.111
@@ -125,18 +89,17 @@ proxies:
   sub_tag: B007-260618
   udp: true
   password: lGqs95QkFHo2NV
-- name: US · HTTP · wzmwayne · 793850FD
-  type: http
-  server: 154.26.192.123
-  port: 10988
-  sub_tag: R002-260618
-  tls: false
+- name: US · SS · wzmwayne · EFBCC8A7
+  type: ss
+  server: 15.204.233.41
+  port: 8882
+  cipher: aes-256-gcm
+  sub_tag: A004-260618
   udp: true
-  username: fQ67Dpe5dU
-  password: gs4BXwT6SW
-- name: US · VMESS · wzmwayne · BA1E17C7
+  password: kDWvXYZoTBcGkC4
+- name: US · VMESS · wzmwayne · A1F85305
   type: vmess
-  server: 172.111.36.126
+  server: 172.111.36.253
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -164,14 +127,14 @@ proxies:
   xudp: true
   packet-encoding: xudp
   servername: xmfhlpy.com
-- name: US · SS · wzmwayne · 63180E72
+- name: US · SS · wzmwayne · 60A9D50D
   type: ss
-  server: 136.148.77.250
-  port: 8388
+  server: 15.204.246.132
+  port: 7307
   cipher: aes-256-gcm
-  sub_tag: B007-260618
+  sub_tag: A004-260618
   udp: true
-  password: itzvpn@321
+  password: FoOiGlkAA9yPEGP
 - name: US · SS · wzmwayne · C353473E
   type: ss
   server: 172.111.36.123
@@ -180,58 +143,33 @@ proxies:
   sub_tag: M003-260806
   udp: true
   password: ZRpgaBeGxtENIXgvhpkZBKz9GnWRS2dYcx9O+a2iwN4=
-- name: US · VMESS · wzmwayne · F9046957
-  type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  alpn:
-  - ''
-  network: ws
-  skip-cert-verify: false
-  sub_tag: F003-260618
-  tls: true
+- name: US · SS · wzmwayne · 7DBBD240
+  type: ss
+  server: 15.204.247.206
+  port: 4444
+  cipher: aes-256-gcm
+  sub_tag: A004-260618
   udp: true
-  ws-opts:
-    headers:
-      Host: www.83761815.xyz
-    path: /path/1698843555400
-  xudp: true
-  packet-encoding: xudp
-  servername: www.83761815.xyz
-- name: US · HTTP · wzmwayne · 86629750
-  type: http
-  server: 129.153.93.183
-  port: 443
-  skip-cert-verify: true
-  sub_tag: P002-260618
-  tls: true
-  udp: true
-  password: None
+  password: pKEW8JPByTVTLtM
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - US · VMESS · radikal · 38D7F93A
-  - US · TROJAN · wzmwayne · 0F851A6A
-  - US · TROJAN · wzmwayne · 1FAE4646
-  - US · VMESS · wzmwayne · 491A7305
-  - US · VMESS · wzmwayne · 40EABEDA
-  - US · VMESS · wzmwayne · 457EA0D8
-  - US · SOCKS5 · wzmwayne · CE846295
-  - US · HTTP · wzmwayne · 423DD28E
-  - US · HTTP · wzmwayne · 3A0D63AA
+  - US · VMESS · radikal · 1D62496C
+  - US · TROJAN · wzmwayne · 275D69E2
+  - US · VMESS · wzmwayne · 53AF5B3C
+  - US · SS · wzmwayne · 0CCF6AEB
   - US · SOCKS5 · wzmwayne · C0B3B312
+  - US · TROJAN · wzmwayne · 67C4E2FA
+  - US · HTTP · wzmwayne · 39215CA3
+  - US · SS · wzmwayne · 836B9E2C
   - US · SS · wzmwayne · 958DCF82
-  - US · HTTP · wzmwayne · 793850FD
-  - US · VMESS · wzmwayne · BA1E17C7
+  - US · SS · wzmwayne · EFBCC8A7
+  - US · VMESS · wzmwayne · A1F85305
   - US · VMESS · wzmwayne · EC87DD1F
-  - US · SS · wzmwayne · 63180E72
+  - US · SS · wzmwayne · 60A9D50D
   - US · SS · wzmwayne · C353473E
-  - US · VMESS · wzmwayne · F9046957
-  - US · HTTP · wzmwayne · 86629750
+  - US · SS · wzmwayne · 7DBBD240
 rules:
 - MATCH,NODEHUB
 profile:

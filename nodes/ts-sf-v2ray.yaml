@@ -1,15 +1,11 @@
 proxies:
-- name: ZZ · VMESS · ts-sf-v2ray · 0111A187
+- name: ZZ · VMESS · ts-sf-v2ray · 0270A5B0
   type: vmess
-  server: cf.0sm.com
-  port: 443
-  uuid: 0cf6d970-3f1d-4aae-a989-92a8f76ae3db
+  server: 154.47.19.225
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
   cipher: auto
-  network: ws
+  network: tcp
   tls: true
-  servername: vmess.lbw666.dpdns.org
-  ws-opts:
-    path: /ws?ed=2048
-    headers:
-      Host: vmess.lbw666.dpdns.org
+  servername: xmfhlpy.com
