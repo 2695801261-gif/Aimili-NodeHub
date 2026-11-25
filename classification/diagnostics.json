@@ -2,66 +2,66 @@
   "schema_version": 1,
   "candidate_limit": 160,
   "checked": 160,
-  "accepted": 19,
-  "quarantined": 141,
+  "accepted": 14,
+  "quarantined": 146,
   "pool_sizes": {
-    "low-risk-datacenter": 15,
+    "low-risk-datacenter": 12,
     "other-residential": 0,
-    "us-residential": 4
+    "us-residential": 2
   },
   "reason_counts": {
-    "asn_has_disqualifying_signal": 9,
+    "asn_has_disqualifying_signal": 3,
     "hosting_risk_exceeds_baseline": 15,
-    "isp_asn_not_confirmed": 1,
-    "layer3_anonymizer_signal": 25,
-    "layer3_low_risk_hosting_and_asn_confirmed": 15,
-    "layer3_residential_access_and_isp_asn_confirmed": 2,
-    "network_has_abuse_reports": 7,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 26,
+    "isp_asn_not_confirmed": 2,
+    "layer3_anonymizer_signal": 29,
+    "layer3_low_risk_hosting_and_asn_confirmed": 12,
+    "layer3_residential_access_and_isp_asn_confirmed": 1,
+    "network_has_abuse_reports": 10,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 28.": 20,
     "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://api.ipify.org']' returned non-zero exit status 35.": 2,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 17,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 35.": 3,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 28.": 22,
-    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 35.": 1,
-    "quarantined:ValueError:insufficient independent exit-IP consensus": 10,
-    "vpngate_isp_access_layer3_confirmed": 2,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 28.": 24,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://checkip.amazonaws.com']' returned non-zero exit status 35.": 1,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 28.": 20,
+    "quarantined:CalledProcessError:Command '['curl', '--silent', '--show-error', '--fail', '--connect-timeout', '5', '--max-time', '8', '--proxy', 'socks5h://127.0.0.1:7891', 'https://icanhazip.com']' returned non-zero exit status 35.": 4,
+    "quarantined:ValueError:insufficient independent exit-IP consensus": 13,
+    "vpngate_isp_access_layer3_confirmed": 1,
     "vpngate_us_consumer_isp_candidate_unverified": 3
   },
   "provider_status_counts": {
     "metadata_source": {
-      "ipwho.is": 79,
-      "not_checked": 81
+      "ipwho.is": 76,
+      "not_checked": 84
     },
     "metadata_status": {
-      "not_checked": 81,
-      "ok": 79
+      "not_checked": 84,
+      "ok": 76
     },
     "ip_risk_status": {
-      "not_checked": 81,
-      "not_reported": 79
+      "not_checked": 84,
+      "not_reported": 76
     },
     "net_status": {
-      "not_checked": 81,
-      "not_reported": 72,
-      "ok": 7
+      "not_checked": 84,
+      "not_reported": 66,
+      "ok": 10
     },
     "oxl_asn_status": {
-      "not_checked": 81,
-      "not_reported": 33,
-      "ok": 46
+      "not_checked": 84,
+      "not_reported": 36,
+      "ok": 40
     },
     "layer3_status": {
-      "not_checked": 81,
-      "ok": 79
+      "not_checked": 84,
+      "ok": 76
     },
     "ipapi_is_status": {
-      "not_checked": 155,
-      "not_configured": 5
+      "not_checked": 156,
+      "not_configured": 4
     }
   },
   "exit_echo": {
-    "agreement": 79,
-    "disagreement": 10,
+    "agreement": 76,
+    "disagreement": 13,
     "not_checked": 71
   }
 }
