@@ -1,15 +1,11 @@
 proxies:
-- name: ZZ · VMESS · ts-sf-clash · A4CB0E94
+- name: ZZ · VMESS · ts-sf-clash · 9A33DAD9
   type: vmess
-  server: 172.66.142.170
-  port: 443
-  uuid: 4caf156a-3309-4105-8388-d388eb9e1105
+  server: 62.93.166.184
+  port: 1270
+  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
   cipher: auto
   tls: true
   skip-cert-verify: true
-  network: ws
-  ws-opts:
-    path: /whatever/vmess
-    headers:
-      host: id2.nathaya.web.id
+  network: tcp

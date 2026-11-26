@@ -1,64 +1,120 @@
 proxies:
-- name: DE · HTTP · kooker · 41F98099
+- name: US · HTTP · kooker · 41E72FB4
   type: http
-  server: 158.173.154.5
-  port: 9002
-  delay: 2269
-  skip-cert-verify: true
+  server: 172.64.69.89
+  port: 443
   tls: true
-- name: DE · HYSTERIA2 · kooker · FD8FDE47
-  type: hysteria2
-  server: 128.254.186.57
-  port: 13337
-  down: ''
-  fingerprint: ''
-  obfs: ''
-  obfs-password: ''
   skip-cert-verify: true
-  sni: mother-earth.fyi
-  up: ''
-  password: 900c8c92-1979-4c7c-8f2f-63e87d53d8fe
-- name: NL · HTTP · kooker · A8640BDD
+  udp: true
+- name: IE · HTTP · kooker · 118F7AE0
+  type: http
+  server: 34.249.214.108
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: NL · HTTP · kooker · 36B37104
+  type: http
+  server: 84.17.47.123
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+  password: None
+- name: NL · HTTP · kooker · 3653EC2C
+  type: http
+  server: 84.17.47.124
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: NL · HTTP · kooker · 546865AA
+  type: http
+  server: 149.36.51.129
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: US · HTTP · kooker · B3B62EE7
+  type: http
+  server: usgp1-cdn-route.couldflare-cdn.com
+  port: 443
+  tls: true
+  udp: true
+  sni: usgp1-cdn-route.couldflare-cdn.com
+  username: mrwdfNTD8M79LCukCieldrqZWqs=
+  password: exaxgqkKkd0TAMrCxeonWg==
+- name: IE · HTTP · kooker · FD93263D
+  type: http
+  server: 18.200.158.139
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: GB · HTTP · kooker · B3FD5136
+  type: http
+  server: 212.102.63.31
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: NL · HTTP · kooker · E5953371
   type: http
   server: 84.17.47.125
   port: 9002
-  delay: 2269
-  skip-cert-verify: true
   tls: true
-- name: DE · HYSTERIA2 · kooker · 37A05ACF
-  type: hysteria2
-  server: 128.254.186.190
-  port: 13337
-  down: ''
-  fingerprint: ''
-  obfs: ''
-  obfs-password: ''
   skip-cert-verify: true
-  sni: mother-earth.fyi
-  up: ''
-  password: 900c8c92-1979-4c7c-8f2f-63e87d53d8fe
-- name: FR · HTTP · kooker · 715BF136
+  udp: true
+- name: NL · HTTP · kooker · D75B1E44
   type: http
-  server: 87.98.174.157
-  port: 6103
-  delay: 2301
-  skip-cert-verify: true
-  tls: true
-- name: NL · HTTP · kooker · 2C5AC2D7
-  type: http
-  server: 84.17.47.125
+  server: 84.17.47.149
   port: 9002
-  delay: 2262
-  skip-cert-verify: true
   tls: true
-  username: "null"
-  password: "null"
-- name: NL · HTTP · kooker · 9109E3E1
+  skip-cert-verify: true
+  udp: true
+  password: None
+- name: BE · HTTP · kooker · E9F1F93E
+  type: http
+  server: 146.70.123.98
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: NL · HTTP · kooker · BBCB8F86
   type: http
   server: 84.17.47.147
   port: 9002
-  delay: 2302
-  skip-cert-verify: true
   tls: true
+  skip-cert-verify: true
+  udp: true
   username: "null"
   password: "null"
+- name: DE · HTTP · kooker · DADA019B
+  type: http
+  server: 149.36.50.1
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+  password: None
+- name: DK · HTTP · kooker · E25547F2
+  type: http
+  server: 158.173.154.5
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: DK · HTTP · kooker · 70464A06
+  type: http
+  server: 158.173.154.1
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: FR · HTTP · kooker · D090CF3D
+  type: http
+  server: 87.98.174.157
+  port: 6103
+  tls: true
+  skip-cert-verify: true
+  udp: true
