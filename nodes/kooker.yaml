@@ -1,23 +1,64 @@
 proxies:
-- name: GB · HTTP · kooker · B3FD5136
+- name: DE · HTTP · kooker · 41F98099
   type: http
-  server: 212.102.63.31
-  port: 443
-  tls: true
+  server: 158.173.154.5
+  port: 9002
+  delay: 2269
   skip-cert-verify: true
-  udp: true
-- name: ZZ · SS · kooker · A9FD64E6
-  type: ss
-  server: 38.180.104.37
-  port: 19084
-  cipher: aes-128-gcm
-  country: 🇺🇸US
-  delay: 773
-  password: ff4d354078394558933d699be149ad69
-- name: BE · HTTP · kooker · E9F1F93E
+  tls: true
+- name: DE · HYSTERIA2 · kooker · FD8FDE47
+  type: hysteria2
+  server: 128.254.186.57
+  port: 13337
+  down: ''
+  fingerprint: ''
+  obfs: ''
+  obfs-password: ''
+  skip-cert-verify: true
+  sni: mother-earth.fyi
+  up: ''
+  password: 900c8c92-1979-4c7c-8f2f-63e87d53d8fe
+- name: NL · HTTP · kooker · A8640BDD
   type: http
-  server: 146.70.123.98
-  port: 443
-  tls: true
+  server: 84.17.47.125
+  port: 9002
+  delay: 2269
   skip-cert-verify: true
-  udp: true
+  tls: true
+- name: DE · HYSTERIA2 · kooker · 37A05ACF
+  type: hysteria2
+  server: 128.254.186.190
+  port: 13337
+  down: ''
+  fingerprint: ''
+  obfs: ''
+  obfs-password: ''
+  skip-cert-verify: true
+  sni: mother-earth.fyi
+  up: ''
+  password: 900c8c92-1979-4c7c-8f2f-63e87d53d8fe
+- name: FR · HTTP · kooker · 715BF136
+  type: http
+  server: 87.98.174.157
+  port: 6103
+  delay: 2301
+  skip-cert-verify: true
+  tls: true
+- name: NL · HTTP · kooker · 2C5AC2D7
+  type: http
+  server: 84.17.47.125
+  port: 9002
+  delay: 2262
+  skip-cert-verify: true
+  tls: true
+  username: "null"
+  password: "null"
+- name: NL · HTTP · kooker · 9109E3E1
+  type: http
+  server: 84.17.47.147
+  port: 9002
+  delay: 2302
+  skip-cert-verify: true
+  tls: true
+  username: "null"
+  password: "null"

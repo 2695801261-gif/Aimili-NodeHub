@@ -1,22 +1,37 @@
 proxies:
-- name: US · VMESS · ts-sf-v2ray · 0DE635A5
+- name: US · VMESS · ts-sf-v2ray · CE5228D6
   type: vmess
-  server: 84.17.41.2
+  server: 38.91.107.49
   port: 18000
   uuid: f8c8dc3d-0d37-46b0-8b34-a7232882fcfe
   alterId: 0
-  cipher: none
+  cipher: auto
   network: tcp
-- name: US · VMESS · ts-sf-v2ray · E999DE2E
+- name: ZZ · VMESS · ts-sf-v2ray · 0A26DA9F
   type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
+  server: 104.17.77.77
+  port: 8443
+  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
+  alterId: 0
   cipher: auto
   network: ws
   tls: true
+  servername: v2ray1.dozapp.xyz
   ws-opts:
-    path: /path/1698843555400
+    path: /lMnsZUN4/
     headers:
-      Host: www.83761815.xyz
+      Host: v2ray1.dozapp.xyz
+- name: ZZ · VMESS · ts-sf-v2ray · F06DD7DB
+  type: vmess
+  server: 172.66.142.170
+  port: 443
+  uuid: 4caf156a-3309-4105-8388-d388eb9e1105
+  alterId: 0
+  cipher: auto
+  network: ws
+  tls: true
+  servername: zoomgov.nathaya.web.id
+  ws-opts:
+    path: /whatever/vmess
+    headers:
+      Host: id2.nathaya.web.id
