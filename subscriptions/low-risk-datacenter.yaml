@@ -4,35 +4,23 @@ mode: rule
 log-level: warning
 ipv6: true
 proxies:
-- name: US · HYSTERIA · shaoyouvip · 41ED537E
-  type: hysteria
-  server: 137.175.82.41
-  port: 20022
-  alpn:
-  - h3
-  down: '55'
-  obfs: ''
-  protocol: ''
+- name: US · VLESS · shaoyouvip · F42B02E2
+  type: vless
+  server: 156.229.167.109
+  port: 8443
+  reality-opts:
+    public-key: 4g6gX0ueJap7pY_iTDx23h6bzo3KIOTcFzP1Uacn0QA
+    short-id: 4ad2e4e660550e43
+  uuid: eb8c97f7-a154-4442-91b0-54c0d055ad0b
+  client-fingerprint: chrome
   skip-cert-verify: true
-  sni: bing.com
-  up: '11'
+  tls: true
   udp: true
-  auth-str: dongtaiwang.com
-- name: US · VMESS · radikal · 07673546
+  network: tcp
+  servername: github.githubassets.com
+- name: US · VMESS · radikal · 56E2445E
   type: vmess
-  server: 129.146.77.248
-  port: 39495
-  uuid: f836c736-87fc-4fde-aabc-00857ecdff3e
-  alterId: 0
-  cipher: auto
-  network: ws
-  ws-opts:
-    path: /cctv13.m3u8
-    headers:
-      Host: 129.146.77.248
-- name: US · VMESS · radikal · 449D8D02
-  type: vmess
-  server: 167.88.63.37
+  server: 172.111.36.137
   port: 1270
   uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
   alterId: 0
@@ -40,128 +28,91 @@ proxies:
   network: tcp
   tls: true
   servername: xmfhlpy.com
-- name: US · HYSTERIA · shaoyouvip · 11137364
-  type: hysteria
-  server: 198.200.57.142
-  port: 22335
-  alpn:
-  - h3
-  down: '55'
-  obfs: ''
-  protocol: ''
-  skip-cert-verify: true
-  sni: bing.com
-  up: '11'
-  udp: true
-  auth-str: github.com/Alvin9999-newpac/fanqiang
-- name: US · TROJAN · wzmwayne · 1D205FB9
-  type: trojan
-  server: 69.164.240.85
-  port: 50875
-  client-fingerprint: chrome
-  network: tcp
-  skip-cert-verify: true
-  sub_tag: B007-260618
-  udp: true
-  password: nwilryafgkyvuxauc8pz
-- name: US · VMESS · radikal · 26CD7097
-  type: vmess
-  server: 129.146.143.80
-  port: 48111
-  uuid: d4603cc2-e0ee-4651-83f5-1db5b7168177
-  alterId: 0
-  cipher: auto
-  network: tcp
-  servername: 129.146.143.80
-- name: US · TROJAN · wzmwayne · 275D69E2
-  type: trojan
-  server: 69.164.240.85
-  port: 50875
-  client-fingerprint: chrome
-  network: tcp
-  skip-cert-verify: true
-  sni: 69.164.240.85
-  sub_tag: C002-260622
-  udp: true
-  password: nwilryafgkyvuxauc8pz
-- name: US · VMESS · wzmwayne · 491A7305
-  type: vmess
-  server: 167.88.63.99
-  port: 1270
-  uuid: 5c040f1d-45db-43bd-8d46-e4950e433735
-  alterId: 0
-  cipher: auto
-  network: tcp
-  skip-cert-verify: false
-  sub_tag: K001-260618
-  tls: true
-  udp: true
-  xudp: true
-  packet-encoding: xudp
-  servername: xmfhlpy.com
-- name: US · TROJAN · wzmwayne · 1D2DA703
-  type: trojan
-  server: 216.152.156.65
-  port: 443
-  client-fingerprint: chrome
-  network: tcp
-  skip-cert-verify: true
-  sub_tag: M003-260806
-  udp: true
-  password: 0ab6c98dae3b48e8b9c4a776b6c9c19a
-- name: US · VLESS · wzmwayne · B405FD70
-  type: vless
-  server: 69.48.201.136
-  port: 30016
-  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
-  network: ws
-  sub_tag: A004-260618
-  udp: true
-  ws-opts:
-    headers:
-      Host: zoom.us
-      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
-        like Gecko) Chrome/66.0.3359.139 Safari/537.36
-    path: /usserver
-  xudp: true
-  packet-encoding: xudp
-  servername: zoom.us
-- name: US · VLESS · wzmwayne · 932828E5
-  type: vless
-  server: 69.48.201.136
-  port: 30016
-  uuid: 03dc60cb-a8d4-4226-93fe-0e6cbf77fe5a
-  network: ws
-  sub_tag: A004-260618
-  udp: true
-  ws-opts:
-    headers:
-      Host: uspanel.unixzone.us
-      User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML,
-        like Gecko) Chrome/70.0.3538.67 Safari/537.36
-    path: /usserver
-  xudp: true
-  packet-encoding: xudp
-  servername: uspanel.unixzone.us
-- name: US · TROJAN · wzmwayne · B289993F
+- name: US · TROJAN · wzmwayne · 1FAE4646
   type: trojan
   server: 66.23.203.21
   port: 59689
   client-fingerprint: chrome
   skip-cert-verify: true
-  sni: 66.23.203.21
-  sub_tag: M003-260806
+  sub_tag: A001-260618
   udp: true
   network: tcp
   password: ae7eb4dwyaz25pxwgq59
-- name: US · SS · wzmwayne · 836B9E2C
-  type: ss
-  server: 107.151.182.253
-  port: 8080
-  cipher: rc4-md5
-  sub_tag: A004-260618
+- name: US · VMESS · radikal · 3B346E12
+  type: vmess
+  server: 38.11.69.48
+  port: 30004
+  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
+  alterId: 64
+  cipher: auto
+  network: ws
+  tls: true
+  ws-opts:
+    path: /path/1698843555400
+    headers:
+      Host: www.83761815.xyz
+- name: US · TROJAN · wzmwayne · A577F8A5
+  type: trojan
+  server: 66.23.203.21
+  port: 59689
+  client-fingerprint: chrome
+  network: tcp
+  skip-cert-verify: true
+  sni: 66.23.203.21
+  sub_tag: C002-260622
   udp: true
-  password: 14fFPrbezE3HDZzsMOr6
+  password: ae7eb4dwyaz25pxwgq59
+- name: US · VMESS · wzmwayne · 40EABEDA
+  type: vmess
+  server: 107.150.19.24
+  port: 54321
+  uuid: 2659ef8a-3456-48f8-95fe-08b82d3f4984
+  alterId: 0
+  cipher: auto
+  alpn:
+  - ''
+  http-opts:
+    headers:
+      Host:
+      - down-cdn.dingtalk.com
+    path:
+    - /x
+  network: http
+  skip-cert-verify: false
+  sub_tag: M003-260806
+  tls: false
+  udp: true
+  xudp: true
+  packet-encoding: xudp
+- name: US · VLESS · wzmwayne · 14D32F82
+  type: vless
+  server: kuruish.org
+  port: 443
+  uuid: 03fcc618-b93d-6796-6aed-8a38c975d581
+  client-fingerprint: chrome
+  network: tcp
+  sub_tag: S004-260618
+  tls: true
+  udp: true
+  xudp: true
+  packet-encoding: xudp
+  servername: kuruish.org
+- name: US · HTTP · wzmwayne · 3A0D63AA
+  type: http
+  server: 137.175.22.16
+  port: 443
+  skip-cert-verify: true
+  sub_tag: R002-260618
+  tls: true
+  udp: true
+- name: US · SS · wzmwayne · 0ECD490F
+  type: ss
+  server: 15.204.247.244
+  port: 4444
+  cipher: aes-256-gcm
+  sub_tag: B007-260618
+  udp: true
+  password: pKEW8JPByTVTLtM
 - name: US · VMESS · wzmwayne · A1F85305
   type: vmess
   server: 172.111.36.253
@@ -177,65 +128,36 @@ proxies:
   xudp: true
   packet-encoding: xudp
   servername: xmfhlpy.com
-- name: US · SS · wzmwayne · 60A9D50D
+- name: US · SS · wzmwayne · 836B9E2C
   type: ss
-  server: 15.204.246.132
-  port: 7307
-  cipher: aes-256-gcm
+  server: 107.151.182.253
+  port: 8080
+  cipher: rc4-md5
   sub_tag: A004-260618
   udp: true
-  password: FoOiGlkAA9yPEGP
-- name: US · VMESS · wzmwayne · C94EFE9A
-  type: vmess
-  server: 38.11.69.48
-  port: 30004
-  uuid: 418048af-a293-4b99-9b0c-98ca3580dd24
-  alterId: 64
-  cipher: auto
-  alpn:
-  - ''
-  network: ws
-  skip-cert-verify: false
-  sub_tag: M003-260806
-  tls: true
-  udp: true
-  ws-opts:
-    headers:
-      Host: www.83761815.xyz
-    path: /path/1698843555400
-  xudp: true
-  packet-encoding: xudp
-  servername: www.83761815.xyz
-- name: US · HTTP · wzmwayne · 7D81F74F
+  password: 14fFPrbezE3HDZzsMOr6
+- name: US · HTTP · wzmwayne · 917FA4E2
   type: http
-  server: 137.175.22.52
-  port: 443
-  skip-cert-verify: true
-  sni: 137.175.22.52
-  sub_tag: R002-260618
-  tls: true
-  udp: true
+  server: 154.26.192.123
+  port: 10988
+  username: fQ67Dpe5dU
+  password: gs4BXwT6SW
 proxy-groups:
 - name: NODEHUB
   type: select
   proxies:
-  - US · HYSTERIA · shaoyouvip · 41ED537E
-  - US · VMESS · radikal · 07673546
-  - US · VMESS · radikal · 449D8D02
-  - US · HYSTERIA · shaoyouvip · 11137364
-  - US · TROJAN · wzmwayne · 1D205FB9
-  - US · VMESS · radikal · 26CD7097
-  - US · TROJAN · wzmwayne · 275D69E2
-  - US · VMESS · wzmwayne · 491A7305
-  - US · TROJAN · wzmwayne · 1D2DA703
-  - US · VLESS · wzmwayne · B405FD70
-  - US · VLESS · wzmwayne · 932828E5
-  - US · TROJAN · wzmwayne · B289993F
-  - US · SS · wzmwayne · 836B9E2C
+  - US · VLESS · shaoyouvip · F42B02E2
+  - US · VMESS · radikal · 56E2445E
+  - US · TROJAN · wzmwayne · 1FAE4646
+  - US · VMESS · radikal · 3B346E12
+  - US · TROJAN · wzmwayne · A577F8A5
+  - US · VMESS · wzmwayne · 40EABEDA
+  - US · VLESS · wzmwayne · 14D32F82
+  - US · HTTP · wzmwayne · 3A0D63AA
+  - US · SS · wzmwayne · 0ECD490F
   - US · VMESS · wzmwayne · A1F85305
-  - US · SS · wzmwayne · 60A9D50D
-  - US · VMESS · wzmwayne · C94EFE9A
-  - US · HTTP · wzmwayne · 7D81F74F
+  - US · SS · wzmwayne · 836B9E2C
+  - US · HTTP · wzmwayne · 917FA4E2
 rules:
 - MATCH,NODEHUB
 profile:
