@@ -1,51 +1,35 @@
 proxies:
-- name: IE · HTTP · kooker · 118F7AE0
+- name: US · HTTP · kooker · 41E72FB4
   type: http
-  server: 34.249.214.108
+  server: 172.64.69.89
   port: 443
   tls: true
   skip-cert-verify: true
   udp: true
-- name: DE · HYSTERIA2 · kooker · 459CA52D
+- name: FR · HYSTERIA · kooker · B14EC053
+  type: hysteria
+  server: 62.210.124.132
+  port: 24667
+  alpn:
+  - h3
+  down: 55 Mbps
+  protocol: udp
+  skip-cert-verify: true
+  sni: bing.com
+  up: 11 Mbps
+  auth-str: dongtaiwang.com
+- name: DE · HYSTERIA2 · kooker · 7159D51C
   type: hysteria2
-  server: uk-tube-01.stre4m.net
-  port: 13337
+  server: 135.126.21.107
+  port: 443
   down: ''
   fingerprint: ''
   obfs: ''
   obfs-password: ''
-  skip-cert-verify: true
-  sni: mother-earth.fyi
+  skip-cert-verify: false
+  sni: de2-balance.rezproffx.ru
   up: ''
-  password: 900c8c92-1979-4c7c-8f2f-63e87d53d8fe
-- name: KR · SOCKS5 · kooker · 033896D3
-  type: socks5
-  server: 59.11.209.162
-  port: 1080
-  skip-cert-verify: true
-  username: ''
-  password: ''
-- name: US · VLESS · kooker · B9AD90B5
-  type: vless
-  server: xray-b8ct4r2f-sahdon-hosaindoost.cloady.io
-  port: 443
-  uuid: 1fd2e2d1-96f5-2056-19fd-b375b1a9d851
-  network: ws
-  skip-cert-verify: true
-  tls: true
-  udp: true
-  ws-opts:
-    headers:
-      Host: xray-b8ct4r2f-sahdon-hosaindoost.cloady.io
-    path: /ffad70ffdfc3bcda
-  servername: xray-b8ct4r2f-sahdon-hosaindoost.cloady.io
-- name: NL · HTTP · kooker · 546865AA
-  type: http
-  server: 149.36.51.129
-  port: 443
-  tls: true
-  skip-cert-verify: true
-  udp: true
+  password: 6ac6d17d-040c-4fab-940e-8f5d72c3fed6
 - name: ID · SOCKS5 · kooker · 4AB3DACD
   type: socks5
   server: 202.155.99.32
@@ -53,84 +37,73 @@ proxies:
   skip-cert-verify: true
   username: gebHTLF6
   password: APJ7RmY9
-- name: RU · VLESS · kooker · 47FE8A98
-  type: vless
-  server: vps3.nemnogogo.com
+- name: BG · SS · kooker · 17E0CE0D
+  type: ss
+  server: bulgaria.astroapps.io
   port: 443
-  uuid: 38308ff1-5aa9-494f-a25a-0f2870d56b3e
-  alpn:
-  - h2
-  client-fingerprint: firefox
-  grpc-opts:
-    grpc-service-name: mobile.api.Event
-  network: grpc
-  tls: true
+  cipher: chacha20-ietf-poly1305
+  plugin: v2ray-plugin
+  plugin-opts:
+    host: bulgaria.astroapps.io
+    mode: websocket
+    path: /6318c86175d20088b16c98a7
+    tls: true
   udp: true
-  xudp: true
-  servername: vps3.nemnogogo.com
-- name: DK · HTTP · kooker · 1BB680D1
-  type: http
-  server: 158.173.154.4
-  port: 9002
-  tls: true
-  skip-cert-verify: true
-  udp: true
-  password: None
-- name: ID · SOCKS5 · kooker · FC9DE580
-  type: socks5
-  server: 203.84.138.59
-  port: 62000
-  skip-cert-verify: true
-  username: 9tcjLp2W
-  password: RRWtX6XP
-- name: DE · VLESS · kooker · 11A43C77
+  password: 5acf789dd7c2bf40a670a342800eff57003c2b164c3c8f53
+- name: DE · VLESS · kooker · 223B677F
   type: vless
-  server: bookend.filnex.baby
-  port: 443
-  uuid: 749b1c56-e658-4bf5-94bd-5c3286a4aed1
-  alpn:
-  - http/1.1
-  client-fingerprint: firefox
+  server: quirivoo.ir
+  port: 2052
+  uuid: dc780059-8b89-42d1-94eb-1c1d1bbbdd2f
+  encryption: mlkem768x25519plus.native.0rtt.7cEi3EYubZPwXl754zAXJkMQRhE95FMPVVhP8613QEA
   network: ws
-  tls: true
   udp: true
   ws-opts:
     headers:
-      Host: bookend.filnex.baby
-      User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.115 Safari/537.36
-    path: /api/de1/stream
+      Host: quirivoo.ir
+      User-Agent: Mozilla/5.0 (Linux; Android 7.0; Moto C Build/NRD90M.059) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100
+        Mobile Safari/537.36
+    path: /
   xudp: true
-  servername: ferncrest.gerqix.online
-- name: NL · HTTP · kooker · 3653EC2C
+- name: IE · HTTP · kooker · 118F7AE0
   type: http
-  server: 84.17.47.124
-  port: 9002
+  server: 34.249.214.108
+  port: 443
   tls: true
   skip-cert-verify: true
   udp: true
-- name: TH · SOCKS5 · kooker · B3EAB5C8
+- name: US · SOCKS5 · kooker · A856F75A
   type: socks5
-  server: 103.14.164.30
-  port: 42000
-  skip-cert-verify: true
-  username: route164JIa2CBPxfy
-  password: VAwyJQX0iKMJiyCw5UVK9wGH
-- name: NL · HTTP · kooker · 112C55E7
-  type: http
-  server: 84.17.47.125
-  port: 9002
+  server: 66.253.2.69
+  port: 62000
+  username: u_rb1dba2
+  password: l1tlrdx52v
+- name: RO · VLESS · kooker · C7EC5C03
+  type: vless
+  server: 193.168.140.228
+  port: 443
+  reality-opts:
+    public-key: UGeXXP0IS2_P7AWPDbbk_w7BzZLoPPrk3ha7OgI_0D4
+    short-id: ''
+  uuid: 89f361ea-a370-4cbe-b2b3-d3e9c0b7c4c1
+  client-fingerprint: chrome
+  encryption: none
+  network: xhttp
   tls: true
-  skip-cert-verify: true
   udp: true
-  username: "null"
-  password: "null"
-- name: TH · SOCKS5 · kooker · 67A05FA2
-  type: socks5
-  server: 103.14.164.202
-  port: 42000
-  skip-cert-verify: true
-  username: route164JIa2CBPxfy
-  password: VAwyJQX0iKMJiyCw5UVK9wGH
+  xhttp-opts:
+    host: www.vodafone.ro
+    mode: auto
+    path: /
+    reuse-settings:
+      c-max-reuse-times: 64-128
+      h-keep-alive-period: 0
+      h-max-request-times: 800-1200
+      h-max-reusable-secs: 1800-3600
+      max-concurrency: 16-32
+    x-padding-bytes: 100-1000
+  xudp: true
+  servername: www.vodafone.ro
 - name: NL · HTTP · kooker · 36B37104
   type: http
   server: 84.17.47.123
@@ -139,6 +112,71 @@ proxies:
   skip-cert-verify: true
   udp: true
   password: None
+- name: US · SOCKS5 · kooker · FEF6ACE9
+  type: socks5
+  server: 104.168.249.36
+  port: 1080
+  username: test123
+  password: test123
+- name: NL · HTTP · kooker · 5C6DB148
+  type: http
+  server: 84.17.47.146
+  port: 9002
+  skip-cert-verify: true
+  tls: true
+  username: "null"
+  password: "null"
+- name: JP · SOCKS5 · kooker · DA9B54DC
+  type: socks5
+  server: 103.248.150.238
+  port: 42000
+  skip-cert-verify: true
+  username: tB4vN7qP
+  password: J5rM2xL9
+- name: DK · HTTP · kooker · 1BB680D1
+  type: http
+  server: 158.173.154.4
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+  password: None
+- name: ID · SOCKS5 · kooker · 7FFE67EB
+  type: socks5
+  server: 202.155.99.212
+  port: 62000
+  skip-cert-verify: true
+  username: gebHTLF6
+  password: APJ7RmY9
+- name: NL · HTTP · kooker · 546865AA
+  type: http
+  server: 149.36.51.129
+  port: 443
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: TH · SOCKS5 · kooker · 67A05FA2
+  type: socks5
+  server: 103.14.164.202
+  port: 42000
+  skip-cert-verify: true
+  username: route164JIa2CBPxfy
+  password: VAwyJQX0iKMJiyCw5UVK9wGH
+- name: US · HTTP · kooker · 8149A96F
+  type: http
+  server: 198.44.138.27
+  port: 9443
+  skip-cert-verify: true
+  tls: true
+- name: US · HTTP · kooker · B3B62EE7
+  type: http
+  server: usgp1-cdn-route.couldflare-cdn.com
+  port: 443
+  tls: true
+  udp: true
+  sni: usgp1-cdn-route.couldflare-cdn.com
+  username: mrwdfNTD8M79LCukCieldrqZWqs=
+  password: exaxgqkKkd0TAMrCxeonWg==
 - name: IE · HTTP · kooker · FD93263D
   type: http
   server: 18.200.158.139
@@ -146,6 +184,28 @@ proxies:
   tls: true
   skip-cert-verify: true
   udp: true
+- name: GB · HTTP · kooker · EFA04617
+  type: http
+  server: 84.17.50.214
+  port: 9443
+  skip-cert-verify: true
+  tls: true
+- name: NL · HTTP · kooker · 66A2B9E1
+  type: http
+  server: 103.97.88.154
+  port: 443
+  skip-cert-verify: true
+  tls: true
+  username: "null"
+  password: "null"
+- name: NL · HTTP · kooker · 6415793A
+  type: http
+  server: 84.17.47.148
+  port: 9002
+  tls: true
+  skip-cert-verify: true
+  udp: true
+  password: None
 - name: GB · HTTP · kooker · B3FD5136
   type: http
   server: 212.102.63.31
@@ -153,18 +213,18 @@ proxies:
   tls: true
   skip-cert-verify: true
   udp: true
-- name: GB · HTTP · kooker · 5B5B8FE1
+- name: NL · HTTP · kooker · 6A098537
   type: http
-  server: 84.17.50.214
-  port: 9443
+  server: 84.17.47.124
+  port: 9002
   skip-cert-verify: true
   tls: true
-  username: ''
-  password: ''
-- name: NL · HTTP · kooker · 5C6DB148
+  username: "null"
+  password: "null"
+- name: NL · HTTP · kooker · C34D9CF3
   type: http
-  server: 84.17.47.146
-  port: 9002
+  server: 51.159.225.196
+  port: 23856
   skip-cert-verify: true
   tls: true
   username: "null"
@@ -177,20 +237,6 @@ proxies:
   skip-cert-verify: true
   udp: true
   password: None
-- name: NL · HTTP · kooker · E5953371
-  type: http
-  server: 84.17.47.125
-  port: 9002
-  tls: true
-  skip-cert-verify: true
-  udp: true
-- name: FR · HTTP · kooker · D090CF3D
-  type: http
-  server: 87.98.174.157
-  port: 6103
-  tls: true
-  skip-cert-verify: true
-  udp: true
 - name: BE · HTTP · kooker · E9F1F93E
   type: http
   server: 146.70.123.98
@@ -213,59 +259,88 @@ proxies:
   tls: true
   skip-cert-verify: true
   udp: true
-- name: CH · HTTP · kooker · 78CEFD9B
+- name: DE · HTTP · kooker · 0B20FCB8
   type: http
-  server: 149.88.27.33
+  server: 158.173.154.3
+  port: 9002
+  skip-cert-verify: true
+  tls: true
+- name: FR · HTTP · kooker · D090CF3D
+  type: http
+  server: 87.98.174.157
+  port: 6103
+  tls: true
+  skip-cert-verify: true
+  udp: true
+- name: DE · HTTP · kooker · 400D6CAC
+  type: http
+  server: 158.173.154.2
+  port: 9002
+  skip-cert-verify: true
+  tls: true
+- name: IT · HTTP · kooker · D9CBDF62
+  type: http
+  server: 185.183.105.130
+  port: 443
+  skip-cert-verify: true
+  tls: true
+- name: LT · HTTP · kooker · 6C3DAA92
+  type: http
+  server: 89.124.11.9
+  port: 443
+  skip-cert-verify: true
+  tls: true
+  username: "null"
+  password: "null"
+- name: EE · HTTP · kooker · 8002D4CF
+  type: http
+  server: 95.153.31.66
   port: 9443
   skip-cert-verify: true
   tls: true
-  username: ''
-  password: ''
-- name: RO · HTTP · kooker · BF2730D1
+- name: RO · HTTP · kooker · 79ABF0C2
+  type: http
+  server: 193.176.84.40
+  port: 9002
+  skip-cert-verify: true
+  tls: true
+- name: RO · HTTP · kooker · 7139EA68
+  type: http
+  server: 193.176.84.37
+  port: 9002
+  skip-cert-verify: true
+  sni: www.bing.com
+  tls: true
+- name: RO · HTTP · kooker · 51B1C437
+  type: http
+  server: 193.176.84.17
+  port: 9002
+  skip-cert-verify: true
+  sni: www.bing.com
+  tls: true
+- name: RO · HTTP · kooker · 5A90359E
+  type: http
+  server: 193.176.84.24
+  port: 9002
+  skip-cert-verify: true
+  sni: www.bing.com
+  tls: true
+- name: RO · HTTP · kooker · C180F418
   type: http
   server: 193.176.84.20
   port: 9002
   skip-cert-verify: true
   tls: true
-  username: ''
-  password: ''
-- name: RO · HTTP · kooker · E5F08EB9
+- name: RO · HTTP · kooker · 1738CB09
   type: http
-  server: 193.176.84.19
+  server: 193.176.84.22
   port: 9002
   skip-cert-verify: true
+  sni: www.bing.com
   tls: true
-  username: "null"
-  password: "null"
-- name: RO · HTTP · kooker · B3D8597C
-  type: http
-  server: 193.176.84.21
-  port: 9002
-  skip-cert-verify: true
-  tls: true
-  username: ''
-  password: ''
-- name: RO · HTTP · kooker · 1017DC99
-  type: http
-  server: 193.176.84.24
-  port: 9002
-  skip-cert-verify: true
-  tls: true
-  username: ''
-  password: ''
-- name: MK · HTTP · kooker · 60BED8F8
+- name: MK · HTTP · kooker · 1B3BA173
   type: http
   server: 185.225.28.50
   port: 443
   skip-cert-verify: true
   tls: true
-  username: ''
-  password: ''
-- name: CY · HTTP · kooker · 3B7B05F7
-  type: http
-  server: 46.199.75.105
-  port: 9443
-  skip-cert-verify: true
-  tls: true
-  username: ''
-  password: ''
