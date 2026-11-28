@@ -1,28 +1,37 @@
 proxies:
-- name: US · VMESS · ts-sf-v2ray · FDFFCFE9
+- name: US · VMESS · ts-sf-v2ray · BEAF154D
   type: vmess
   server: 188.114.99.137
-  port: 8443
-  uuid: 60441548-b68e-43b2-8191-e3b884be4b3c
-  alterId: 0
-  cipher: auto
-  network: ws
-  tls: true
-  servername: v2ray1.dozapp.xyz
-  ws-opts:
-    path: /lMnsZUN4/
-    headers:
-      Host: v2ray1.dozapp.xyz
-- name: ZZ · VMESS · ts-sf-v2ray · 4EC4DD2E
-  type: vmess
-  server: cf.090227.xyz
   port: 443
-  uuid: 0cf6d970-3f1d-4aae-a989-92a8f76ae3db
+  uuid: 6a89a215-22bf-4bd7-9642-b95b2e09583a
   alterId: 0
   cipher: auto
   network: ws
   tls: true
+  servername: guanwang.awsno.com
   ws-opts:
-    path: /ws?ed=2048
+    path: /hls/cctv5phd.m3u8
     headers:
-      Host: vmess.lbw666.dpdns.org
+      Host: guanwang.awsno.com
+- name: ZZ · VMESS · ts-sf-v2ray · CF70CCD4
+  type: vmess
+  server: 3h-kazakhstan1.09vpn.com
+  port: 80
+  uuid: 567f4be5-12ab-42e1-b8d9-db6fd1fdd31c
+  alterId: 0
+  cipher: auto
+  network: ws
+  servername: wrmelmwxlf.gktevlrqznwpqozy.fabpfs6fgizmnojhcvqxwl.kytrcfzqla87gvgvs6c7kjnrubuh.cc
+  ws-opts:
+    path: /vmess/
+- name: ZZ · VMESS · ts-sf-v2ray · 32D454AD
+  type: vmess
+  server: 132.145.80.230
+  port: 80
+  uuid: 5155860e-d07d-46c3-9128-3afbd84626c7
+  alterId: 0
+  cipher: auto
+  network: ws
+  servername: kr02.a0a.xyz
+  ws-opts:
+    path: /cctv13.m3u8
